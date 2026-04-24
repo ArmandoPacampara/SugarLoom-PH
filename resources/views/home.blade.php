@@ -23,9 +23,7 @@
             --shadow-card: 0 8px 32px rgba(201,75,118,0.10);
         }
 
-
         * { box-sizing: border-box; margin: 0; padding: 0; }
-
 
         body {
             font-family: 'Poppins', sans-serif;
@@ -34,13 +32,11 @@
             overflow-x: hidden;
         }
 
-
         h1, h2, h3 {
             font-family: 'Poppins', sans-serif;
             color: var(--text-dark);
             letter-spacing: -0.03em;
         }
-
 
         /* ── NAVBAR ── */
         .navbar {
@@ -55,14 +51,12 @@
             z-index: 100;
         }
 
-
         .logo {
             font-size: 1.1rem;
             font-weight: 900;
-            color: var(--text-dark);
+            color: white;
             letter-spacing: 0;
         }
-
 
         .nav-links {
             position: absolute;
@@ -71,7 +65,6 @@
             display: flex;
             gap: 2.5rem;
         }
-
 
         .nav-links a {
             color: var(--white);
@@ -82,7 +75,6 @@
         }
        
         .nav-links a:hover { opacity: 0.8; }
-
 
         .nav-actions { display: flex; gap: 0.8rem; }
        
@@ -114,7 +106,6 @@
             overflow: hidden;
         }
 
-
         /* The distinct curved shape behind the cookies */
         .hero::before {
             content: '';
@@ -128,7 +119,6 @@
             z-index: 1;
         }
 
-
         .hero-text {
             width: 65%;           /* Increased from 55% */
             max-width: 750px;     /* Increased from 600px */
@@ -136,7 +126,6 @@
             z-index: 3;
             margin-top: -2rem;
         }
-
 
         .hero-text h1 {
             font-size: clamp(3.5rem, 6vw, 5.5rem);
@@ -146,12 +135,10 @@
             letter-spacing: -0.04em;
         }
 
-
         .hero-text h1 .accent {
             color: var(--text-accent);
             display: block;
         }
-
 
         .hero-text p {
             font-size: 0.95rem;
@@ -161,9 +148,7 @@
             margin-bottom: 2.5rem;
         }
 
-
         .hero-buttons { display: flex; gap: 1.25rem; flex-wrap: wrap; }
-
 
         .btn {
             border-radius: 999px;
@@ -192,7 +177,6 @@
             box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
         }
 
-
         .hero-image {
             position: absolute;
             right: 0;
@@ -215,7 +199,6 @@
         /* ── SECTION COMMONS ── */
         .section { padding: 5rem 4rem; }
 
-
         .section-header {
             display: flex;
             justify-content: space-between;
@@ -223,10 +206,8 @@
             margin-bottom: 3rem;
         }
 
-
         .section-header h2 { font-size: 2.5rem; font-weight: 800; }
         .section-header p { font-size: 1rem; color: var(--text-body); margin-top: 0.5rem; font-weight: 300; }
-
 
         .view-all {
             font-size: 0.95rem;
@@ -328,8 +309,23 @@
         }
 
 
-        .quiz-img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .quiz-img-wrap {
+        flex: 1; /* Changed from 1.2 to 1 for perfect 50/50 balance */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 3.5rem 3.5rem 3.5rem 0; /* Padding to give the image breathing room */
+    }
 
+    .quiz-img {
+        width: 100%; 
+        height: 100%;
+        max-height: 330px; /* Prevents it from getting too tall */
+        object-fit: cover; /* Ensures the image doesn't stretch/distort */
+        object-position: center;
+        border-radius: 16px; /* Rounds the image perfectly */
+        box-shadow: 0 8px 24px rgba(0,0,0,0.12); /* Adds a subtle shadow for depth */
+    }
 
         .quiz-content {
             background: #fae6eb;
@@ -472,13 +468,11 @@
             cursor: pointer;
         }
 
-
         /* ── RESPONSIVE ── */
         @media (max-width: 1024px) {
             .hero-text h1 { font-size: 3.5rem; }
             .hero-image { width: 50%; }
         }
-
 
         @media (max-width: 900px) {
             .section { padding: 4rem 2rem; }
@@ -495,7 +489,6 @@
             footer { padding: 2rem; }
         }
 
-
         @media (max-width: 600px) {
             .products-grid, .reviews-grid { grid-template-columns: 1fr; }
             .hero-text h1 { font-size: 3rem; }
@@ -506,13 +499,12 @@
 </head>
 <body>
 
-
 <nav class="navbar">
     <div class="logo">SugarLoom PH</div>
     <div class="nav-links">
-        <a href="#">Catalog</a>
-        <a href="#">Track Order</a>
-        <a href="#">Dashboard</a>
+        <a href="{{ route('catalog') }}">Catalog</a>
+        <a href="{{ route('track-order') }}">Track Order</a>
+        <a href="{{ route('dashboard') }}">Dashboard</a>
     </div>
     <div class="nav-actions">
         <button aria-label="Cart">
@@ -524,7 +516,6 @@
     </div>
 </nav>
 
-
 <section class="hero">
     <div class="hero-text">
         <h1>
@@ -534,7 +525,7 @@
         </h1>
         <p>Indulge in our small-batch, handcrafted cookies baked daily with premium ingredients and a touch of artisanal magic.</p>
         <div class="hero-buttons">
-            <a href="#" class="btn btn-primary">Shop Now</a>
+            <a href="{{ route('catalog') }}" class="btn btn-primary">Shop Now</a>
             <a href="#" class="btn btn-white">Our Story</a>
         </div>
     </div>
@@ -543,16 +534,14 @@
     </div>
 </section>
 
-
 <section class="section best-sellers">
     <div class="section-header">
         <div>
             <h2>Best Sellers</h2>
             <p>The flavors that captured everyone's hearts.</p>
         </div>
-        <a href="#" class="view-all">View All Catalog →</a>
+        <a href="{{ route('catalog') }}" class="view-all">View All Catalog →</a>
     </div>
-
 
     <div class="products-grid">
         @foreach($bestSellers as $product)
@@ -575,7 +564,6 @@
     </div>
 </section>
 
-
 <section class="quiz-section">
     <div class="quiz-card">
         <img class="quiz-img" src="{{ asset('images/baking.png') }}" alt="Baking ingredients">
@@ -589,13 +577,11 @@
     </div>
 </section>
 
-
 <section class="section testimonials">
     <div class="section-header">
         <h2>What Our Loomers Say</h2>
         <div class="divider"></div>
     </div>
-
 
     <div class="reviews-grid">
         @foreach($testimonials as $review)
@@ -621,15 +607,12 @@
     </div>
 </section>
 
-
 <footer>
     <div class="footer-logo">SugarLoom PH</div>
     <button class="footer-cart" aria-label="Cart">🛒</button>
 </footer>
 
-
 <div class="toast" id="toast"></div>
-
 
 <script>
     // Use data attributes instead of inline onclick to avoid Blade/JS conflicts
@@ -638,7 +621,6 @@
             addToCart(this.dataset.productId);
         });
     });
-
 
     function addToCart(productId) {
         fetch('/cart/add', {
@@ -658,7 +640,6 @@
         });
     }
 
-
     function showToast(message) {
         var toast = document.getElementById('toast');
         toast.textContent = message;
@@ -666,7 +647,6 @@
         setTimeout(function() { toast.classList.remove('show'); }, 2800);
     }
 </script>
-
 
 </body>
 </html>
