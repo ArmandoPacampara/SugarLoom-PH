@@ -17,4 +17,16 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
+Route::get('/test-product', function () {
+    return view('products.show');
+});
+
+Route::get('/catalog', function () {
+    return view('welcome');
+})->name('catalog');
+
+Route::get('/track-order', function () {
+    return view('welcome');
+})->name('track-order');
+
 require __DIR__.'/auth.php';
