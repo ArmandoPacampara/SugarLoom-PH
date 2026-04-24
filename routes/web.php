@@ -1,9 +1,8 @@
 <?php
 
-
-
 namespace App\Http\Controllers;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\CartController;
 
@@ -12,6 +11,8 @@ use App\Http\Controllers\CartController;
 #|--------------------------------------------------------------------------
 Route::get('/', [PageController::class, 'home'])->name('home');
 Route::get('/catalog', [PageController::class, 'catalog'])->name('catalog'); # Web Routes – SugarLoom PH 
+Route::get('/dashboard', [DashboardController::class, 'index']);
+Route::get('/about', [PageController::class, 'about'])->name('about');
 #|--------------------------------------------------------------------------
 
 // ── Placeholder routes (build these out next) ─────────────────────────────
@@ -26,3 +27,4 @@ Route::prefix('cart')->name('cart.')->group(function () {
     Route::delete('/{id}',  [CartController::class, 'remove'])->name('remove');
     Route::delete('/',      [CartController::class, 'clear'])->name('clear');
 });
+
