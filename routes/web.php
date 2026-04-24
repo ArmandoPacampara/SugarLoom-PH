@@ -6,6 +6,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\CartController;
 
+require __DIR__.'/auth.php';
 // ── Public pages ──────────────────────────────────────────────────────────
 
 #|--------------------------------------------------------------------------
@@ -28,29 +29,3 @@ Route::prefix('cart')->name('cart.')->group(function () {
     Route::delete('/',      [CartController::class, 'clear'])->name('clear');
 });
 
-<<<<<<< HEAD
-=======
-Route::get('/dashboard', function () {
-    return view('dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
-
-Route::middleware('auth')->group(function () {
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-});
-
-Route::get('/test-product', function () {
-    return view('products.show');
-});
-
-Route::get('/catalog', function () {
-    return view('welcome');
-})->name('catalog');
-
-Route::get('/track-order', function () {
-    return view('welcome');
-})->name('track-order');
-
-require __DIR__.'/auth.php';
->>>>>>> 9b763315e79c08fefc39251731e24321775cae87
