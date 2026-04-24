@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers; // THIS LINE IS CRITICAL
 
 use App\Models\Product;
 use App\Models\Testimonial;
@@ -17,6 +17,14 @@ class PageController extends Controller
         $testimonials = Testimonial::active()->take(3)->get();
 
         return view('home', compact('bestSellers', 'testimonials'));
+    }
+    /*
+    * About page
+    */
+
+    public function about()
+    {
+        return view('about');
     }
 
     /**
