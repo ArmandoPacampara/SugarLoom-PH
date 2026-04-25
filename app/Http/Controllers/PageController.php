@@ -18,6 +18,7 @@ class PageController extends Controller
 
         return view('home', compact('bestSellers', 'testimonials'));
     }
+
     /*
     * About page
     */
@@ -26,7 +27,7 @@ class PageController extends Controller
     {
         return view('about');
     }
-
+   
     /**
      * Catalog page
      */
