@@ -14,6 +14,7 @@ Route::get('/', [PageController::class, 'home'])->name('home');
 Route::get('/catalog', [PageController::class, 'catalog'])->name('catalog'); # Web Routes – SugarLoom PH 
 Route::get('/dashboard', [DashboardController::class, 'index']);
 Route::get('/about', [PageController::class, 'about'])->name('about');
+Route::get('/show', [PageController::class, 'show'])->name('show');
 #|--------------------------------------------------------------------------
 
 // ── Placeholder routes (build these out next) ─────────────────────────────

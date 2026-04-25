@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers; // THIS LINE IS CRITICAL
+namespace App\Http\Controllers;
 
 use App\Models\Product;
 use App\Models\Testimonial;
@@ -18,16 +18,14 @@ class PageController extends Controller
 
         return view('home', compact('bestSellers', 'testimonials'));
     }
-
-    /*
-    * About page
-    */
-
     public function about()
     {
         return view('about');
     }
-   
+    public function show()
+    {
+        return view('products.show');
+    }
     /**
      * Catalog page
      */
@@ -46,5 +44,18 @@ class PageController extends Controller
 
         return view('catalog', compact('bakersChoice', 'topPick', 'products', 'category'));
     }
-}
 
+    // public function show($slug)
+    // {
+    //     $product = Product::where('slug', $slug)->firstOrFail();
+
+    //     $suggestions = Product::active()
+    //         ->where('id', '!=', $product->id)
+    //         ->inRandomOrder()
+    //         ->take(3)
+    //         ->get();
+
+    //     return view('products.show', compact('product', 'suggestions'));
+    // }
+    
+}
