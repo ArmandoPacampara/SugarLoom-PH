@@ -26,7 +26,12 @@ Route::get('/dashboard', fn() => view('dashboard'))->name('dashboard');
 Route::prefix('cart')->name('cart.')->group(function () {
     Route::get('/',         [CartController::class, 'index'])->name('index');
     Route::post('/add',     [CartController::class, 'add'])->name('add');
+    Route::patch('/{id}',   [CartController::class, 'update'])->name('update');
     Route::delete('/{id}',  [CartController::class, 'remove'])->name('remove');
     Route::delete('/',      [CartController::class, 'clear'])->name('clear');
 });
 
+Route::post('/checkout', [CartController::class, 'checkout'])->name('checkout.process');
+Route::get('/checkout/success', [CartController::class, 'paymongoSuccess'])->name('checkout.success');
+Route::get('/checkout/cancel', [CartController::class, 'paymongoCancel'])->name('checkout.cancel');
+Route::get('/checkout/failed', [CartController::class, 'paymongoCancel'])->name('checkout.failed');

@@ -50,10 +50,8 @@
             font-size: 1.1rem;
             font-weight: 900;
             color: white;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;;
             letter-spacing: 0;
+            text-decoration: none;
         }
 
         .logo-icon {
@@ -67,34 +65,63 @@
         }
 
         .nav-links {
-            display: flex;
-            gap: 3rem;
             position: absolute;
             left: 50%;
             transform: translateX(-50%);
+            display: flex;
+            gap: 2.5rem;
         }
 
         .nav-links a {
-            color: rgba(255,255,255,0.8);
+            color: var(--white);
             text-decoration: none;
             font-size: 0.9rem;
-            font-weight: 500;
+            font-weight: 400;
+            transition: opacity 0.2s;
         }
 
+        .nav-links a:hover { opacity: 0.8; }
         .nav-links a.active { color: var(--white); }
 
         .nav-actions {
             display: flex;
-            gap: 1rem;
+            gap: 0.8rem;
         }
 
-        .nav-actions button {
+        .nav-actions > button,
+        .nav-actions > a,
+        .nav-actions > span {
+            width: 38px; height: 38px;
+            border-radius: 50%;
+            border: 1px solid rgba(255,255,255,0.5);
             background: transparent;
-            border: none;
-            color: white;
-            font-size: 1.2rem;
+            color: var(--dark);
             cursor: pointer;
+            display: grid;
+            place-items: center;
+            transition: background 0.2s;
+            padding: 0;
+            position: relative;
         }
+
+        .nav-actions > button:hover,
+        .nav-actions > a:hover,
+        .nav-actions > span:hover { background: rgba(255,255,255,0.2); }
+
+        .nav-actions svg { width: 16px; height: 16px; fill: currentColor; }
+
+        .cart-count {
+            position: absolute;
+            top: -9px;
+            right: -7px;
+            color: white;
+            font-size: 0.72rem;
+            font-weight: 800;
+            line-height: 1;
+            text-shadow: 0 1px 2px rgba(26, 16, 24, 0.45);
+        }
+
+        .cart-count.is-empty { display: none; }
 
         /* ── PAGE HEADER ─────────────────────────────── */
         .container {
@@ -409,26 +436,49 @@
 
         .btn-add-catalog:hover { background: #e5e0e3; }
 
+        .toast {
+            position: fixed;
+            right: 2rem;
+            bottom: 2rem;
+            transform: translateY(90px);
+            opacity: 0;
+            background: var(--dark);
+            color: white;
+            padding: 0.9rem 1.2rem;
+            border-radius: 999px;
+            box-shadow: 0 14px 34px rgba(26, 16, 24, 0.22);
+            font-size: 0.92rem;
+            font-weight: 700;
+            z-index: 9999;
+            pointer-events: none;
+            transition: transform 0.25s ease, opacity 0.25s ease;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
     </style>
 </head>
 <body>
 
 <nav class="navbar">
-    <div class="logo">
-        <a href="/" class="logo">SugarLoom PH</a>
-    </div>
+    <a href="{{ route('home') }}" class="logo">SugarLoom PH</a>
     <div class="nav-links">
         <a href="{{ route('catalog') }}" class="active">Catalog</a>
         <a href="{{ route('track-order') }}">Track Order</a>
         <a href="{{ route('dashboard') }}">Dashboard</a>
     </div>
     <div class="nav-actions">
-        <button aria-label="Cart">
+        <a href="{{ route('cart.index') }}" aria-label="Cart">
             <svg viewBox="0 0 24 24"><path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"/></svg>
-        </button>
-        <button aria-label="Account">
+            @php($cartCount = collect(session('cart', []))->sum('quantity'))
+            <span class="cart-count {{ $cartCount ? '' : 'is-empty' }}" data-cart-count>{{ $cartCount }}</span>
+        </a>
+        <span aria-label="Account">
             <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
-        </button>
+        </span>
     </div>
 </nav>
 
@@ -463,7 +513,7 @@
             </div>
         </div>
         <div class="top-pick-img-wrap">
-            <img class="top-pick-img" src="{{ $topPick->image ? asset('storage/' . $topPick->image) : asset('images/placeholder-cookie.png') }}" alt="{{ $topPick->name }}">
+            <img class="top-pick-img" src="{{ $topPick->image ? asset($topPick->image) : asset('images/placeholder-cookie.png') }}" alt="{{ $topPick->name }}">
         </div>
     </section>
     @endif
@@ -488,7 +538,7 @@
             @foreach($products as $product)
             <div class="catalog-card" data-category="{{ $product->category }}">
                 <div class="catalog-img-wrap">
-                    <img src="{{ $product->image ? asset('storage/' . $product->image) : asset('images/placeholder-cookie.png') }}" alt="{{ $product->name }}">
+                    <img src="{{ $product->image ? asset($product->image) : asset('images/placeholder-cookie.png') }}" alt="{{ $product->name }}">
                     <span class="catalog-price-badge">₱{{ number_format($product->price, 0) }}</span>
                 </div>
                 <div class="catalog-card-body">
@@ -508,6 +558,8 @@
     </section>
 </div>
 
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
 <script>
 function filterProducts(btn, filter) {
     // Update active tab
@@ -526,6 +578,7 @@ function addToCart(productId) {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
+            'Accept': 'application/json',
             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || ''
         },
         body: JSON.stringify({ product_id: productId, quantity: 1 })
@@ -533,10 +586,31 @@ function addToCart(productId) {
     .then(res => res.json())
     .then(data => {
         if (data.success) {
-            alert('Added to cart! 🍪');
+            updateCartCount(data.count || 0);
+            showToast('Added to cart.');
         }
     })
-    .catch(err => console.error(err));
+    .catch(() => showToast('Something went wrong. Please try again.'));
+}
+
+document.querySelectorAll('[data-id]').forEach(button => {
+    button.addEventListener('click', () => addToCart(button.dataset.id));
+});
+
+let toastTimer;
+function showToast(message) {
+    const toast = document.getElementById('toast');
+    toast.textContent = message;
+    toast.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toast.classList.remove('show'), 2600);
+}
+
+function updateCartCount(count) {
+    document.querySelectorAll('[data-cart-count]').forEach(badge => {
+        badge.textContent = count;
+        badge.classList.toggle('is-empty', count < 1);
+    });
 }
 </script>
 
