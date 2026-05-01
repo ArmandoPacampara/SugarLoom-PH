@@ -79,8 +79,18 @@
             font-weight: 400;
             transition: opacity 0.2s;
         }
+        .nav-links form { margin: 0; }
+        .nav-links button {
+            background: transparent;
+            border: 0;
+            color: var(--white);
+            cursor: pointer;
+            font: inherit;
+            padding: 0;
+        }
 
-        .nav-links a:hover { opacity: 0.8; }
+        .nav-links a:hover,
+        .nav-links button:hover { opacity: 0.8; }
         .nav-links a.active { color: var(--white); }
 
         .nav-actions {
@@ -466,9 +476,22 @@
 <nav class="navbar">
     <a href="{{ route('home') }}" class="logo">SugarLoom PH</a>
     <div class="nav-links">
-        <a href="{{ route('catalog') }}" class="active">Catalog</a>
-        <a href="{{ route('track-order') }}">Track Order</a>
-        <a href="{{ route('dashboard') }}">Dashboard</a>
+        @auth
+            @if(auth()->user()->isAdmin())
+                <a href="{{ route('admin.dashboard') }}">Admin</a>
+            @else
+                <a href="{{ route('catalog') }}" class="active">Catalog</a>
+                <a href="{{ route('track-order') }}">Track Order</a>
+            @endif
+            <form method="POST" action="{{ route('logout') }}">
+                @csrf
+                <button type="submit">Logout</button>
+            </form>
+        @else
+            <a href="{{ route('catalog') }}" class="active">Catalog</a>
+            <a href="{{ route('track-order') }}">Track Order</a>
+            <a href="{{ route('login') }}">Login</a>
+        @endauth
     </div>
     <div class="nav-actions">
         <a href="{{ route('cart.index') }}" aria-label="Cart">
@@ -476,9 +499,9 @@
             @php($cartCount = collect(session('cart', []))->sum('quantity'))
             <span class="cart-count {{ $cartCount ? '' : 'is-empty' }}" data-cart-count>{{ $cartCount }}</span>
         </a>
-        <span aria-label="Account">
+        <a href="{{ route('login') }}" aria-label="Login" title="Login">
             <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
-        </span>
+        </a>
     </div>
 </nav>
 

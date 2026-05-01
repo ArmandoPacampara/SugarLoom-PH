@@ -74,8 +74,18 @@
             font-weight: 400;
             transition: opacity 0.2s;
         }
+        .nav-links form { margin: 0; }
+        .nav-links button {
+            background: transparent;
+            border: 0;
+            color: var(--white);
+            cursor: pointer;
+            font: inherit;
+            padding: 0;
+        }
        
-        .nav-links a:hover { opacity: 0.8; }
+        .nav-links a:hover,
+        .nav-links button:hover { opacity: 0.8; }
 
         .nav-actions { display: flex; gap: 0.8rem; }
        
@@ -113,6 +123,222 @@
         }
 
         .cart-count.is-empty { display: none; }
+
+        body.modal-open {
+            overflow: hidden;
+        }
+
+        .login-overlay {
+            align-items: center;
+            background: rgba(43, 27, 36, 0.48);
+            backdrop-filter: blur(8px);
+            display: none;
+            inset: 0;
+            justify-content: center;
+            padding: 2rem;
+            position: fixed;
+            z-index: 999;
+        }
+
+        .login-overlay.is-open {
+            display: flex;
+        }
+
+        .login-popup {
+            background:
+                radial-gradient(circle at 88% 16%, rgba(255,255,255,0.95) 0 10rem, transparent 10.2rem),
+                linear-gradient(105deg, #f7cbd5 0%, #fff5f0 100%);
+            border: 1px solid rgba(255,255,255,0.8);
+            border-radius: 26px;
+            box-shadow: 0 28px 80px rgba(43, 27, 36, 0.28);
+            display: grid;
+            grid-template-columns: minmax(0, 0.95fr) minmax(320px, 0.82fr);
+            gap: 1.5rem;
+            max-width: 920px;
+            min-height: 480px;
+            overflow: hidden;
+            padding: 2.1rem;
+            position: relative;
+            width: min(100%, 920px);
+        }
+
+        .login-copy {
+            align-self: center;
+            padding: 1rem 0.5rem 1rem 0.7rem;
+        }
+
+        .login-copy h2 {
+            color: var(--text-dark);
+            font-size: clamp(2.9rem, 5vw, 4.6rem);
+            font-weight: 900;
+            letter-spacing: 0;
+            line-height: 0.96;
+            margin-bottom: 1.15rem;
+        }
+
+        .login-copy h2 span {
+            color: var(--text-accent);
+            display: block;
+        }
+
+        .login-copy p {
+            color: var(--text-body);
+            font-size: 0.98rem;
+            font-weight: 300;
+            line-height: 1.65;
+            max-width: 410px;
+        }
+
+        .login-panel {
+            align-self: center;
+            background: rgba(255,255,255,0.97);
+            border: 1px solid rgba(255,255,255,0.8);
+            border-radius: 22px;
+            box-shadow: 0 18px 50px rgba(206, 90, 122, 0.18);
+            padding: 2.25rem 2.25rem 1.8rem;
+        }
+
+        .login-panel h2 {
+            color: var(--text-dark);
+            font-size: 2rem;
+            font-weight: 900;
+            letter-spacing: 0;
+            line-height: 1;
+            margin-bottom: 0.55rem;
+        }
+
+        .login-panel .subtext {
+            color: var(--text-muted);
+            font-size: 0.94rem;
+            margin-bottom: 1.55rem;
+        }
+
+        .login-close {
+            background: rgba(255,255,255,0.72);
+            border: 1px solid rgba(255,255,255,0.9);
+            border-radius: 50%;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 1.25rem;
+            font-weight: 800;
+            height: 34px;
+            line-height: 1;
+            position: absolute;
+            right: 1rem;
+            top: 1rem;
+            width: 34px;
+            z-index: 2;
+        }
+
+        .login-close:hover {
+            color: var(--pink-btn);
+        }
+
+        .login-field {
+            margin-bottom: 1rem;
+        }
+
+        .login-field label {
+            color: var(--text-dark);
+            display: block;
+            font-size: 0.86rem;
+            font-weight: 800;
+            margin-bottom: 0.48rem;
+        }
+
+        .login-field input[type="email"],
+        .login-field input[type="password"] {
+            background: #edf5ff;
+            border: 1.5px solid #f0c8d3;
+            border-radius: 999px;
+            color: var(--text-dark);
+            font: inherit;
+            font-size: 0.86rem;
+            outline: none;
+            padding: 0.82rem 1rem;
+            width: 100%;
+        }
+
+        .login-field input:focus {
+            border-color: #ef7fa1;
+            box-shadow: 0 0 0 3px rgba(239, 127, 161, 0.2);
+        }
+
+        .login-hint {
+            color: var(--text-muted);
+            display: block;
+            font-size: 0.66rem;
+            margin-top: 0.26rem;
+        }
+
+        .login-row {
+            align-items: center;
+            display: flex;
+            justify-content: space-between;
+            gap: 0.75rem;
+            margin: 1.1rem 0 1.35rem;
+        }
+
+        .login-remember {
+            align-items: center;
+            color: var(--text-body);
+            display: flex;
+            font-size: 0.82rem;
+            font-weight: 700;
+            gap: 0.45rem;
+        }
+
+        .login-remember input {
+            accent-color: var(--pink-btn);
+        }
+
+        .login-forgot,
+        .login-register a {
+            color: var(--pink-btn);
+            font-size: 0.82rem;
+            font-weight: 800;
+            text-decoration: none;
+        }
+
+        .login-submit {
+            background: var(--pink-btn);
+            border: 0;
+            border-radius: 999px;
+            box-shadow: 0 12px 28px rgba(206, 90, 122, 0.28);
+            color: var(--white);
+            cursor: pointer;
+            font: inherit;
+            font-size: 0.92rem;
+            font-weight: 900;
+            padding: 0.86rem 1rem;
+            width: 100%;
+        }
+
+        .login-register {
+            color: var(--text-muted);
+            font-size: 0.84rem;
+            margin-top: 1.25rem;
+            text-align: center;
+        }
+
+        .login-errors,
+        .login-status {
+            border-radius: 12px;
+            font-size: 0.74rem;
+            line-height: 1.45;
+            margin-bottom: 0.85rem;
+            padding: 0.65rem 0.75rem;
+        }
+
+        .login-errors {
+            background: #fff1f2;
+            color: #be123c;
+        }
+
+        .login-status {
+            background: #ecfdf3;
+            color: #166534;
+        }
 
 
         /* ── HERO ── */
@@ -514,6 +740,13 @@
             .hero-text h1 { font-size: 3rem; }
             .hero-buttons { flex-direction: column; width: 100%; }
             .btn { text-align: center; width: 100%; }
+            .login-popup {
+                grid-template-columns: 1fr;
+                min-height: auto;
+                max-width: 520px;
+            }
+            .login-copy { display: none; }
+            .login-panel { padding: 2.3rem 1.4rem 1.5rem; }
         }
     </style>
 </head>
@@ -522,9 +755,22 @@
 <nav class="navbar">
     <a href="{{ route('home') }}" class="logo">SugarLoom PH</a>
     <div class="nav-links">
-        <a href="{{ route('catalog') }}">Catalog</a>
-        <a href="{{ route('track-order') }}">Track Order</a>
-        <a href="{{ route('dashboard') }}">Dashboard</a>
+        @auth
+            @if(auth()->user()->isAdmin())
+                <a href="{{ route('admin.dashboard') }}">Admin</a>
+            @else
+                <a href="{{ route('catalog') }}">Catalog</a>
+                <a href="{{ route('track-order') }}">Track Order</a>
+            @endif
+            <form method="POST" action="{{ route('logout') }}">
+                @csrf
+                <button type="submit">Logout</button>
+            </form>
+        @else
+            <a href="{{ route('catalog') }}">Catalog</a>
+            <a href="{{ route('track-order') }}">Track Order</a>
+            <button type="button" data-login-open>Login</button>
+        @endauth
     </div>
     <div class="nav-actions">
         <a href="{{ route('cart.index') }}" aria-label="Cart">
@@ -532,11 +778,73 @@
             @php($cartCount = collect(session('cart', []))->sum('quantity'))
             <span class="cart-count {{ $cartCount ? '' : 'is-empty' }}" data-cart-count>{{ $cartCount }}</span>
         </a>
-        <span aria-label="Account">
+        <button type="button" aria-label="Login" title="Login" data-login-open>
             <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
-        </span>
+        </button>
     </div>
 </nav>
+
+@guest
+<div class="login-overlay {{ $errors->any() || session('status') ? 'is-open' : '' }}" id="loginModal" aria-hidden="{{ $errors->any() || session('status') ? 'false' : 'true' }}">
+    <section class="login-popup" role="dialog" aria-modal="true" aria-labelledby="loginTitle">
+        <button type="button" class="login-close" data-login-close aria-label="Close login">&times;</button>
+
+        <div class="login-copy">
+            <h2>Welcome back,<span>sweet soul.</span></h2>
+            <p>Sign in to continue shopping small-batch treats, track your orders, or manage the SugarLoom dashboard.</p>
+        </div>
+
+        <div class="login-panel">
+            <h2 id="loginTitle">Log in</h2>
+            <p class="subtext">Use your SugarLoom account to continue.</p>
+
+            @if (session('status'))
+                <div class="login-status">{{ session('status') }}</div>
+            @endif
+
+            @if ($errors->any())
+                <div class="login-errors">
+                    @foreach ($errors->all() as $error)
+                        <div>{{ $error }}</div>
+                    @endforeach
+                </div>
+            @endif
+
+            <form method="POST" action="{{ route('login') }}">
+                @csrf
+
+                <div class="login-field">
+                    <label for="modal-email">Email</label>
+                    <input id="modal-email" type="email" name="email" value="{{ old('email') }}" required autocomplete="username">
+                    <span class="login-hint">Never shown to the public.</span>
+                </div>
+
+                <div class="login-field">
+                    <label for="modal-password">Password</label>
+                    <input id="modal-password" type="password" name="password" required autocomplete="current-password">
+                </div>
+
+                <div class="login-row">
+                    <label class="login-remember" for="modal-remember">
+                        <input id="modal-remember" type="checkbox" name="remember">
+                        <span>Remember me</span>
+                    </label>
+
+                    @if (Route::has('password.request'))
+                        <a class="login-forgot" href="{{ route('password.request') }}">Forgot password?</a>
+                    @endif
+                </div>
+
+                <button type="submit" class="login-submit">Log in</button>
+            </form>
+
+            @if (Route::has('register'))
+                <p class="login-register">New here? <a href="{{ route('register') }}">Create an account</a></p>
+            @endif
+        </div>
+    </section>
+</div>
+@endguest
 
 <section class="hero">
     <div class="hero-text">
@@ -676,6 +984,49 @@
             badge.textContent = count;
             badge.classList.toggle('is-empty', count < 1);
         });
+    }
+
+    const loginModal = document.getElementById('loginModal');
+
+    function openLoginModal() {
+        if (!loginModal) return;
+        loginModal.classList.add('is-open');
+        loginModal.setAttribute('aria-hidden', 'false');
+        document.body.classList.add('modal-open');
+        setTimeout(function() {
+            document.getElementById('modal-email')?.focus();
+        }, 50);
+    }
+
+    function closeLoginModal() {
+        if (!loginModal) return;
+        loginModal.classList.remove('is-open');
+        loginModal.setAttribute('aria-hidden', 'true');
+        document.body.classList.remove('modal-open');
+    }
+
+    document.querySelectorAll('[data-login-open]').forEach(function(trigger) {
+        trigger.addEventListener('click', openLoginModal);
+    });
+
+    document.querySelectorAll('[data-login-close]').forEach(function(trigger) {
+        trigger.addEventListener('click', closeLoginModal);
+    });
+
+    loginModal?.addEventListener('click', function(event) {
+        if (event.target === loginModal) {
+            closeLoginModal();
+        }
+    });
+
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape') {
+            closeLoginModal();
+        }
+    });
+
+    if (loginModal?.classList.contains('is-open')) {
+        document.body.classList.add('modal-open');
     }
 </script>
 

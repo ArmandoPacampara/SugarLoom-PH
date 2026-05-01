@@ -22,13 +22,15 @@ class DatabaseSeeder extends Seeder
         Schema::enableForeignKeyConstraints();
 
         // ── Test user ─────────────────────────────────
-            // Check if the user exists first. If not, use the factory to create them!
-            if (!User::where('email', 'test@example.com')->exists()) {
-                User::factory()->create([
-                    'name'  => 'Test User',
-                    'email' => 'test@example.com',
-                ]);
-            }
+            User::updateOrCreate(
+                ['email' => 'admin@sugarloom.test'],
+                ['name' => 'SugarLoom Admin', 'password' => 'password', 'role' => User::ROLE_ADMIN]
+            );
+
+            User::updateOrCreate(
+                ['email' => 'test@example.com'],
+                ['name' => 'Test Customer', 'password' => 'password', 'role' => User::ROLE_CUSTOMER]
+            );
 
         // ── Products ──────────────────────────────────
         $products = [
