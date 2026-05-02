@@ -1,506 +1,215 @@
-@php
-    $order = session('latest_order', [
-        'number' => 'SL-89234-PH',
-        'customer' => [
-            'full_name' => 'Sofia Vergara',
-            'shipping_address' => '123 Amethyst Lane, Serendra Two',
-            'city' => 'Bonifacio Global City, Taguig',
-            'postal_code' => '1634',
-            'phone' => '+63 917 888 2211',
-        ],
-        'items' => [
-            ['name' => 'Truffle Cocoa Cake', 'quantity' => 1, 'price' => 1250, 'image' => null],
-            ['name' => 'Rose Macarons (Set)', 'quantity' => 2, 'price' => 240, 'image' => null],
-        ],
-        'totals' => ['total' => 1730],
-    ]);
-
-    $fallbacks = ['images/baking.png', 'images/Macaroons.png', 'images/cookies4.jpeg'];
-@endphp
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Track Order - SugarLoom PH</title>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <title>Track Order | SugarLoom PH</title>
     <style>
         :root {
-            --rose: #9d4f5d;
-            --pink: #ff9daf;
-            --blush: #fff7f7;
-            --soft: #f5eaea;
-            --ink: #251f22;
-            --muted: #75676c;
-            --brown: #815f57;
-            --pink-nav: #e06b87;
-            --white: #ffffff;
-            --text-dark: #1a1018;
+            --pink-deep:   #d8547b; 
+            --pink-nav:    #e06b87;
+            --pink-light:  #f8bac9;
+            --pink-pale:   #ffd7e1;
+            --cream:       #fffcfc; 
+            --dark:        #1a1018;
+            --text-body:   #4a3d45;
+            --white:       #ffffff;
+            --gray-btn:    #f3eff1;
         }
 
-        * { box-sizing: border-box; }
-
-        body {
-            margin: 0;
-            font-family: 'DM Sans', sans-serif;
-            background: var(--blush);
-            color: var(--ink);
-        }
-
-        a { color: inherit; text-decoration: none; }
-
-        .navbar {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 4rem;
-            height: 70px;
-            background: var(--pink-nav);
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
-
-        .logo {
-            font-size: 1.1rem;
-            font-weight: 900;
-            color: white;
-            letter-spacing: 0;
-            text-decoration: none;
-        }
-
-        .nav-links {
+                .cart-count {
             position: absolute;
-            left: 50%;
-            transform: translateX(-50%);
-            display: flex;
-            gap: 2.5rem;
+            top: -9px;
+            right: -7px;
+            color: white;
+            font-size: 0.72rem;
+            font-weight: 800;
+            line-height: 1;
+            text-shadow: 0 1px 2px rgba(43, 27, 36, 0.45);
         }
 
-        .nav-links a {
-            color: var(--white);
-            text-decoration: none;
-            font-size: 0.9rem;
-            font-weight: 400;
-            transition: opacity 0.2s;
-        }
-        .nav-links form { margin: 0; }
-        .nav-links button {
-            background: transparent;
-            border: 0;
-            color: var(--white);
+                .footer-cart {
+            width: 44px; height: 44px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.4);
+            color: white;
+            display: grid;
+            place-items: center;
+            font-size: 1.1rem;
             cursor: pointer;
-            font: inherit;
-            padding: 0;
         }
 
-        .nav-links a:hover,
-        .nav-links button:hover { opacity: 0.8; }
-        .nav-links a.active { color: var(--white); border-bottom: 0; padding-bottom: 0; }
-
+        .cart-count.is-empty { display: none; }
+        
+        body { margin: 0; font-family: Arial, sans-serif; background: #fdf2f8; color: #111827; }
+        
+        /* Navbar Styles */
+        .navbar { display: flex; align-items: center; justify-content: space-between; padding: 0 4rem; height: 70px; background: var(--pink-nav); }
+        .logo { font-size: 1.1rem; font-weight: 900; color: white; text-decoration: none; }
+        .nav-links { display: flex; gap: 2.5rem; align-items: center; position: absolute; left: 50%; transform: translateX(-50%); }
+        .nav-links a { color: white; text-decoration: none; font-size: 0.9rem; transition: opacity 0.2s; }
+        .nav-links form { margin: 0; }
+        .nav-links button { background: transparent; border: 0; color: white; cursor: pointer; font: inherit; padding: 0; transition: opacity 0.2s; }
+        .nav-links a:hover, .nav-links button:hover { opacity: 0.8; }
+        .nav-links a.active { color: white; }
+        
         .nav-actions { display: flex; gap: 0.8rem; }
-
         .nav-actions > button,
-        .nav-actions > a,
-        .nav-actions > span {
+        .nav-actions > a {
             width: 38px; height: 38px;
             border-radius: 50%;
             border: 1px solid rgba(255,255,255,0.5);
             background: transparent;
-            color: var(--text-dark);
+            color: var(--dark);
             cursor: pointer;
             display: grid;
             place-items: center;
             transition: background 0.2s;
+            text-decoration: none;
             padding: 0;
+            position: relative;
         }
-
         .nav-actions > button:hover,
-        .nav-actions > a:hover,
-        .nav-actions > span:hover { background: rgba(255,255,255,0.2); }
-
+        .nav-actions > a:hover { background: rgba(255,255,255,0.2); }
         .nav-actions svg { width: 16px; height: 16px; fill: currentColor; }
+        .login-btn { background: transparent; border: 0; font: inherit; }
 
-        .page {
-            max-width: 1230px;
-            margin: 0 auto;
-            padding: 48px 32px 80px;
+        /* Page Layout Styles */
+        .container { max-width: 600px; margin: 60px auto; padding: 0 24px; }
+        .card { background: white; padding: 40px; border-radius: 20px; box-shadow: 0 8px 20px rgba(0,0,0,0.05); text-align: center; }
+        
+        h1 { font-size: 28px; margin-top: 0; color: var(--pink-deep); margin-bottom: 10px; }
+        p.subtitle { color: gray; margin-bottom: 30px; font-size: 15px; }
+
+        .search-form { display: flex; gap: 10px; justify-content: center; margin-bottom: 20px; }
+        input[type="text"] { width: 65%; padding: 14px; border: 2px solid #e5e7eb; border-radius: 10px; font-size: 16px; transition: border-color 0.2s; }
+        input:focus { outline: none; border-color: var(--pink-nav); }
+        
+        .btn-primary { background: #fb7185; color: white; border: none; padding: 0 24px; border-radius: 10px; font-weight: bold; cursor: pointer; transition: opacity 0.2s; font-size: 16px; }
+        .btn-primary:hover { opacity: 0.9; }
+
+        hr { border: none; border-top: 1px solid #f3eff1; margin: 30px 0; }
+
+        /* Timeline Styles */
+        .tracking-result { text-align: left; }
+        .tracking-result h3 { margin-top: 0; margin-bottom: 24px; color: var(--dark); }
+        
+        .timeline { display: flex; flex-direction: column; gap: 24px; position: relative; }
+        .timeline::before {
+            content: ''; position: absolute; left: 11px; top: 10px; bottom: 10px; width: 2px; background: #e5e7eb; z-index: 0;
         }
 
-        .status-kicker {
-            color: var(--rose);
-            text-transform: uppercase;
-            letter-spacing: .12em;
-            font-size: 12px;
-            font-weight: 800;
-            margin-bottom: 8px;
-        }
-
-        h1 {
-            margin: 0;
-            font-size: clamp(40px, 6vw, 58px);
-            line-height: 1;
-            letter-spacing: 0;
-        }
-
-        .eta {
-            margin-top: 16px;
-            color: #5d5356;
-            font-size: 18px;
-        }
-
-        .eta strong { color: var(--rose); }
-
-        .layout {
-            display: grid;
-            grid-template-columns: minmax(0, 1fr) 390px;
-            gap: 32px;
-            margin-top: 52px;
-        }
-
-        .card {
-            background: #fff;
-            border-radius: 28px;
-            padding: 30px 32px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, .04);
-        }
-
-        .progress-card { padding-top: 36px; }
-
-        .progress {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            position: relative;
-            margin-bottom: 46px;
-        }
-
-        .progress::before {
-            content: "";
-            position: absolute;
-            top: 20px;
-            left: 4%;
-            right: 4%;
-            height: 4px;
-            background: #eadfe1;
-        }
-
-        .progress::after {
-            content: "";
-            position: absolute;
-            top: 20px;
-            left: 4%;
-            width: 38%;
-            height: 4px;
-            background: var(--pink);
-        }
-
-        .step {
-            position: relative;
-            z-index: 1;
-            text-align: center;
-            color: #a99b9f;
-            font-size: 13px;
-            font-weight: 800;
-        }
-
-        .dot {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            margin: 0 auto 10px;
-            display: grid;
-            place-items: center;
-            background: #f1ebec;
-            color: #b6aaae;
-        }
-
-        .step.done,
-        .step.current { color: var(--rose); }
-
-        .step.done .dot,
-        .step.current .dot {
-            background: var(--rose);
-            color: #fff;
-        }
-
-        .message {
-            display: grid;
-            grid-template-columns: 120px 1fr;
-            gap: 24px;
-            align-items: center;
-            background: #fbefef;
-            border-radius: 14px;
-            padding: 24px;
-        }
-
-        .message img {
-            width: 96px;
-            height: 96px;
-            border-radius: 50%;
-            object-fit: cover;
-        }
-
-        .message h2 {
-            margin: 0 0 6px;
-            font-size: 22px;
-        }
-
-        .message p {
-            margin: 0;
-            color: #5f5356;
-            line-height: 1.45;
-        }
-
-        .timeline {
-            background: #f0e4e5;
-            margin-top: 32px;
-        }
-
-        .timeline h2,
-        .side-title {
-            margin: 0 0 26px;
-            font-size: 20px;
-        }
-
-        .event {
-            display: grid;
-            grid-template-columns: 16px 1fr;
-            gap: 10px;
-            margin: 22px 0;
-        }
-
-        .event-dot {
-            width: 8px;
-            height: 8px;
-            margin-top: 7px;
-            border-radius: 50%;
-            background: #d6c4c8;
-        }
-
-        .event:first-of-type .event-dot { background: var(--rose); }
-
-        .event strong { display: block; }
-        .event span { color: #6d6265; font-size: 12px; }
-
-        .sidebar {
-            display: grid;
-            gap: 32px;
-            align-content: start;
-        }
-
-        .item {
-            display: grid;
-            grid-template-columns: 48px 1fr auto;
-            gap: 12px;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-
-        .item img {
-            width: 48px;
-            height: 48px;
-            object-fit: cover;
-            border-radius: 12px;
-        }
-
-        .item strong { display: block; font-size: 15px; }
-        .item span { color: #6d6265; font-size: 13px; }
-        .item-price { color: var(--brown); font-weight: 800; }
-
-        .summary-total {
-            border-top: 1px solid #f0e5e5;
-            padding-top: 24px;
-            margin-top: 8px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-weight: 800;
-        }
-
-        .summary-total span:last-child {
-            color: var(--rose);
-            font-size: 26px;
-        }
-
-        .details p {
-            margin: 8px 0;
-            color: #574d50;
-            line-height: 1.45;
-        }
-
-        .details strong { display: block; margin-bottom: 8px; }
-
-        .support {
-            background: var(--brown);
-            color: #fff;
-            text-align: center;
-            padding: 28px;
-        }
-
-        .support p {
-            color: #f7dddd;
-            font-size: 13px;
-        }
-
-        .support a {
-            color: #ffb3c0;
-            font-weight: 800;
-        }
-
-        .notice {
-            margin-top: 24px;
-            background: #f0fff4;
-            color: #22633a;
-            border-radius: 12px;
-            padding: 14px 16px;
-        }
-
-        .footer {
-            background: #f4f4f4;
-            padding: 42px 48px;
-            display: flex;
-            justify-content: space-between;
-            color: #81787b;
-            font-size: 14px;
-        }
-
-        .footer strong { color: #a30f3b; font-size: 18px; }
-        .footer-links { display: flex; gap: 32px; }
-
-        @media (max-width: 900px) {
-            .layout { grid-template-columns: 1fr; }
-            .nav-links { display: none; }
-        }
-
-        @media (max-width: 620px) {
-            .navbar { padding: 0 2rem; }
-            .page { padding: 34px 18px 56px; }
-            .message { grid-template-columns: 1fr; }
-            .footer { display: grid; gap: 20px; padding: 30px 20px; }
-            .footer-links { flex-wrap: wrap; gap: 18px; }
-        }
+        .timeline-step { display: flex; align-items: flex-start; gap: 20px; position: relative; z-index: 1; opacity: 0.5; }
+        .timeline-step.active { opacity: 1; }
+        
+        .dot { width: 24px; height: 24px; border-radius: 50%; background: white; border: 3px solid #e5e7eb; display: flex; align-items: center; justify-content: center; box-sizing: border-box; }
+        .timeline-step.active .dot { border-color: var(--pink-nav); background: var(--pink-pale); }
+        
+        .info { display: flex; flex-direction: column; padding-top: 2px; }
+        .info strong { font-size: 16px; color: var(--dark); }
+        .info .time { font-size: 13px; color: gray; margin-top: 4px; }
     </style>
 </head>
 <body>
-    <nav class="navbar">
-        <a href="{{ route('home') }}" class="logo">SugarLoom PH</a>
-        <div class="nav-links">
-            @auth
-                @if(auth()->user()->isAdmin())
-                    <a href="{{ route('admin.dashboard') }}">Admin</a>
-                @else
-                    <a href="{{ route('catalog') }}">Catalog</a>
-                    <a href="{{ route('track-order') }}" class="active">Track Order</a>
-                @endif
-                <form method="POST" action="{{ route('logout') }}">
-                    @csrf
-                    <button type="submit">Logout</button>
-                </form>
+
+<nav class="navbar">
+    <a href="{{ route('home') }}" class="logo">SugarLoom PH</a>
+    <div class="nav-links">
+        @auth
+            @if(auth()->user()->isAdmin())
+                <a href="{{ route('admin.dashboard') }}">Admin</a>
             @else
                 <a href="{{ route('catalog') }}">Catalog</a>
-                <a href="{{ route('track-order') }}" class="active">Track Order</a>
-                <a href="{{ route('login') }}">Login</a>
-            @endauth
-        </div>
-        <div class="nav-actions">
-            <a href="{{ route('cart.index') }}" aria-label="Cart">
-                <svg viewBox="0 0 24 24"><path d="M7 18c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.6-1.35 2.44A2 2 0 0 0 7 17h12v-2H7.42l1.1-2h7.45c.75 0 1.41-.41 1.75-1.03L21 6H5.21l-.94-2H1zm16 16c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg>
-            </a>
-            <a href="{{ route('login') }}" aria-label="Login" title="Login">
+                <a href="{{ route('track-order') }}">Track Order</a>
+                <a href="{{ route('about') }}">About Us</a>
+            @endif
+            <form method="POST" action="{{ route('logout') }}">
+                @csrf
+                <button type="submit">Logout</button>
+            </form>
+        @else
+            <a href="{{ route('catalog') }}">Catalog</a>
+            <a href="{{ route('track-order') }}">Track Order</a>
+            <a href="{{ route('about') }}">About Us</a>
+        @endauth
+    </div>
+    <div class="nav-actions">
+        <a href="{{ route('cart.index') }}" aria-label="Cart">
+            <svg viewBox="0 0 24 24"><path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"/></svg>
+            @php($cartCount = collect(session('cart', []))->sum('quantity'))
+            <span class="cart-count {{ $cartCount ? '' : 'is-empty' }}" data-cart-count>{{ $cartCount }}</span>
+        </a>
+        @auth
+            <a href="{{ route('profile.edit') }}" aria-label="Account" title="Account">
                 <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
             </a>
-        </div>
-    </nav>
+        @else
+            <a href="{{ route('login') }}" aria-label="Account" title="Account">
+                <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/></svg>
+            </a>
+        @endauth
+    </div>
+</nav>
 
-    <main class="page">
-        <div class="status-kicker">Order in Progress</div>
-        <h1>#{{ $order['number'] }}</h1>
-        <div class="eta">Expected delivery: Today at <strong>{{ now()->addMinutes(75)->format('g:i A') }}</strong></div>
+<div class="container">
+    <div class="card">
+        <h1>Track Your Order</h1>
+        <p class="subtitle">Enter your order ID below to check the current delivery status.</p>
 
-        @if(session('status'))
-            <div class="notice">{{ session('status') }}</div>
+        <!-- Tracking Input Form -->
+        <form class="search-form" method="GET" action="{{ route('track-order') }}">
+            <input type="text" name="tracking_number" value="{{ request('tracking_number') }}" placeholder="e.g. SL-123456-PH" required>
+            <button type="submit" class="btn-primary">Track</button>
+        </form>
+
+        <!-- Progress Display (Only shows if a tracking number is submitted) -->
+        @if(request('tracking_number'))
+            <hr>
+            <div class="tracking-result">
+                <h3>Status for: <span style="color: var(--pink-nav);">{{ request('tracking_number') }}</span></h3>
+                
+                <div class="timeline">
+                    <!-- Step 1 -->
+                    <div class="timeline-step active">
+                        <div class="dot"></div>
+                        <div class="info">
+                            <strong>Order Confirmed</strong>
+                            <span class="time">Payment verified. We've received your order!</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Step 2 -->
+                    <div class="timeline-step active">
+                        <div class="dot"></div>
+                        <div class="info">
+                            <strong>Preparing Sweets</strong>
+                            <span class="time">Our bakers are currently preparing your items.</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Step 3 -->
+                    <div class="timeline-step">
+                        <div class="dot"></div>
+                        <div class="info">
+                            <strong>Out for Delivery</strong>
+                            <span class="time">Pending rider pickup.</span>
+                        </div>
+                    </div>
+
+                    <!-- Step 4 -->
+                    <div class="timeline-step">
+                        <div class="dot"></div>
+                        <div class="info">
+                            <strong>Delivered</strong>
+                            <span class="time">Pending.</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
         @endif
+    </div>
+</div>
 
-        <div class="layout">
-            <section>
-                <div class="card progress-card">
-                    <div class="progress">
-                        <div class="step done"><div class="dot">✓</div>Confirmed</div>
-                        <div class="step current"><div class="dot">◒</div>Baking</div>
-                        <div class="step"><div class="dot">□</div>Ready</div>
-                        <div class="step"><div class="dot">▱</div>Delivery</div>
-                    </div>
-                    <div class="message">
-                        <img src="{{ asset('images/baking.png') }}" alt="Freshly baked bread">
-                        <div>
-                            <h2>Your order is in the oven!</h2>
-                            <p>Our bakers are currently preparing your artisanal selection with care. We expect to have it ready for dispatch in 45 minutes.</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="card timeline">
-                    <h2>Order Timeline</h2>
-                    <div class="event">
-                        <span class="event-dot"></span>
-                        <div><strong>Started Baking</strong><span>Today, {{ now()->format('g:i A') }} · Artisan Kitchen Unit 4</span></div>
-                    </div>
-                    <div class="event">
-                        <span class="event-dot"></span>
-                        <div><strong>Quality Check Passed</strong><span>Today, {{ now()->subMinutes(15)->format('g:i A') }} · Ingredients Verified</span></div>
-                    </div>
-                    <div class="event">
-                        <span class="event-dot"></span>
-                        <div><strong>Order Confirmed</strong><span>Today, {{ now()->subMinutes(30)->format('g:i A') }} · Transaction {{ $order['number'] }}</span></div>
-                    </div>
-                </div>
-            </section>
-
-            <aside class="sidebar">
-                <div class="card">
-                    <h2 class="side-title">Items Summary</h2>
-                    @foreach($order['items'] as $index => $item)
-                        <div class="item">
-                            <img src="{{ asset($fallbacks[$index] ?? 'images/cookies1.jpeg') }}" alt="{{ $item['name'] }}">
-                            <div>
-                                <strong>{{ $item['name'] }}</strong>
-                                <span>Qty: {{ $item['quantity'] }}</span>
-                            </div>
-                            <div class="item-price">P{{ number_format($item['price'] * $item['quantity'], 0) }}</div>
-                        </div>
-                    @endforeach
-                    <div class="summary-total">
-                        <span>Total Amount</span>
-                        <span>P{{ number_format($order['totals']['total'], 0) }}</span>
-                    </div>
-                </div>
-
-                <div class="card details">
-                    <h2 class="side-title">Delivery Details</h2>
-                    <strong>{{ $order['customer']['full_name'] }}</strong>
-                    <p>{{ $order['customer']['shipping_address'] }}</p>
-                    <p>{{ $order['customer']['city'] }}, {{ $order['customer']['postal_code'] }}</p>
-                    <p>{{ $order['customer']['phone'] }}</p>
-                </div>
-
-                <div class="card support">
-                    <h2 class="side-title">Need assistance?</h2>
-                    <p>Our concierge team is available 24/7 to help with your artisanal order.</p>
-                    <a href="#">Contact Support →</a>
-                </div>
-            </aside>
-        </div>
-    </main>
-
-    <footer class="footer">
-        <div><strong>SugarLoom PH</strong><br>© 2024 SugarLoom PH. Baked with artisanal care.</div>
-        <div class="footer-links">
-            <a href="#">Facebook</a>
-            <a href="#">Instagram</a>
-            <a href="#">Contact Us</a>
-            <a href="#">Privacy Policy</a>
-        </div>
-    </footer>
 </body>
 </html>

@@ -149,7 +149,7 @@
             @php($cartCount = collect(session('cart', []))->sum('quantity'))
             <span class="cart-count {{ $cartCount ? '' : 'is-empty' }}" data-cart-count>{{ $cartCount }}</span>
         </a>
-        <a href="{{ route('login') }}" aria-label="Login" title="Login">
+        <a href="{{ auth()->check() ? route('profile.edit') : route('login') }}" aria-label="Account" title="Account">
             <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
         </a>
     </div>

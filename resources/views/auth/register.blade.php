@@ -1,52 +1,101 @@
-<x-guest-layout>
-    <form method="POST" action="{{ route('register') }}">
-        @csrf
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register | SugarLoom PH</title>
+    <style>
+        :root {
+            --pink-deep:   #d8547b; 
+            --pink-nav:    #e06b87;
+            --pink-light:  #f8bac9;
+            --pink-pale:   #ffd7e1;
+            --cream:       #fffcfc; 
+            --dark:        #1a1018;
+            --text-body:   #4a3d45;
+            --text-muted:  #8a7080;
+            --white:       #ffffff;
+        }
 
-        <!-- Name -->
-        <div>
-            <x-input-label for="name" :value="__('Name')" />
-            <x-text-input id="name" class="block mt-1 w-full" type="text" name="name" :value="old('name')" required autofocus autocomplete="name" />
-            <x-input-error :messages="$errors->get('name')" class="mt-2" />
-        </div>
+        body { margin: 0; font-family: Arial, sans-serif; background: #fdf2f8; color: #111827; }
+        .navbar { display: flex; align-items: center; justify-content: space-between; padding: 0 4rem; height: 70px; background: var(--pink-nav); }
+        .logo { font-size: 1.1rem; font-weight: 900; color: white; text-decoration: none; }
+        
+        .container { max-width: 500px; margin: 60px auto; padding: 0 24px; }
+        .card { background: white; padding: 30px; border-radius: 20px; box-shadow: 0 8px 20px rgba(0,0,0,0.05); }
+        
+        h2 { font-size: 24px; margin-top: 0; text-align: center; color: var(--pink-deep); }
+        
+        .form-group { margin-bottom: 16px; }
+        label { display: block; font-size: 14px; font-weight: bold; color: var(--text-body); margin-bottom: 6px; }
+        input[type="text"], input[type="email"], input[type="password"] {
+            width: 100%; padding: 12px; border: 1px solid #e5e7eb; border-radius: 10px; box-sizing: border-box; font-size: 14px;
+        }
+        input:focus { outline: none; border-color: var(--pink-nav); box-shadow: 0 0 0 3px var(--pink-pale); }
 
-        <!-- Email Address -->
-        <div class="mt-4">
-            <x-input-label for="email" :value="__('Email')" />
-            <x-text-input id="email" class="block mt-1 w-full" type="email" name="email" :value="old('email')" required autocomplete="username" />
-            <x-input-error :messages="$errors->get('email')" class="mt-2" />
-        </div>
+        .btn-primary {
+            background: #fb7185; color: white; border: none; padding: 12px; border-radius: 999px; font-weight: bold; cursor: pointer; width: 100%; font-size: 16px; transition: opacity 0.2s;
+        }
+        .btn-primary:hover { opacity: 0.9; }
+        
+        .text-center { text-align: center; margin-top: 16px; font-size: 14px; }
+        .text-center a { color: var(--pink-deep); text-decoration: none; font-weight: bold; }
+        
+        .alert-error { background: #fee2e2; color: #b91c1c; padding: 12px; border-radius: 10px; margin-bottom: 20px; font-size: 14px; }
+    </style>
+</head>
+<body>
 
-        <!-- Password -->
-        <div class="mt-4">
-            <x-input-label for="password" :value="__('Password')" />
+<nav class="navbar">
+    <a href="{{ route('home') }}" class="logo">SugarLoom PH</a>
+</nav>
 
-            <x-text-input id="password" class="block mt-1 w-full"
-                            type="password"
-                            name="password"
-                            required autocomplete="new-password" />
+<div class="container">
+    <div class="card">
+        <h2>Create an Account</h2>
 
-            <x-input-error :messages="$errors->get('password')" class="mt-2" />
-        </div>
+        <!-- Validation Errors -->
+        @if ($errors->any())
+            <div class="alert-error">
+                <ul style="margin: 0; padding-left: 20px;">
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
 
-        <!-- Confirm Password -->
-        <div class="mt-4">
-            <x-input-label for="password_confirmation" :value="__('Confirm Password')" />
+        <form method="POST" action="{{ route('register') }}">
+            @csrf
 
-            <x-text-input id="password_confirmation" class="block mt-1 w-full"
-                            type="password"
-                            name="password_confirmation" required autocomplete="new-password" />
+            <div class="form-group">
+                <label for="name">Full Name</label>
+                <input id="name" type="text" name="name" value="{{ old('name') }}" required autofocus placeholder="Juan Dela Cruz">
+            </div>
 
-            <x-input-error :messages="$errors->get('password_confirmation')" class="mt-2" />
-        </div>
+            <div class="form-group">
+                <label for="email">Email Address</label>
+                <input id="email" type="email" name="email" value="{{ old('email') }}" required placeholder="juan@example.com">
+            </div>
 
-        <div class="flex items-center justify-end mt-4">
-            <a class="underline text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-800" href="{{ route('login') }}">
-                {{ __('Already registered?') }}
-            </a>
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input id="password" type="password" name="password" required placeholder="••••••••">
+            </div>
 
-            <x-primary-button class="ms-4">
-                {{ __('Register') }}
-            </x-primary-button>
-        </div>
-    </form>
-</x-guest-layout>
+            <div class="form-group">
+                <label for="password_confirmation">Confirm Password</label>
+                <input id="password_confirmation" type="password" name="password_confirmation" required placeholder="••••••••">
+            </div>
+
+            <button type="submit" class="btn-primary">Register Now</button>
+
+            <div class="text-center">
+                Already have an account? <a href="{{ route('login') }}">Log in here</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+</body>
+</html>
