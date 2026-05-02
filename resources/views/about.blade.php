@@ -2,9 +2,39 @@
 <html>
 <head>
     <title>Our Story</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.tailwindcss.com"></script> 
 </head>
 <body>
+
+<nav class="sticky top-0 z-50 flex h-[70px] items-center justify-between bg-[#e06b87] px-8 md:px-16">
+    <a href="{{ route('home') }}" class="text-[1.1rem] font-black tracking-normal text-white no-underline">SugarLoom PH</a>
+    <div class="absolute left-1/2 hidden -translate-x-1/2 gap-10 md:flex">
+        @auth
+            @if(auth()->user()->isAdmin())
+                <a href="{{ route('admin.dashboard') }}" class="text-sm font-normal text-white no-underline transition hover:opacity-80">Admin</a>
+            @else
+                <a href="{{ route('catalog') }}" class="text-sm font-normal text-white no-underline transition hover:opacity-80">Catalog</a>
+                <a href="{{ route('track-order') }}" class="text-sm font-normal text-white no-underline transition hover:opacity-80">Track Order</a>
+            @endif
+            <form method="POST" action="{{ route('logout') }}" class="m-0">
+                @csrf
+                <button type="submit" class="bg-transparent border-0 p-0 text-sm font-normal text-white transition hover:opacity-80">Logout</button>
+            </form>
+        @else
+            <a href="{{ route('catalog') }}" class="text-sm font-normal text-white no-underline transition hover:opacity-80">Catalog</a>
+            <a href="{{ route('track-order') }}" class="text-sm font-normal text-white no-underline transition hover:opacity-80">Track Order</a>
+            <a href="{{ route('login') }}" class="text-sm font-normal text-white no-underline transition hover:opacity-80">Login</a>
+        @endauth
+    </div>
+    <div class="flex gap-3">
+        <a href="{{ route('cart.index') }}" class="grid h-[38px] w-[38px] place-items-center rounded-full border border-white/50 text-[#1a1018] transition hover:bg-white/20" aria-label="Cart">
+            <svg class="h-4 w-4 fill-current" viewBox="0 0 24 24"><path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"/></svg>
+        </a>
+        <a href="{{ route('login') }}" class="grid h-[38px] w-[38px] place-items-center rounded-full border border-white/50 text-[#1a1018] transition hover:bg-white/20" aria-label="Login" title="Login">
+            <svg class="h-4 w-4 fill-current" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+        </a>
+    </div>
+</nav>
 
 <div class="bg-[#f6efef] text-gray-800">
 

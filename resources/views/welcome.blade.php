@@ -3,129 +3,37 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SugarLoom PH</title>
-
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;600;800&display=swap" rel="stylesheet">
-
+    <title>Welcome</title>
     <style>
         body {
-            margin: 0;
-            font-family: 'Poppins', sans-serif;
-            background: #f8b4b4;
-        }
-
-        /* NAVBAR */
-        .navbar {
+            font-family: Arial, sans-serif;
             display: flex;
-            justify-content: space-between;
+            justify-content: center;
             align-items: center;
-            padding: 15px 50px;
-            background: #d95b7a;
-            color: white;
-        }
-
-        .nav-links a {
-            margin: 0 15px;
-            color: white;
-            text-decoration: none;
-            font-weight: 500;
-        }
-
-        .logo {
-            font-weight: bold;
-            font-size: 20px;
-        }
-
-        /* HERO */
-        .hero {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 60px;
-        }
-
-        .hero-text {
-            max-width: 50%;
-        }
-
-        .hero h1 {
-            font-size: 60px;
+            height: 100vh;
             margin: 0;
-            color: #2b2b2b;
+            background: linear-gradient(135deg, #ff4d6d 0%, #ff8fa3 100%);}
+        .container {
+            text-align: center;
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
         }
-
-        .hero h1 span {
-            color: #7a3e4d;
+        h1 {
+            color: #333;
+            margin: 0;
         }
-
-        .hero p {
-            margin-top: 20px;
-            color: #555;
-        }
-
-        .buttons {
-            margin-top: 30px;
-        }
-
-        .btn {
-            padding: 12px 25px;
-            border-radius: 25px;
-            border: none;
-            cursor: pointer;
-            margin-right: 10px;
-        }
-
-        .btn-primary {
-            background: #d95b7a;
-            color: white;
-        }
-
-        .btn-secondary {
-            background: #eee;
-        }
-
-        .hero img {
-            width: 450px;
+        p {
+            color: #666;
+            font-size: 18px;
+            margin-top: 10px;
         }
     </style>
 </head>
 <body>
-
-    <!-- NAVBAR -->
-    <div class="navbar">
-        <div class="logo">SugarLoom PH</div>
-        <div class="nav-links">
-            <a href="#">Catalog</a>
-            <a href="#">Track Order</a>
-            <a href="#">Dashboard</a>
-        </div>
+    <div class="container">
+        <h1>Welcome to {{ $name ?? 'SugarLoom PH' }}!</h1>
+        <p>We're glad to have you here.</p>
     </div>
-
-    <!-- HERO SECTION -->
-    <div class="hero">
-        <div class="hero-text">
-            <h1>
-                Where sweet dreams are <br>
-                <span>woven!</span>
-            </h1>
-
-            <p>
-                Indulge in our small-batch, handcrafted cookies baked daily
-                with premium ingredients and a touch of artisanal magic.
-            </p>
-
-            <div class="buttons">
-                <button class="btn btn-primary">Shop Now</button>
-                <button class="btn btn-secondary">Our Story</button>
-            </div>
-        </div>
-
-        <!-- IMAGE -->
-        <div>
-            <img src="{{ asset('images/cookies.png') }}" alt="Cookies">
-        </div>
-    </div>
-
 </body>
-</html>
