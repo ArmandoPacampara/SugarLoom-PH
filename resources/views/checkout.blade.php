@@ -1,3 +1,5 @@
+@extends('layouts.app')
+
 @php
     $fallbackImages = [
         'red velvet' => 'images/Red Velvet Cookie.png',
@@ -21,14 +23,11 @@
     };
 @endphp
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Checkout - SugarLoom PH</title>
+@section('title', 'Checkout - SugarLoom PH')
+
+@section('styles')
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
     <style>
         :root {
             --rose: #9d4f5d;
@@ -40,117 +39,26 @@
             --muted: #75676c;
             --line: #eadfe1;
             --brown: #815f57;
-            --pink-nav: #e06b87;
-            --white: #ffffff;
-            --text-dark: #1a1018;
         }
-
-        * { box-sizing: border-box; }
 
         body {
-            margin: 0;
-            font-family: 'DM Sans', sans-serif;
             background: var(--blush);
             color: var(--ink);
+            scroll-behavior: smooth;
         }
 
-        a { color: inherit; text-decoration: none; }
-
-        .navbar {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 4rem;
-            height: 70px;
-            background: var(--pink-nav);
-            position: sticky;
-            top: 0;
-            z-index: 100;
+        /* ── ANIMATIONS ── */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-4px); }
+            75% { transform: translateX(4px); }
         }
-
-        .logo {
-            font-size: 1.1rem;
-            font-weight: 900;
-            color: white;
-            letter-spacing: 0;
-            text-decoration: none;
-        }
-
-        .nav-links {
-            position: absolute;
-            left: 50%;
-            transform: translateX(-50%);
-            display: flex;
-            gap: 2.5rem;
-        }
-
-        .nav-links a {
-            color: var(--white);
-            text-decoration: none;
-            font-size: 0.9rem;
-            font-weight: 400;
-            transition: opacity 0.2s;
-        }
-        .nav-links form { margin: 0; }
-        .nav-links button {
-            background: transparent;
-            border: 0;
-            color: var(--white);
-            cursor: pointer;
-            font: inherit;
-            padding: 0;
-        }
-
-        .nav-links a:hover,
-        .nav-links button:hover { opacity: 0.8; }
-        .nav-links a.active { color: var(--white); border-bottom: 0; padding-bottom: 0; }
-
-        .nav-actions { display: flex; gap: 0.8rem; }
-
-        .nav-actions > button,
-        .nav-actions > a,
-        .nav-actions > span {
-            width: 38px; height: 38px;
-            border-radius: 50%;
-            border: 1px solid rgba(255,255,255,0.5);
-            background: transparent;
-            color: var(--text-dark);
-            cursor: pointer;
-            display: grid;
-            place-items: center;
-            transition: background 0.2s;
-            padding: 0;
-        }
-
-        .nav-actions > button:hover,
-        .nav-actions > a:hover,
-        .nav-actions > span:hover { background: rgba(255,255,255,0.2); }
-
-        .icon-link {
-            position: relative;
-        }
-
-        .nav-actions svg { width: 16px; height: 16px; fill: currentColor; }
-
-        .cart-count {
-            position: absolute;
-            top: -9px;
-            right: -7px;
-            color: #fff;
-            font-size: 0.72rem;
-            font-weight: 800;
-            line-height: 1;
-            text-shadow: 0 1px 2px rgba(37, 31, 34, 0.45);
-        }
-
-        .cart-count.is-empty { display: none; }
-
-        .login-btn { background: transparent; border: 0; font: inherit; }
+        .cart-shake { animation: shake 0.4s ease-in-out; }
 
         .page {
-            max-width: 1090px;
+            max-width: 1200px;
             margin: 0 auto;
-            padding: 46px 28px 80px;
+            padding: 80px 40px 120px;
         }
 
         .steps {
@@ -260,7 +168,9 @@
             font-weight: 700;
             color: #4d3739;
             cursor: pointer;
+            transition: all 0.3s;
         }
+        .payment-card:hover { transform: translateY(-3px); background: #fff; border-color: var(--pink-nav); }
 
         .payment-card svg {
             width: 24px;
@@ -288,7 +198,9 @@
             cursor: pointer;
             background: linear-gradient(90deg, var(--rose), #ff9daf);
             box-shadow: 0 12px 24px rgba(157, 79, 93, 0.2);
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
+        .confirm-button:hover:not(:disabled) { transform: translateY(-4px) scale(1.02); box-shadow: 0 15px 30px rgba(157, 79, 93, 0.35); }
 
         .confirm-button:disabled {
             background: #d9cfd1;
@@ -525,12 +437,9 @@
         @media (max-width: 920px) {
             .checkout-layout { grid-template-columns: 1fr; }
             .summary { order: -1; }
-            .nav-links { display: none; }
         }
 
         @media (max-width: 640px) {
-            .navbar { padding: 0 2rem; }
-            .logo { font-size: 1.1rem; }
             .page { padding: 30px 18px 56px; }
             .steps {
                 grid-template-columns: 40px 1fr 40px 1fr 40px;
@@ -562,483 +471,182 @@
                 gap: 18px;
             }
         }
-
-
-        body.modal-open {
-    overflow: hidden;
-}
-
-.login-overlay {
-    align-items: center;
-    background: rgba(43, 27, 36, 0.48);
-    backdrop-filter: blur(8px);
-    display: none;
-    inset: 0;
-    justify-content: center;
-    padding: 2rem;
-    position: fixed;
-    z-index: 999;
-}
-
-.login-overlay.is-open {
-    display: flex;
-}
-
-.login-popup {
-    background:
-        radial-gradient(circle at 88% 16%, rgba(255,255,255,0.95) 0 10rem, transparent 10.2rem),
-        linear-gradient(105deg, #f7cbd5 0%, #fff5f0 100%);
-    border: 1px solid rgba(255,255,255,0.8);
-    border-radius: 26px;
-    box-shadow: 0 28px 80px rgba(43, 27, 36, 0.28);
-    display: grid;
-    grid-template-columns: minmax(0, 0.95fr) minmax(320px, 0.82fr);
-    gap: 1.5rem;
-    max-width: 920px;
-    min-height: 480px;
-    overflow: hidden;
-    padding: 2.1rem;
-    position: relative;
-    width: min(100%, 920px);
-}
-
-.login-copy {
-    align-self: center;
-    padding: 1rem 0.5rem 1rem 0.7rem;
-}
-
-.login-copy h2 {
-    color: var(--text-dark);
-    font-size: clamp(2.9rem, 5vw, 4.6rem);
-    font-weight: 900;
-    letter-spacing: 0;
-    line-height: 0.96;
-    margin-bottom: 1.15rem;
-}
-
-.login-copy h2 span {
-    color: var(--text-accent);
-    display: block;
-}
-
-.login-copy p {
-    color: var(--text-body);
-    font-size: 0.98rem;
-    font-weight: 300;
-    line-height: 1.65;
-    max-width: 410px;
-}
-
-.login-panel {
-    align-self: center;
-    background: rgba(255,255,255,0.97);
-    border: 1px solid rgba(255,255,255,0.8);
-    border-radius: 22px;
-    box-shadow: 0 18px 50px rgba(206, 90, 122, 0.18);
-    padding: 2.25rem 2.25rem 1.8rem;
-}
-
-.login-field {
-    margin-bottom: 1rem;
-}
-
-.login-field label {
-    color: var(--text-dark);
-    display: block;
-    font-size: 0.86rem;
-    font-weight: 800;
-    margin-bottom: 0.48rem;
-}
-
-.login-field input[type="email"],
-.login-field input[type="password"] {
-    background: #edf5ff;
-    border: 1.5px solid #f0c8d3;
-    border-radius: 999px;
-    color: var(--text-dark);
-    font: inherit;
-    font-size: 0.86rem;
-    outline: none;
-    padding: 0.82rem 1rem;
-    width: 100%;
-}
-
-.login-field input:focus {
-    border-color: #ef7fa1;
-    box-shadow: 0 0 0 3px rgba(239, 127, 161, 0.2);
-}
-
-.login-row {
-    align-items: center;
-    display: flex;
-    justify-content: space-between;
-    gap: 0.75rem;
-    margin: 1.1rem 0 1.35rem;
-}
-
-.login-remember {
-    align-items: center;
-    display: flex;
-    font-size: 0.82rem;
-    font-weight: 700;
-    gap: 0.45rem;
-}
-
-.login-submit {
-    background: var(--pink-btn);
-    border: 0;
-    border-radius: 999px;
-    box-shadow: 0 12px 28px rgba(206, 90, 122, 0.28);
-    color: var(--white);
-    cursor: pointer;
-    font: inherit;
-    font-size: 0.92rem;
-    font-weight: 900;
-    padding: 0.86rem 1rem;
-    width: 100%;
-}
-
-.login-close {
-    background: rgba(255,255,255,0.72);
-    border: 1px solid rgba(255,255,255,0.9);
-    border-radius: 50%;
-    cursor: pointer;
-    font-size: 1.25rem;
-    font-weight: 800;
-    height: 34px;
-    position: absolute;
-    right: 1rem;
-    top: 1rem;
-    width: 34px;
-}
-
-@media (max-width: 600px) {
-    .login-popup {
-        grid-template-columns: 1fr;
-        min-height: auto;
-        max-width: 520px;
-    }
-    .login-copy { display: none; }
-}
-        
-        @include('partials.navbar-styles')
-        @include('partials.login-modal-styles')
     </style>
-</head>
-<body>
-<nav class="navbar">
-    <a href="{{ route('home') }}" class="logo">SugarLoom PH</a>
-    <div class="nav-links">
-        @auth
-            @if(auth()->user()->isAdmin())
-                <a href="{{ route('admin.dashboard') }}">Admin</a>
-            @else
-                <a href="{{ route('catalog') }}">Catalog</a>
-                <a href="{{ route('track-order') }}">Track Order</a>
-                <a href="{{ route('about') }}">About Us</a>
-            @endif
-            <form method="POST" action="{{ route('logout') }}">
+@endsection
+
+@section('content')
+<main class="page">
+    <div class="steps" aria-label="Checkout progress" data-aos="fade-down">
+        <div class="step active"><div class="step-bubble">1</div>Cart</div>
+        <div class="step-line active"></div>
+        <div class="step active"><div class="step-bubble">2</div>Shipping</div>
+        <div class="step-line"></div>
+        <div class="step"><div class="step-bubble">3</div>Payment</div>
+    </div>
+
+    @if (session('status'))
+        <div class="notice">{{ session('status') }}</div>
+    @endif
+
+    @if ($errors->any())
+        <div class="errors">
+            {{ $errors->first() }}
+        </div>
+    @endif
+
+    @if($cartItems->isEmpty())
+        <section class="empty-state" data-aos="zoom-in">
+            <h1>Your cart is waiting for something sweet.</h1>
+            <p>Add your favorite SugarLoom treats from the catalog, then come back here to check out.</p>
+            <a href="{{ route('catalog') }}">Browse Catalog</a>
+        </section>
+    @else
+        <div class="checkout-layout">
+            <section data-aos="fade-right">
+                @php($checkoutUser = auth()->user())
+                <form method="POST" action="{{ route('checkout.process') }}" id="checkout-form">
                 @csrf
-                <button type="submit">Logout</button>
-            </form>
-        @else
-            <a href="{{ route('catalog') }}">Catalog</a>
-            <a href="{{ route('track-order') }}">Track Order</a>
-            <a href="{{ route('about') }}">About Us</a>
-        @endauth
-    </div>
-    <div class="nav-actions">
-        <a href="{{ route('cart.index') }}" aria-label="Cart">
-            <svg viewBox="0 0 24 24"><path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"/></svg>
-            @php($cartCount = collect(session('cart', []))->sum('quantity'))
-            <span class="cart-count {{ $cartCount ? '' : 'is-empty' }}" data-cart-count>{{ $cartCount }}</span>
-        </a>
-        @auth
-            <a href="{{ route('profile.edit') }}" aria-label="Account" title="Account">
-                <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
-            </a>
-        @else
-            <button type="button" class="login-btn" data-login-open aria-label="Login" title="Login">
-                <svg viewBox="0 0 24 24">
-                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/>
-                </svg>
-            </button>
-        @endauth
-    </div>
-</nav>
+                <input type="hidden" name="promo_code" value="{{ $totals['promo_code'] ?? $promoCode ?? '' }}">
+                <h1>Shipping Information</h1>
+                <div class="form-grid">
+                    <div class="field full">
+                        <label for="full_name">Full Name</label>
+                        <input id="full_name" name="full_name" value="{{ old('full_name', $checkoutUser?->name) }}" placeholder="Eleanor Pasticceria" required>
+                    </div>
+                    <div class="field full">
+                        <label for="email">Email Address</label>
+                        <input id="email" type="email" name="email" value="{{ old('email', $checkoutUser?->email) }}" placeholder="eleanor@example.com" required>
+                    </div>
+                    <div class="field full">
+                        <label for="phone">Mobile Number</label>
+                        <input id="phone" name="phone" value="{{ old('phone', $checkoutUser?->phone) }}" placeholder="+63 917 888 2211" required>
+                    </div>
+                    <div class="field full">
+                        <label for="shipping_address">Shipping Address</label>
+                        <input id="shipping_address" name="shipping_address" value="{{ old('shipping_address', $checkoutUser?->shipping_address) }}" placeholder="123 Artisanal Lane, Flour District" required>
+                    </div>
+                    <div class="field">
+                        <label for="city">City</label>
+                        <input id="city" name="city" value="{{ old('city', $checkoutUser?->city) }}" placeholder="Manila" required>
+                    </div>
+                    <div class="field">
+                        <label for="postal_code">Postal Code</label>
+                        <input id="postal_code" name="postal_code" value="{{ old('postal_code', $checkoutUser?->postal_code) }}" placeholder="1000" required>
+                    </div>
+                </div>
 
+                <h1 class="payment-title">Payment Method</h1>
+                <div class="payment-options">
+                    <label class="payment-option">
+                        <input type="radio" name="payment_method" value="card" @checked(old('payment_method', 'card') === 'card')>
+                        <span class="payment-card">
+                            <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"></rect><path d="M3 10h18"></path></svg>
+                            Card
+                        </span>
+                    </label>
+                    <label class="payment-option">
+                        <input type="radio" name="payment_method" value="gcash" @checked(old('payment_method') === 'gcash')>
+                        <span class="payment-card">
+                            <svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"></rect><path d="M8 12h8M12 8v8"></path></svg>
+                            GCash
+                        </span>
+                    </label>
+                    <label class="payment-option">
+                        <input type="radio" name="payment_method" value="cod" @checked(old('payment_method') === 'cod')>
+                        <span class="payment-card">
+                            <svg viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="10" rx="2"></rect><circle cx="12" cy="12" r="2"></circle><path d="M7 7V5h10v2"></path></svg>
+                            COD
+                        </span>
+                    </label>
+                </div>
 
-@include('partials.login-modal')
-
-    <main class="page">
-        <div class="steps" aria-label="Checkout progress">
-            <div class="step active"><div class="step-bubble">1</div>Cart</div>
-            <div class="step-line active"></div>
-            <div class="step active"><div class="step-bubble">2</div>Shipping</div>
-            <div class="step-line"></div>
-            <div class="step"><div class="step-bubble">3</div>Payment</div>
-        </div>
-
-        @if (session('status'))
-            <div class="notice">{{ session('status') }}</div>
-        @endif
-
-        @if ($errors->any())
-            <div class="errors">
-                {{ $errors->first() }}
-            </div>
-        @endif
-
-        @if($cartItems->isEmpty())
-            <section class="empty-state">
-                <h1>Your cart is waiting for something sweet.</h1>
-                <p>Add your favorite SugarLoom treats from the catalog, then come back here to check out.</p>
-                <a href="{{ route('catalog') }}">Browse Catalog</a>
+                <button class="confirm-button" type="submit">Confirm Order</button>
+                <p class="terms">By clicking "Confirm Order", you agree to our Terms of Service.</p>
+                </form>
             </section>
-        @else
-            <div class="checkout-layout">
-                <section>
-                    @php($checkoutUser = auth()->user())
-                    <form method="POST" action="{{ route('checkout.process') }}" id="checkout-form">
-                    @csrf
-                    <input type="hidden" name="promo_code" value="{{ $totals['promo_code'] ?? $promoCode ?? '' }}">
-                    <h1>Shipping Information</h1>
-                    <div class="form-grid">
-                        <div class="field full">
-                            <label for="full_name">Full Name</label>
-                            <input id="full_name" name="full_name" value="{{ old('full_name', $checkoutUser?->name) }}" placeholder="Eleanor Pasticceria" required>
-                        </div>
-                        <div class="field full">
-                            <label for="email">Email Address</label>
-                            <input id="email" type="email" name="email" value="{{ old('email', $checkoutUser?->email) }}" placeholder="eleanor@example.com" required>
-                        </div>
-                        <div class="field full">
-                            <label for="phone">Mobile Number</label>
-                            <input id="phone" name="phone" value="{{ old('phone', $checkoutUser?->phone) }}" placeholder="+63 917 888 2211" required>
-                        </div>
-                        <div class="field full">
-                            <label for="shipping_address">Shipping Address</label>
-                            <input id="shipping_address" name="shipping_address" value="{{ old('shipping_address', $checkoutUser?->shipping_address) }}" placeholder="123 Artisanal Lane, Flour District" required>
-                        </div>
-                        <div class="field">
-                            <label for="city">City</label>
-                            <input id="city" name="city" value="{{ old('city', $checkoutUser?->city) }}" placeholder="Manila" required>
-                        </div>
-                        <div class="field">
-                            <label for="postal_code">Postal Code</label>
-                            <input id="postal_code" name="postal_code" value="{{ old('postal_code', $checkoutUser?->postal_code) }}" placeholder="1000" required>
-                        </div>
-                    </div>
 
-                    <h1 class="payment-title">Payment Method</h1>
-                    <div class="payment-options">
-                        <label class="payment-option">
-                            <input type="radio" name="payment_method" value="card" @checked(old('payment_method', 'card') === 'card')>
-                            <span class="payment-card">
-                                <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"></rect><path d="M3 10h18"></path></svg>
-                                Card
-                            </span>
-                        </label>
-                        <label class="payment-option">
-                            <input type="radio" name="payment_method" value="gcash" @checked(old('payment_method') === 'gcash')>
-                            <span class="payment-card">
-                                <svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"></rect><path d="M8 12h8M12 8v8"></path></svg>
-                                GCash
-                            </span>
-                        </label>
-                        <label class="payment-option">
-                            <input type="radio" name="payment_method" value="cod" @checked(old('payment_method') === 'cod')>
-                            <span class="payment-card">
-                                <svg viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="10" rx="2"></rect><circle cx="12" cy="12" r="2"></circle><path d="M7 7V5h10v2"></path></svg>
-                                COD
-                            </span>
-                        </label>
-                    </div>
+            <aside class="summary" data-aos="fade-left">
+                <div class="summary-title">
+                    <svg viewBox="0 0 24 24"><path d="M6 8h12l-1 12H7L6 8Z"></path><path d="M9 8a3 3 0 0 1 6 0"></path></svg>
+                    Order Summary
+                </div>
 
-                    <button class="confirm-button" type="submit">Confirm Order</button>
-                    <p class="terms">By clicking "Confirm Order", you agree to our Terms of Service.</p>
-                    </form>
-                </section>
-
-                <aside class="summary">
-                    <div class="summary-title">
-                        <svg viewBox="0 0 24 24"><path d="M6 8h12l-1 12H7L6 8Z"></path><path d="M9 8a3 3 0 0 1 6 0"></path></svg>
-                        Order Summary
-                    </div>
-
-                    @foreach($cartItems as $item)
-                        <div class="cart-item">
-                            <img src="{{ $imageFor($item) }}" alt="{{ $item['name'] }}">
-                            <div>
-                                <div class="item-name">{{ $item['name'] }}</div>
-                                <div class="item-desc">{{ $item['description'] }}</div>
-                                <div class="qty-row">
-                                    <form class="qty-form" method="POST" action="{{ route('cart.update', $item['id']) }}">
-                                        @csrf
-                                        @method('PATCH')
-                                        <input type="hidden" name="quantity" value="{{ max(1, $item['quantity'] - 1) }}">
-                                        <button class="qty-button" type="submit" @disabled($item['quantity'] <= 1)>-</button>
-                                    </form>
-                                    <span class="quantity">{{ $item['quantity'] }}</span>
-                                    <form class="qty-form" method="POST" action="{{ route('cart.update', $item['id']) }}">
-                                        @csrf
-                                        @method('PATCH')
-                                        <input type="hidden" name="quantity" value="{{ $item['quantity'] + 1 }}">
-                                        <button class="qty-button" type="submit">+</button>
-                                    </form>
-                                    <form method="POST" action="{{ route('cart.remove', $item['id']) }}">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button class="remove-button" type="submit" aria-label="Remove {{ $item['name'] }}">x</button>
-                                    </form>
-                                </div>
+                @foreach($cartItems as $item)
+                    <div class="cart-item">
+                        <img src="{{ $imageFor($item) }}" alt="{{ $item['name'] }}">
+                        <div>
+                            <div class="item-name">{{ $item['name'] }}</div>
+                            <div class="item-desc">{{ $item['description'] }}</div>
+                            <div class="qty-row">
+                                <form class="qty-form" method="POST" action="{{ route('cart.update', $item['id']) }}">
+                                    @csrf
+                                    @method('PATCH')
+                                    <input type="hidden" name="quantity" value="{{ max(1, $item['quantity'] - 1) }}">
+                                    <button class="qty-button" type="submit" @disabled($item['quantity'] <= 1)>-</button>
+                                </form>
+                                <span class="quantity">{{ $item['quantity'] }}</span>
+                                <form class="qty-form" method="POST" action="{{ route('cart.update', $item['id']) }}">
+                                    @csrf
+                                    @method('PATCH')
+                                    <input type="hidden" name="quantity" value="{{ $item['quantity'] + 1 }}">
+                                    <button class="qty-button" type="submit">+</button>
+                                </form>
+                                <form method="POST" action="{{ route('cart.remove', $item['id']) }}">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button class="remove-button" type="submit" aria-label="Remove {{ $item['name'] }}">x</button>
+                                </form>
                             </div>
-                            <div class="item-price">P{{ number_format($item['price'] * $item['quantity'], 0) }}</div>
                         </div>
-                    @endforeach
+                        <div class="item-price">P{{ number_format($item['price'] * $item['quantity'], 0) }}</div>
+                    </div>
+                @endforeach
 
-                    <hr class="summary-divider">
+                <hr class="summary-divider">
 
-                    <div class="total-row">
-                        <span>Subtotal</span>
-                        <strong>P{{ number_format($totals['subtotal'], 0) }}</strong>
+                <div class="total-row">
+                    <span>Subtotal</span>
+                    <strong>P{{ number_format($totals['subtotal'], 0) }}</strong>
+                </div>
+                @if(($totals['discount'] ?? 0) > 0)
+                    <div class="total-row discount-row">
+                        <span>{{ $totals['promo_code'] }} Discount</span>
+                        <strong>-P{{ number_format($totals['discount'], 0) }}</strong>
                     </div>
-                    @if(($totals['discount'] ?? 0) > 0)
-                        <div class="total-row discount-row">
-                            <span>{{ $totals['promo_code'] }} Discount</span>
-                            <strong>-P{{ number_format($totals['discount'], 0) }}</strong>
-                        </div>
-                    @endif
-                    <div class="total-row">
-                        <span>Delivery Fee</span>
-                        <strong>P{{ number_format($totals['delivery_fee'], 0) }}</strong>
+                @endif
+                <div class="total-row">
+                    <span>Delivery Fee</span>
+                    <strong>P{{ number_format($totals['delivery_fee'], 0) }}</strong>
+                </div>
+                <div class="total-row">
+                    <span>Tax</span>
+                    <strong>P{{ number_format($totals['tax'], 0) }}</strong>
+                </div>
+                <div class="total-row grand-total">
+                    <span>Total</span>
+                    <span>P{{ number_format($totals['total'], 0) }}</span>
+                </div>
+                <form method="POST" action="{{ route('cart.promo') }}">
+                    @csrf
+                    <div class="promo">
+                        <input name="promo_code" value="{{ old('promo_code', $promoCode ?? '') }}" placeholder="Promo Code">
+                        <button type="submit">Apply</button>
                     </div>
-                    <div class="total-row">
-                        <span>Tax</span>
-                        <strong>P{{ number_format($totals['tax'], 0) }}</strong>
-                    </div>
-                    <div class="total-row grand-total">
-                        <span>Total</span>
-                        <span>P{{ number_format($totals['total'], 0) }}</span>
-                    </div>
-                    <form method="POST" action="{{ route('cart.promo') }}">
-                        @csrf
-                        <div class="promo">
-                            <input name="promo_code" value="{{ old('promo_code', $promoCode ?? '') }}" placeholder="Promo Code">
-                            <button type="submit">Apply</button>
-                        </div>
-                    </form>
-                    <p class="promo-note">Sample voucher: <strong>SWEET10</strong> gives 10% off your subtotal. Clear the field and apply again to remove it.</p>
-                </aside>
-            </div>
-        @endif
-    </main>
-
-    <footer class="footer">
-        <div>
-            <strong>SugarLoom PH</strong>
-            <span>© 2024 SugarLoom PH. Baked with artisanal care.</span>
+                </form>
+                <p class="promo-note">Sample voucher: <strong>SWEET10</strong> gives 10% off your subtotal. Clear the field and apply again to remove it.</p>
+            </aside>
         </div>
-        <div class="footer-links">
-            <a href="#">Facebook</a>
-            <a href="#">Instagram</a>
-            <a href="#">Contact Us</a>
-            <a href="#">Privacy Policy</a>
-        </div>
-    </footer>
+    @endif
+</main>
+@endsection
 
-    
+@section('scripts')
+<script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
 <script>
-function filterProducts(btn, filter) {
-    // Update active tab
-    document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
-    btn.classList.add('active');
-
-    // Filter cards
-    document.querySelectorAll('.catalog-card').forEach(card => {
-        const match = filter === 'all' || card.dataset.category === filter;
-        card.style.display = match ? '' : 'none';
-    });
-}
-
-function addToCart(productId) {
-    fetch('/cart/add', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || ''
-        },
-        body: JSON.stringify({ product_id: productId, quantity: 1 })
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (data.success) {
-            updateCartCount(data.count || 0);
-            showToast('Added to cart.');
-        }
-    })
-    .catch(() => showToast('Something went wrong. Please try again.'));
-}
-
-document.querySelectorAll('[data-id]').forEach(button => {
-    button.addEventListener('click', () => addToCart(button.dataset.id));
+AOS.init({
+    once: true,
+    duration: 800,
+    easing: 'ease-out-cubic'
 });
-
-let toastTimer;
-function showToast(message) {
-    const toast = document.getElementById('toast');
-    toast.textContent = message;
-    toast.classList.add('show');
-    clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => toast.classList.remove('show'), 2600);
-}
-
-function updateCartCount(count) {
-    document.querySelectorAll('[data-cart-count]').forEach(badge => {
-        badge.textContent = count;
-        badge.classList.toggle('is-empty', count < 1);
-    });
-}
-
-const loginModal = document.getElementById('loginModal');
-
-function openLoginModal() {
-    if (!loginModal) return;
-    loginModal.classList.add('is-open');
-    loginModal.setAttribute('aria-hidden', 'false');
-    document.body.classList.add('modal-open');
-    setTimeout(function() {
-        document.getElementById('modal-email')?.focus();
-    }, 50);
-}
-
-function closeLoginModal() {
-    if (!loginModal) return;
-    loginModal.classList.remove('is-open');
-    loginModal.setAttribute('aria-hidden', 'true');
-    document.body.classList.remove('modal-open');
-}
-
-document.querySelectorAll('[data-login-open]').forEach(btn => {
-    btn.addEventListener('click', openLoginModal);
-});
-
-document.querySelectorAll('[data-login-close]').forEach(btn => {
-    btn.addEventListener('click', closeLoginModal);
-});
-
-loginModal?.addEventListener('click', function(e) {
-    if (e.target === loginModal) closeLoginModal();
-});
-
-document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') closeLoginModal();
-});
-
-if (loginModal?.classList.contains('is-open')) {
-    document.body.classList.add('modal-open');
-}
 </script>
-</body>
-</html>
+@endsection
