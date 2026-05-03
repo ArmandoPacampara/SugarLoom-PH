@@ -118,6 +118,9 @@
         .footer-logo { font-size: 1.25rem; font-weight: 900; color: var(--text-dark); text-decoration: none; }
         .footer-cart { width: 44px; height: 44px; border-radius: 50%; background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.4); color: white; display: grid; place-items: center; font-size: 1.1rem; cursor: pointer; }
 
+        @include('partials.navbar-styles')
+        @include('partials.login-modal-styles')
+
         /* Provide a spot for page-specific styles */
     </style>
 </head>
@@ -132,6 +135,7 @@
             @else
                 <a href="{{ route('catalog') }}">Catalog</a>
                 <a href="{{ route('track-order') }}">Track Order</a>
+                <a href="{{ route('about') }}">About Us</a>
             @endif
             <form method="POST" action="{{ route('logout') }}">
                 @csrf
@@ -140,7 +144,7 @@
         @else
             <a href="{{ route('catalog') }}">Catalog</a>
             <a href="{{ route('track-order') }}">Track Order</a>
-            <a href="{{ route('login') }}">Login</a>
+            <a href="{{ route('about') }}">About Us</a>
         @endauth
     </div>
     <div class="nav-actions">
@@ -149,11 +153,19 @@
             @php($cartCount = collect(session('cart', []))->sum('quantity'))
             <span class="cart-count {{ $cartCount ? '' : 'is-empty' }}" data-cart-count>{{ $cartCount }}</span>
         </a>
-        <a href="{{ auth()->check() ? route('profile.edit') : route('login') }}" aria-label="Account" title="Account">
-            <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
-        </a>
+        @auth
+            <a href="{{ route('profile.edit') }}" aria-label="Account" title="Account">
+                <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+            </a>
+        @else
+            <button type="button" class="login-btn" data-login-open aria-label="Login" title="Login">
+                <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/></svg>
+            </button>
+        @endauth
     </div>
 </nav>
+
+@include('partials.login-modal')
 
 <main>
     @yield('content')
@@ -209,6 +221,7 @@
     }
 </script>
 
+@include('partials.login-modal-script')
 @yield('scripts')
 </body>
 </html>

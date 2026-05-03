@@ -12,6 +12,13 @@ class CartController extends Controller
 {
     private const DELIVERY_FEE = 150;
     private const TAX_RATE = 0.12;
+    private const VOUCHERS = [
+        'SWEET10' => [
+            'label' => 'SWEET10 voucher',
+            'type' => 'percent',
+            'value' => 10,
+        ],
+    ];
 
     public function index(): View
     {
@@ -79,9 +86,34 @@ class CartController extends Controller
 
     public function clear(): RedirectResponse
     {
-        session()->forget('cart');
+        session()->forget(['cart', 'promo_code']);
 
         return redirect()->route('cart.index')->with('status', 'Your cart is now empty.');
+    }
+
+    public function applyPromo(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'promo_code' => ['nullable', 'string', 'max:40'],
+        ]);
+
+        $promoCode = $this->normalizePromoCode($validated['promo_code'] ?? null);
+
+        if ($promoCode === '') {
+            session()->forget('promo_code');
+
+            return redirect()->route('cart.index')->with('status', 'Promo code removed.');
+        }
+
+        if (! $this->voucherFor($promoCode)) {
+            session()->forget('promo_code');
+
+            return redirect()->route('cart.index')->withErrors(['promo_code' => 'That promo code is not valid. Try SWEET10 for 10% off.']);
+        }
+
+        session(['promo_code' => $promoCode]);
+
+        return redirect()->route('cart.index')->with('status', "{$promoCode} applied. You got 10% off your subtotal.");
     }
 
     public function checkout(Request $request): RedirectResponse
@@ -103,7 +135,14 @@ class CartController extends Controller
             'promo_code' => ['nullable', 'string', 'max:40'],
         ]);
 
-        $totals = $this->calculateTotals($cart);
+        $promoCode = $this->normalizePromoCode($validated['promo_code'] ?? session('promo_code'));
+
+        if ($promoCode !== '' && ! $this->voucherFor($promoCode)) {
+            return redirect()->route('cart.index')->withErrors(['promo_code' => 'That promo code is not valid. Try SWEET10 for 10% off.']);
+        }
+
+        $validated['promo_code'] = $promoCode ?: null;
+        $totals = $this->calculateTotals($cart, $promoCode);
         $orderNumber = 'SL-' . now()->format('His') . '-PH';
         $order = [
             'number' => $orderNumber,
@@ -117,7 +156,7 @@ class CartController extends Controller
         session(['latest_order' => $order]);
 
         if ($validated['payment_method'] === 'cod') {
-            session()->forget('cart');
+            session()->forget(['cart', 'promo_code']);
 
             return redirect()->route('track-order')->with('status', 'Order confirmed for cash on delivery.');
         }
@@ -130,7 +169,7 @@ class CartController extends Controller
 
     public function paymongoSuccess(): RedirectResponse
     {
-        session()->forget('cart');
+        session()->forget(['cart', 'promo_code']);
 
         return redirect()->route('track-order')->with('status', 'Payment received. Your order is now being prepared.');
     }
@@ -145,24 +184,46 @@ class CartController extends Controller
     private function cartViewData(): array
     {
         $cartItems = collect(session('cart', []))->values();
-        $totals = $this->calculateTotals($cartItems);
+        $promoCode = session('promo_code');
+        $totals = $this->calculateTotals($cartItems, $promoCode);
+        $voucher = $this->voucherFor($promoCode);
 
-        return compact('cartItems', 'totals');
+        return compact('cartItems', 'totals', 'promoCode', 'voucher');
     }
 
-    private function calculateTotals($cartItems): array
+    private function calculateTotals($cartItems, ?string $promoCode = null): array
     {
         $subtotal = collect($cartItems)->sum(fn ($item) => $item['price'] * $item['quantity']);
+        $voucher = $this->voucherFor($promoCode);
+        $discount = $voucher && $subtotal > 0
+            ? round($subtotal * ($voucher['value'] / 100))
+            : 0;
         $deliveryFee = $subtotal > 0 ? self::DELIVERY_FEE : 0;
-        $tax = $subtotal > 0 ? round($subtotal * self::TAX_RATE) : 0;
-        $total = $subtotal + $deliveryFee + $tax;
+        $taxableAmount = max(0, $subtotal - $discount);
+        $tax = $taxableAmount > 0 ? round($taxableAmount * self::TAX_RATE) : 0;
+        $total = $taxableAmount + $deliveryFee + $tax;
 
         return [
             'subtotal' => $subtotal,
+            'discount' => $discount,
             'delivery_fee' => $deliveryFee,
             'tax' => $tax,
             'total' => $total,
+            'promo_code' => $voucher ? $promoCode : null,
+            'promo_label' => $voucher['label'] ?? null,
         ];
+    }
+
+    private function normalizePromoCode(?string $promoCode): string
+    {
+        return strtoupper(trim((string) $promoCode));
+    }
+
+    private function voucherFor(?string $promoCode): ?array
+    {
+        $promoCode = $this->normalizePromoCode($promoCode);
+
+        return self::VOUCHERS[$promoCode] ?? null;
     }
 
     private function createPayMongoCheckoutSession(array $order): string
@@ -171,10 +232,13 @@ class CartController extends Controller
 
         abort_if(blank($secretKey), 500, 'PayMongo secret key is not configured.');
 
+        $subtotal = max(1, collect($order['items'])->sum(fn ($item) => $item['price'] * $item['quantity']));
+        $discountMultiplier = max(0, ($subtotal - $order['totals']['discount']) / $subtotal);
+
         $lineItems = collect($order['items'])->map(fn ($item) => [
             'currency' => 'PHP',
-            'amount' => (int) round($item['price'] * 100),
-            'name' => $item['name'],
+            'amount' => (int) round($item['price'] * $discountMultiplier * 100),
+            'name' => $order['totals']['discount'] > 0 ? "{$item['name']} ({$order['totals']['promo_code']} applied)" : $item['name'],
             'quantity' => $item['quantity'],
         ])->values()->all();
 

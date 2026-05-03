@@ -23,7 +23,8 @@
         .nav-links a:hover, .nav-links button:hover { opacity: 0.8; }
         
         .nav-actions { display: flex; gap: 0.8rem; }
-        .nav-actions > a {
+        .nav-actions > a,
+        .nav-actions > button {
             width: 38px; height: 38px;
             border-radius: 50%;
             border: 1px solid rgba(255,255,255,0.5);
@@ -34,8 +35,10 @@
             place-items: center;
             transition: background 0.2s;
             text-decoration: none;
+            padding: 0;
         }
-        .nav-actions > a:hover { background: rgba(255,255,255,0.2); }
+        .nav-actions > a:hover,
+        .nav-actions > button:hover { background: rgba(255,255,255,0.2); }
         .nav-actions svg { width: 16px; height: 16px; fill: currentColor; }
 
         /* Page Layout Styles */
@@ -53,6 +56,8 @@
         
         .btn-primary { background: #fb7185; color: white; border: none; padding: 10px 20px; border-radius: 999px; font-weight: bold; cursor: pointer; transition: opacity 0.2s; }
         .btn-primary:hover { opacity: 0.9; }
+        .btn-logout { background: #f3eff1; color: var(--text-body); border: none; padding: 10px 20px; border-radius: 999px; font-weight: bold; cursor: pointer; margin-top: 12px; transition: opacity 0.2s; }
+        .btn-logout:hover { opacity: 0.85; }
         .alert-success { background: #dcfce7; color: #16a34a; padding: 12px; border-radius: 10px; margin-bottom: 20px; font-size: 14px; font-weight: bold; }
         
         /* Order History Styles */
@@ -89,6 +94,8 @@
         }
 
         .cart-count.is-empty { display: none; }
+
+        @include('partials.login-modal-styles')
     </style>
 </head>
 <body>
@@ -104,10 +111,6 @@
                 <a href="{{ route('catalog') }}">Catalog</a>
                 <a href="{{ route('track-order') }}">Track Order</a>
             @endif
-            <form method="POST" action="{{ route('logout') }}">
-                @csrf
-                <button type="submit">Logout</button>
-            </form>
         @else
             <a href="{{ route('catalog') }}">Catalog</a>
             <a href="{{ route('track-order') }}">Track Order</a>
@@ -120,11 +123,19 @@
             @php($cartCount = collect(session('cart', []))->sum('quantity'))
             <span class="cart-count {{ $cartCount ? '' : 'is-empty' }}" data-cart-count>{{ $cartCount }}</span>
         </a>
-        <a href="{{ auth()->check() ? route('profile.edit') : route('login') }}" aria-label="Account" title="Account">
-            <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
-        </a>
+        @auth
+            <a href="{{ route('profile.edit') }}" aria-label="Account" title="Account">
+                <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+            </a>
+        @else
+            <button type="button" class="login-btn" data-login-open aria-label="Login" title="Login">
+                <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/></svg>
+            </button>
+        @endauth
     </div>
 </nav>
+
+@include('partials.login-modal')
 
 <div class="container">
     <h1>My Account</h1>
@@ -152,7 +163,32 @@
                     <input id="email" type="email" name="email" value="{{ old('email', $user->email) }}" required>
                 </div>
 
+                <div class="form-group">
+                    <label for="phone">Mobile Number</label>
+                    <input id="phone" type="text" name="phone" value="{{ old('phone', $user->phone) }}" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="shipping_address">Shipping Address</label>
+                    <input id="shipping_address" type="text" name="shipping_address" value="{{ old('shipping_address', $user->shipping_address) }}" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="city">City</label>
+                    <input id="city" type="text" name="city" value="{{ old('city', $user->city) }}" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="postal_code">Postal Code</label>
+                    <input id="postal_code" type="text" name="postal_code" value="{{ old('postal_code', $user->postal_code) }}" required>
+                </div>
+
                 <button type="submit" class="btn-primary" style="margin-top: 10px;">Save Changes</button>
+            </form>
+
+            <form method="POST" action="{{ route('logout') }}">
+                @csrf
+                <button type="submit" class="btn-logout">Logout</button>
             </form>
         </div>
 
@@ -188,5 +224,6 @@
     </div>
 </div>
 
+@include('partials.login-modal-script')
 </body>
 </html>

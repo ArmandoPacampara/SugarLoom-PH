@@ -19,6 +19,11 @@
             --white:       #ffffff;
             --radius-card: 20px;
             --shadow-card: 0 8px 32px rgba(201,75,118,0.10);
+
+            --text-dark: #2b1b24;
+            --text-muted: #665560;
+            --pink-btn: #ce5a7a;
+            --text-accent: #835372;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -748,6 +753,8 @@
             .login-copy { display: none; }
             .login-panel { padding: 2.3rem 1.4rem 1.5rem; }
         }
+        @include('partials.navbar-styles')
+        @include('partials.login-modal-styles')
     </style>
 <body>
 
@@ -783,12 +790,18 @@
                 <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
             </a>
         @else
-            <a href="{{ route('login') }}" aria-label="Account" title="Account">
-                <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/></svg>
-            </a>
+            <button type="button" class="login-btn" data-login-open aria-label="Login" title="Login">
+                <svg viewBox="0 0 24 24">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/>
+                </svg>
+            </button>
         @endauth
     </div>
 </nav>
+
+
+@include('partials.login-modal')
+
 
 <div class="bg-[#f6efef] text-gray-800">
 
@@ -953,6 +966,99 @@
     </footer>
 
 </div>
+
+<script>
+function filterProducts(btn, filter) {
+    // Update active tab
+    document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+
+    // Filter cards
+    document.querySelectorAll('.catalog-card').forEach(card => {
+        const match = filter === 'all' || card.dataset.category === filter;
+        card.style.display = match ? '' : 'none';
+    });
+}
+
+function addToCart(productId) {
+    fetch('/cart/add', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || ''
+        },
+        body: JSON.stringify({ product_id: productId, quantity: 1 })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            updateCartCount(data.count || 0);
+            showToast('Added to cart.');
+        }
+    })
+    .catch(() => showToast('Something went wrong. Please try again.'));
+}
+
+document.querySelectorAll('[data-id]').forEach(button => {
+    button.addEventListener('click', () => addToCart(button.dataset.id));
+});
+
+let toastTimer;
+function showToast(message) {
+    const toast = document.getElementById('toast');
+    toast.textContent = message;
+    toast.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toast.classList.remove('show'), 2600);
+}
+
+function updateCartCount(count) {
+    document.querySelectorAll('[data-cart-count]').forEach(badge => {
+        badge.textContent = count;
+        badge.classList.toggle('is-empty', count < 1);
+    });
+}
+
+const loginModal = document.getElementById('loginModal');
+
+function openLoginModal() {
+    if (!loginModal) return;
+    loginModal.classList.add('is-open');
+    loginModal.setAttribute('aria-hidden', 'false');
+    document.body.classList.add('modal-open');
+    setTimeout(function() {
+        document.getElementById('modal-email')?.focus();
+    }, 50);
+}
+
+function closeLoginModal() {
+    if (!loginModal) return;
+    loginModal.classList.remove('is-open');
+    loginModal.setAttribute('aria-hidden', 'true');
+    document.body.classList.remove('modal-open');
+}
+
+document.querySelectorAll('[data-login-open]').forEach(btn => {
+    btn.addEventListener('click', openLoginModal);
+});
+
+document.querySelectorAll('[data-login-close]').forEach(btn => {
+    btn.addEventListener('click', closeLoginModal);
+});
+
+loginModal?.addEventListener('click', function(e) {
+    if (e.target === loginModal) closeLoginModal();
+});
+
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeLoginModal();
+});
+
+if (loginModal?.classList.contains('is-open')) {
+    document.body.classList.add('modal-open');
+}
+</script>
 
 </body>
 </html>

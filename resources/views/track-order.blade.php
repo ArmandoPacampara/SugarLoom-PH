@@ -15,6 +15,10 @@
             --text-body:   #4a3d45;
             --white:       #ffffff;
             --gray-btn:    #f3eff1;
+            --text-dark: #2b1b24;
+            --text-muted: #665560;
+            --pink-btn: #ce5a7a;
+            --text-accent: #835372;
         }
 
                 .cart-count {
@@ -109,6 +113,166 @@
         .info { display: flex; flex-direction: column; padding-top: 2px; }
         .info strong { font-size: 16px; color: var(--dark); }
         .info .time { font-size: 13px; color: gray; margin-top: 4px; }
+
+        body.modal-open {
+    overflow: hidden;
+}
+
+.login-overlay {
+    align-items: center;
+    background: rgba(43, 27, 36, 0.48);
+    backdrop-filter: blur(8px);
+    display: none;
+    inset: 0;
+    justify-content: center;
+    padding: 2rem;
+    position: fixed;
+    z-index: 999;
+}
+
+.login-overlay.is-open {
+    display: flex;
+}
+
+.login-popup {
+    background:
+        radial-gradient(circle at 88% 16%, rgba(255,255,255,0.95) 0 10rem, transparent 10.2rem),
+        linear-gradient(105deg, #f7cbd5 0%, #fff5f0 100%);
+    border: 1px solid rgba(255,255,255,0.8);
+    border-radius: 26px;
+    box-shadow: 0 28px 80px rgba(43, 27, 36, 0.28);
+    display: grid;
+    grid-template-columns: minmax(0, 0.95fr) minmax(320px, 0.82fr);
+    gap: 1.5rem;
+    max-width: 920px;
+    min-height: 480px;
+    overflow: hidden;
+    padding: 2.1rem;
+    position: relative;
+    width: min(100%, 920px);
+}
+
+.login-copy {
+    align-self: center;
+    padding: 1rem 0.5rem 1rem 0.7rem;
+}
+
+.login-copy h2 {
+    color: var(--text-dark);
+    font-size: clamp(2.9rem, 5vw, 4.6rem);
+    font-weight: 900;
+    letter-spacing: 0;
+    line-height: 0.96;
+    margin-bottom: 1.15rem;
+}
+
+.login-copy h2 span {
+    color: var(--text-accent);
+    display: block;
+}
+
+.login-copy p {
+    color: var(--text-body);
+    font-size: 0.98rem;
+    font-weight: 300;
+    line-height: 1.65;
+    max-width: 410px;
+}
+
+.login-panel {
+    align-self: center;
+    background: rgba(255,255,255,0.97);
+    border: 1px solid rgba(255,255,255,0.8);
+    border-radius: 22px;
+    box-shadow: 0 18px 50px rgba(206, 90, 122, 0.18);
+    padding: 2.25rem 2.25rem 1.8rem;
+}
+
+.login-field {
+    margin-bottom: 1rem;
+}
+
+.login-field label {
+    color: var(--text-dark);
+    display: block;
+    font-size: 0.86rem;
+    font-weight: 800;
+    margin-bottom: 0.48rem;
+}
+
+.login-field input[type="email"],
+.login-field input[type="password"] {
+    background: #edf5ff;
+    border: 1.5px solid #f0c8d3;
+    border-radius: 999px;
+    color: var(--text-dark);
+    font: inherit;
+    font-size: 0.86rem;
+    outline: none;
+    padding: 0.82rem 1rem;
+    width: 100%;
+}
+
+.login-field input:focus {
+    border-color: #ef7fa1;
+    box-shadow: 0 0 0 3px rgba(239, 127, 161, 0.2);
+}
+
+.login-row {
+    align-items: center;
+    display: flex;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin: 1.1rem 0 1.35rem;
+}
+
+.login-remember {
+    align-items: center;
+    display: flex;
+    font-size: 0.82rem;
+    font-weight: 700;
+    gap: 0.45rem;
+}
+
+.login-submit {
+    background: var(--pink-btn);
+    border: 0;
+    border-radius: 999px;
+    box-shadow: 0 12px 28px rgba(206, 90, 122, 0.28);
+    color: var(--white);
+    cursor: pointer;
+    font: inherit;
+    font-size: 0.92rem;
+    font-weight: 900;
+    padding: 0.86rem 1rem;
+    width: 100%;
+}
+
+.login-close {
+    background: rgba(255,255,255,0.72);
+    border: 1px solid rgba(255,255,255,0.9);
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 1.25rem;
+    font-weight: 800;
+    height: 34px;
+    position: absolute;
+    right: 1rem;
+    top: 1rem;
+    width: 34px;
+}
+
+@media (max-width: 600px) {
+    .login-popup {
+        grid-template-columns: 1fr;
+        min-height: auto;
+        max-width: 520px;
+    }
+    .login-copy { display: none; }
+}
+
+        @include('partials.navbar-styles')
+        @include('partials.login-modal-styles')
     </style>
 </head>
 <body>
@@ -145,12 +309,18 @@
                 <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
             </a>
         @else
-            <a href="{{ route('login') }}" aria-label="Account" title="Account">
-                <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/></svg>
-            </a>
+            <button type="button" class="login-btn" data-login-open aria-label="Login" title="Login">
+                <svg viewBox="0 0 24 24">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/>
+                </svg>
+            </button>
         @endauth
     </div>
 </nav>
+
+
+@include('partials.login-modal')
+
 
 <div class="container">
     <div class="card">
@@ -211,5 +381,98 @@
     </div>
 </div>
 
+
+<script>
+function filterProducts(btn, filter) {
+    // Update active tab
+    document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+
+    // Filter cards
+    document.querySelectorAll('.catalog-card').forEach(card => {
+        const match = filter === 'all' || card.dataset.category === filter;
+        card.style.display = match ? '' : 'none';
+    });
+}
+
+function addToCart(productId) {
+    fetch('/cart/add', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || ''
+        },
+        body: JSON.stringify({ product_id: productId, quantity: 1 })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            updateCartCount(data.count || 0);
+            showToast('Added to cart.');
+        }
+    })
+    .catch(() => showToast('Something went wrong. Please try again.'));
+}
+
+document.querySelectorAll('[data-id]').forEach(button => {
+    button.addEventListener('click', () => addToCart(button.dataset.id));
+});
+
+let toastTimer;
+function showToast(message) {
+    const toast = document.getElementById('toast');
+    toast.textContent = message;
+    toast.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toast.classList.remove('show'), 2600);
+}
+
+function updateCartCount(count) {
+    document.querySelectorAll('[data-cart-count]').forEach(badge => {
+        badge.textContent = count;
+        badge.classList.toggle('is-empty', count < 1);
+    });
+}
+
+const loginModal = document.getElementById('loginModal');
+
+function openLoginModal() {
+    if (!loginModal) return;
+    loginModal.classList.add('is-open');
+    loginModal.setAttribute('aria-hidden', 'false');
+    document.body.classList.add('modal-open');
+    setTimeout(function() {
+        document.getElementById('modal-email')?.focus();
+    }, 50);
+}
+
+function closeLoginModal() {
+    if (!loginModal) return;
+    loginModal.classList.remove('is-open');
+    loginModal.setAttribute('aria-hidden', 'true');
+    document.body.classList.remove('modal-open');
+}
+
+document.querySelectorAll('[data-login-open]').forEach(btn => {
+    btn.addEventListener('click', openLoginModal);
+});
+
+document.querySelectorAll('[data-login-close]').forEach(btn => {
+    btn.addEventListener('click', closeLoginModal);
+});
+
+loginModal?.addEventListener('click', function(e) {
+    if (e.target === loginModal) closeLoginModal();
+});
+
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeLoginModal();
+});
+
+if (loginModal?.classList.contains('is-open')) {
+    document.body.classList.add('modal-open');
+}
+</script>
 </body>
 </html>

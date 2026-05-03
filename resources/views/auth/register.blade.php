@@ -21,7 +21,7 @@
         .navbar { display: flex; align-items: center; justify-content: space-between; padding: 0 4rem; height: 70px; background: var(--pink-nav); }
         .logo { font-size: 1.1rem; font-weight: 900; color: white; text-decoration: none; }
         
-        .container { max-width: 500px; margin: 60px auto; padding: 0 24px; }
+        .container { max-width: 620px; margin: 44px auto; padding: 0 24px; }
         .card { background: white; padding: 30px; border-radius: 20px; box-shadow: 0 8px 20px rgba(0,0,0,0.05); }
         
         h2 { font-size: 24px; margin-top: 0; text-align: center; color: var(--pink-deep); }
@@ -76,6 +76,26 @@
             <div class="form-group">
                 <label for="email">Email Address</label>
                 <input id="email" type="email" name="email" value="{{ old('email') }}" required placeholder="juan@example.com">
+            </div>
+
+            <div class="form-group">
+                <label for="phone">Mobile Number</label>
+                <input id="phone" type="text" name="phone" value="{{ old('phone') }}" required placeholder="+63 917 888 2211">
+            </div>
+
+            <div class="form-group">
+                <label for="shipping_address">Shipping Address</label>
+                <input id="shipping_address" type="text" name="shipping_address" value="{{ old('shipping_address') }}" required placeholder="123 Artisanal Lane, Flour District">
+            </div>
+
+            <div class="form-group">
+                <label for="city">City</label>
+                <input id="city" type="text" name="city" value="{{ old('city') }}" required placeholder="Manila">
+            </div>
+
+            <div class="form-group">
+                <label for="postal_code">Postal Code</label>
+                <input id="postal_code" type="text" name="postal_code" value="{{ old('postal_code') }}" required placeholder="1000">
             </div>
 
             <div class="form-group">
