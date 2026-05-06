@@ -18,6 +18,12 @@ class ProfileController extends Controller
     {
         return view('profile.edit', [
             'user' => $request->user(),
+            'orders' => $request->user()
+                ->orders()
+                ->with('items')
+                ->latest('placed_at')
+                ->take(5)
+                ->get(),
         ]);
     }
 

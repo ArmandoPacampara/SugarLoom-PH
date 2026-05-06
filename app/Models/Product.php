@@ -14,6 +14,7 @@ class Product extends Model
         'description',
         'short_description',
         'price',
+        'stock_quantity',
         'image',
         'category',
         'rating',
@@ -26,6 +27,7 @@ class Product extends Model
 
     protected $casts = [
         'price'           => 'decimal:2',
+        'stock_quantity'  => 'integer',
         'rating'          => 'decimal:1',
         'is_best_seller'  => 'boolean',
         'is_top_pick'     => 'boolean',
@@ -63,4 +65,3 @@ class Product extends Model
         return $query->active()->where('category', $category)->orderBy('sort_order');
     }
 }
-

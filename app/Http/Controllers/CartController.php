@@ -2,9 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Order;
 use App\Models\Product;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\View\View;
 
@@ -143,22 +146,19 @@ class CartController extends Controller
 
         $validated['promo_code'] = $promoCode ?: null;
         $totals = $this->calculateTotals($cart, $promoCode);
-        $orderNumber = 'SL-' . now()->format('His') . '-PH';
-        $order = [
-            'number' => $orderNumber,
-            'customer' => $validated,
-            'items' => $cart->values()->all(),
-            'totals' => $totals,
-            'payment_method' => $validated['payment_method'],
-            'placed_at' => now()->toDateTimeString(),
-        ];
+        $order = $this->createOrder($cart, $validated, $totals);
 
-        session(['latest_order' => $order]);
+        session([
+            'latest_order_id' => $order->id,
+            'latest_order_number' => $order->order_number,
+        ]);
 
         if ($validated['payment_method'] === 'cod') {
             session()->forget(['cart', 'promo_code']);
 
-            return redirect()->route('track-order')->with('status', 'Order confirmed for cash on delivery.');
+            return redirect()
+                ->route('track-order', ['tracking_number' => $order->order_number])
+                ->with('status', 'Order confirmed for cash on delivery.');
         }
 
         $checkoutUrl = $this->createPayMongoCheckoutSession($order);
@@ -171,11 +171,34 @@ class CartController extends Controller
     {
         session()->forget(['cart', 'promo_code']);
 
-        return redirect()->route('track-order')->with('status', 'Payment received. Your order is now being prepared.');
+        if ($orderId = session('latest_order_id')) {
+            Order::whereKey($orderId)->update([
+                'payment_status' => Order::PAYMENT_PAID,
+                'status' => Order::STATUS_PREPARING,
+            ]);
+        }
+
+        return redirect()
+            ->route('track-order', ['tracking_number' => session('latest_order_number')])
+            ->with('status', 'Payment received. Your order is now being prepared.');
     }
 
     public function paymongoCancel(): View
     {
+        if ($orderId = session('latest_order_id')) {
+            $order = Order::with('items.product')->find($orderId);
+
+            if ($order && $order->status !== Order::STATUS_CANCELLED) {
+                DB::transaction(function () use ($order) {
+                    foreach ($order->items as $item) {
+                        $item->product?->increment('stock_quantity', $item->quantity);
+                    }
+
+                    $order->update(['status' => Order::STATUS_CANCELLED]);
+                });
+            }
+        }
+
         return view('payment-failed', [
             'message' => 'Payment failed, please try again.',
         ]);
@@ -226,41 +249,42 @@ class CartController extends Controller
         return self::VOUCHERS[$promoCode] ?? null;
     }
 
-    private function createPayMongoCheckoutSession(array $order): string
+    private function createPayMongoCheckoutSession(Order $order): string
     {
         $secretKey = config('services.paymongo.secret_key');
 
         abort_if(blank($secretKey), 500, 'PayMongo secret key is not configured.');
 
-        $subtotal = max(1, collect($order['items'])->sum(fn ($item) => $item['price'] * $item['quantity']));
-        $discountMultiplier = max(0, ($subtotal - $order['totals']['discount']) / $subtotal);
+        $order->loadMissing('items');
+        $subtotal = max(1, $order->items->sum(fn ($item) => $item->unit_price * $item->quantity));
+        $discountMultiplier = max(0, ($subtotal - (float) $order->discount) / $subtotal);
 
-        $lineItems = collect($order['items'])->map(fn ($item) => [
+        $lineItems = $order->items->map(fn ($item) => [
             'currency' => 'PHP',
-            'amount' => (int) round($item['price'] * $discountMultiplier * 100),
-            'name' => $order['totals']['discount'] > 0 ? "{$item['name']} ({$order['totals']['promo_code']} applied)" : $item['name'],
-            'quantity' => $item['quantity'],
+            'amount' => (int) round($item->unit_price * $discountMultiplier * 100),
+            'name' => $order->discount > 0 ? "{$item->product_name} ({$order->promo_code} applied)" : $item->product_name,
+            'quantity' => $item->quantity,
         ])->values()->all();
 
-        if ($order['totals']['delivery_fee'] > 0) {
+        if ($order->delivery_fee > 0) {
             $lineItems[] = [
                 'currency' => 'PHP',
-                'amount' => (int) round($order['totals']['delivery_fee'] * 100),
+                'amount' => (int) round($order->delivery_fee * 100),
                 'name' => 'Delivery Fee',
                 'quantity' => 1,
             ];
         }
 
-        if ($order['totals']['tax'] > 0) {
+        if ($order->tax > 0) {
             $lineItems[] = [
                 'currency' => 'PHP',
-                'amount' => (int) round($order['totals']['tax'] * 100),
+                'amount' => (int) round($order->tax * 100),
                 'name' => 'Tax',
                 'quantity' => 1,
             ];
         }
 
-        $paymentMethods = $order['payment_method'] === 'gcash' ? ['gcash'] : ['card'];
+        $paymentMethods = $order->payment_method === 'gcash' ? ['gcash'] : ['card'];
 
         $response = Http::withBasicAuth($secretKey, '')
             ->acceptJson()
@@ -268,17 +292,17 @@ class CartController extends Controller
                 'data' => [
                     'attributes' => [
                         'billing' => [
-                            'name' => $order['customer']['full_name'],
-                            'email' => $order['customer']['email'],
-                            'phone' => $order['customer']['phone'],
+                            'name' => $order->customer_name,
+                            'email' => $order->customer_email,
+                            'phone' => $order->customer_phone,
                             'address' => [
-                                'line1' => $order['customer']['shipping_address'],
-                                'city' => $order['customer']['city'],
-                                'postal_code' => $order['customer']['postal_code'],
+                                'line1' => $order->shipping_address,
+                                'city' => $order->city,
+                                'postal_code' => $order->postal_code,
                                 'country' => 'PH',
                             ],
                         ],
-                        'description' => "SugarLoom PH order {$order['number']}",
+                        'description' => "SugarLoom PH order {$order->order_number}",
                         'line_items' => $lineItems,
                         'payment_method_types' => $paymentMethods,
                         'send_email_receipt' => true,
@@ -296,5 +320,74 @@ class CartController extends Controller
         }
 
         return $response->json('data.attributes.checkout_url');
+    }
+
+    private function createOrder($cart, array $customer, array $totals): Order
+    {
+        return DB::transaction(function () use ($cart, $customer, $totals) {
+            $products = Product::whereIn('id', $cart->keys())->lockForUpdate()->get()->keyBy('id');
+
+            foreach ($cart as $item) {
+                $product = $products->get($item['id']);
+
+                if (! $product || ! $product->is_active) {
+                    abort(422, "{$item['name']} is no longer available.");
+                }
+
+                if ($product->stock_quantity < $item['quantity']) {
+                    abort(422, "Only {$product->stock_quantity} {$product->name} left in stock.");
+                }
+            }
+
+            $order = Order::create([
+                'order_number' => $this->generateOrderNumber(),
+                'user_id' => Auth::id(),
+                'customer_name' => $customer['full_name'],
+                'customer_email' => $customer['email'],
+                'customer_phone' => $customer['phone'],
+                'shipping_address' => $customer['shipping_address'],
+                'city' => $customer['city'],
+                'postal_code' => $customer['postal_code'],
+                'payment_method' => $customer['payment_method'],
+                'payment_status' => Order::PAYMENT_PENDING,
+                'status' => Order::STATUS_PENDING,
+                'subtotal' => $totals['subtotal'],
+                'discount' => $totals['discount'],
+                'delivery_fee' => $totals['delivery_fee'],
+                'tax' => $totals['tax'],
+                'total' => $totals['total'],
+                'promo_code' => $totals['promo_code'],
+                'placed_at' => now(),
+            ]);
+
+            foreach ($cart as $item) {
+                $product = $products->get($item['id']);
+
+                $order->items()->create([
+                    'product_id' => $product->id,
+                    'product_name' => $product->name,
+                    'unit_price' => $item['price'],
+                    'quantity' => $item['quantity'],
+                    'line_total' => $item['price'] * $item['quantity'],
+                    'product_snapshot' => [
+                        'image' => $product->image,
+                        'category' => $product->category,
+                    ],
+                ]);
+
+                $product->decrement('stock_quantity', $item['quantity']);
+            }
+
+            return $order;
+        });
+    }
+
+    private function generateOrderNumber(): string
+    {
+        do {
+            $number = 'SL-' . now()->format('Ymd-His') . '-' . random_int(100, 999);
+        } while (Order::where('order_number', $number)->exists());
+
+        return $number;
     }
 }

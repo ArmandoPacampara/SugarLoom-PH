@@ -103,6 +103,10 @@
         .info { display: flex; flex-direction: column; padding-top: 2px; }
         .info strong { font-size: 16px; color: var(--dark); }
         .info .time { font-size: 13px; color: gray; margin-top: 4px; }
+        .notice { background: #dcfce7; color: #166534; padding: 12px; border-radius: 12px; margin-bottom: 18px; font-weight: bold; }
+        .not-found { background: #fee2e2; color: #991b1b; padding: 12px; border-radius: 12px; margin-top: 18px; }
+        .order-summary { background: #fff7fb; border-radius: 14px; padding: 14px; margin-bottom: 22px; }
+        .summary-row { display: flex; justify-content: space-between; gap: 12px; margin: 5px 0; color: #4b5563; }
     </style>
 @endsection
 
@@ -112,54 +116,57 @@
         <h1>Track Your Order</h1>
         <p class="subtitle">Enter your order ID below to check the current delivery status.</p>
 
+        @if (session('status'))
+            <div class="notice">{{ session('status') }}</div>
+        @endif
+
         <!-- Tracking Input Form -->
         <form class="search-form" method="GET" action="{{ route('track-order') }}" data-aos="fade-up" data-aos-delay="200">
-            <input type="text" name="tracking_number" value="{{ request('tracking_number') }}" placeholder="e.g. SL-123456-PH" required>
+            <input type="text" name="tracking_number" value="{{ $trackingNumber }}" placeholder="e.g. SL-20260506-120001-123" required>
             <button type="submit" class="btn-primary">Track</button>
         </form>
 
         <!-- Progress Display (Only shows if a tracking number is submitted) -->
-        @if(request('tracking_number'))
+        @if($trackingNumber && ! $order)
+            <div class="not-found">No order found for {{ $trackingNumber }}. Please check the order ID and try again.</div>
+        @endif
+
+        @if($order)
             <hr>
             <div class="tracking-result">
-                <h3 data-aos="fade-right">Status for: <span style="color: var(--pink-nav);">{{ request('tracking_number') }}</span></h3>
-                
-                <div class="timeline">
-                    <!-- Step 1 -->
-                    <div class="timeline-step active" data-aos="fade-left" data-aos-delay="300">
-                        <div class="dot"></div>
-                        <div class="info">
-                            <strong>Order Confirmed</strong>
-                            <span class="time">Payment verified. We've received your order!</span>
-                        </div>
-                    </div>
-                    
-                    <!-- Step 2 -->
-                    <div class="timeline-step active" data-aos="fade-left" data-aos-delay="400">
-                        <div class="dot"></div>
-                        <div class="info">
-                            <strong>Preparing Sweets</strong>
-                            <span class="time">Our bakers are currently preparing your items.</span>
-                        </div>
-                    </div>
-                    
-                    <!-- Step 3 -->
-                    <div class="timeline-step" data-aos="fade-left" data-aos-delay="500">
-                        <div class="dot"></div>
-                        <div class="info">
-                            <strong>Out for Delivery</strong>
-                            <span class="time">Pending rider pickup.</span>
-                        </div>
-                    </div>
+                <h3 data-aos="fade-right">Status for: <span style="color: var(--pink-nav);">{{ $order->order_number }}</span></h3>
 
-                    <!-- Step 4 -->
-                    <div class="timeline-step" data-aos="fade-left" data-aos-delay="600">
-                        <div class="dot"></div>
-                        <div class="info">
-                            <strong>Delivered</strong>
-                            <span class="time">Pending.</span>
-                        </div>
+                <div class="order-summary">
+                    <div class="summary-row">
+                        <span>Items</span>
+                        <strong>{{ $order->items_summary }}</strong>
                     </div>
+                    <div class="summary-row">
+                        <span>Total</span>
+                        <strong>PHP {{ number_format($order->total, 2) }}</strong>
+                    </div>
+                    <div class="summary-row">
+                        <span>Current status</span>
+                        <strong>{{ $order->status_label }}</strong>
+                    </div>
+                </div>
+
+                <div class="timeline">
+                    @php
+                        $statusKeys = array_keys($steps);
+                        $currentIndex = array_search($order->status, $statusKeys, true);
+                        $currentIndex = $currentIndex === false ? 0 : $currentIndex;
+                    @endphp
+
+                    @foreach($steps as $status => $step)
+                        <div class="timeline-step {{ $loop->index <= $currentIndex ? 'active' : '' }}" data-aos="fade-left" data-aos-delay="{{ 300 + ($loop->index * 100) }}">
+                            <div class="dot"></div>
+                            <div class="info">
+                                <strong>{{ $step['label'] }}</strong>
+                                <span class="time">{{ $loop->index <= $currentIndex ? $step['description'] : 'Pending.' }}</span>
+                            </div>
+                        </div>
+                    @endforeach
                 </div>
             </div>
         @endif

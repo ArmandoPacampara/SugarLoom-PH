@@ -24,12 +24,12 @@ class DatabaseSeeder extends Seeder
         // ── Test user ─────────────────────────────────
             User::updateOrCreate(
                 ['email' => 'admin@sugarloom.test'],
-                ['name' => 'SugarLoom Admin', 'password' => 'password', 'role' => User::ROLE_ADMIN]
+                ['name' => 'SugarLoom Admin', 'password' => bcrypt('password'), 'role' => User::ROLE_ADMIN]
             );
 
             User::updateOrCreate(
                 ['email' => 'test@example.com'],
-                ['name' => 'Test Customer', 'password' => 'password', 'role' => User::ROLE_CUSTOMER]
+                ['name' => 'Test Customer', 'password' => bcrypt('password'), 'role' => User::ROLE_CUSTOMER]
             );
 
         // ── Products ──────────────────────────────────

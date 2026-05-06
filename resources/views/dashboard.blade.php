@@ -129,6 +129,24 @@
         .blue { background: #dbeafe; color: #2563eb; }
         .green { background: #dcfce7; color: #16a34a; }
         .yellow { background: #fef9c3; color: #ca8a04; }
+        .red { background: #fee2e2; color: #dc2626; }
+        .status-form { display: flex; gap: 8px; align-items: center; }
+        .status-select, .stock-input {
+            border: 1px solid #f3d4dc;
+            border-radius: 999px;
+            padding: 7px 10px;
+            background: white;
+        }
+        .mini-btn {
+            padding: 7px 10px;
+            border-radius: 999px;
+            border: 0;
+            background: #fb7185;
+            color: white;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: pointer;
+        }
 
         .inventory-item { margin-bottom: 16px; }
         
@@ -173,6 +191,7 @@
         .text-gray { color: gray; }
         .text-bold { font-weight: bold; }
         .fs-14 { font-size: 14px; }
+        .empty-state { color: gray; padding: 12px 0; }
     </style>
 @endsection
 
@@ -188,11 +207,25 @@
         </div>
     </div>
 
+    @if (session('status'))
+        <div class="card" style="margin: 0 0 20px; color: #166534; background: #dcfce7;">
+            {{ session('status') }}
+        </div>
+    @endif
+
+    <!-- TABS -->
+    <div class="tabs" style="display: flex; background: white; border-radius: 12px; padding: 4px; margin-bottom: 24px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
+        <a href="{{ route('admin.dashboard') }}" class="tab active" style="flex: 1; padding: 12px 24px; border-radius: 8px; text-align: center; text-decoration: none; color: white; font-weight: 500; background: #fb7185; box-shadow: 0 2px 8px rgba(251, 113, 133, 0.3);">Dashboard</a>
+        <a href="{{ route('admin.inventory') }}" class="tab" style="flex: 1; padding: 12px 24px; border-radius: 8px; text-align: center; text-decoration: none; color: #6b7280; font-weight: 500; transition: all 0.2s;">Inventory</a>
+        <a href="#" class="tab" style="flex: 1; padding: 12px 24px; border-radius: 8px; text-align: center; text-decoration: none; color: #6b7280; font-weight: 500; transition: all 0.2s;">Orders</a>
+        <a href="#" class="tab" style="flex: 1; padding: 12px 24px; border-radius: 8px; text-align: center; text-decoration: none; color: #6b7280; font-weight: 500; transition: all 0.2s;">Analytics</a>
+    </div>
+
     <!-- STATS -->
     <div class="grid grid-3">
         <div class="card m-0" data-aos="fade-up" data-aos-delay="100">
             <p class="text-gray mt-0">TOTAL SALES</p>
-            <h2>₱{{ number_format($totalSales ?? 0, 2) }}</h2>
+            <h2>PHP {{ number_format($totalSales ?? 0, 2) }}</h2>
             <div class="progress">
                 <div class="progress-bar" @style(['width' => ($salesProgress ?? 50) . '%'])></div>
             </div>
@@ -201,7 +234,7 @@
         <div class="card m-0" data-aos="fade-up" data-aos-delay="200">
             <p class="text-gray mt-0">ACTIVE ORDERS</p>
             <h2>{{ $activeOrders ?? 0 }}</h2>
-            <p class="text-gray fs-14">Next delivery in {{ $nextDelivery ?? 'N/A' }}</p>
+            <p class="text-gray fs-14">Next delivery: {{ $nextDelivery ?? 'N/A' }}</p>
         </div>
 
         <div class="card m-0" data-aos="fade-up" data-aos-delay="300">
@@ -222,21 +255,12 @@
         </div>
 
         <div class="card m-0" data-aos="fade-left">
-            <h3>Inventory</h3>
-            @foreach($inventory ?? [] as $item)
-                <div class="inventory-item">
-                    <div class="inventory-top">
-                        <span>{{ $item['name'] }}</span>
-                        <span class="text-red">{{ $item['stock'] }}</span>
-                    </div>
-                    <div class="progress">
-                        <div class="progress-bar" @style(['width' => ($item['percent'] ?? 0) . '%', 'transition-delay' => (0.5 + $loop->index * 0.1) . 's'])></div>
-                    </div>
-                </div>
-            @endforeach
-            <button class="btn btn-light w-full mt-16">
-                Update Stock Levels
-            </button>
+            <h3>Quick Actions</h3>
+            <div style="display: flex; flex-direction: column; gap: 16px;">
+                <a href="{{ route('admin.inventory') }}" class="btn btn-primary" style="text-align: center; text-decoration: none;">📦 Manage Inventory</a>
+                <button class="btn btn-light">📊 View Reports</button>
+                <button class="btn btn-light">👥 Customer Support</button>
+            </div>
         </div>
     </div>
 
@@ -257,23 +281,30 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach($orders ?? [] as $order)
+                    @forelse($orders ?? [] as $order)
                     <tr>
-                        <td class="text-bold">{{ $order['id'] }}</td>
-                        <td>{{ $order['customer'] }}</td>
-                        <td class="text-gray">{{ $order['item'] }}</td>
+                        <td class="text-bold">{{ $order->order_number }}</td>
+                        <td>{{ $order->customer_name }}</td>
+                        <td class="text-gray">{{ $order->items_summary }}</td>
                         <td>
-                            <span class="badge 
-                                @if($order['status']=='Preparing') blue 
-                                @elseif($order['status']=='Delivered') green 
-                                @else yellow 
-                                @endif">
-                                {{ $order['status'] }}
-                            </span>
+                            <form method="POST" action="{{ route('admin.orders.status', $order) }}" class="status-form">
+                                @csrf
+                                @method('PATCH')
+                                <select class="status-select" name="status" aria-label="Status for {{ $order->order_number }}">
+                                    @foreach($statuses as $value => $label)
+                                        <option value="{{ $value }}" @selected($order->status === $value)>{{ $label }}</option>
+                                    @endforeach
+                                </select>
+                                <button class="mini-btn" type="submit">Save</button>
+                            </form>
                         </td>
-                        <td class="text-bold">₱{{ number_format($order['amount'], 2) }}</td>
+                        <td class="text-bold">PHP {{ number_format($order->total, 2) }}</td>
                     </tr>
-                    @endforeach
+                    @empty
+                    <tr>
+                        <td colspan="5" class="empty-state">No customer orders yet.</td>
+                    </tr>
+                    @endforelse
                 </tbody>
             </table>
         </div>
@@ -281,12 +312,17 @@
         <!-- TRENDING -->
         <div class="trending m-0" style="max-width: none;" data-aos="fade-up" data-aos-delay="200">
             <h3 class="mt-0">Trending This Week</h3>
-            @foreach($trending ?? [] as $trend)
+            @forelse($trending ?? [] as $trend)
                 <div class="trend-item">
-                    <span>{{ $trend['name'] }}</span>
-                    <span>{{ $trend['percent'] }}%</span>
+                    <span>{{ $trend->product_name }}</span>
+                    <span>{{ $trend->total_quantity }} sold</span>
                 </div>
-            @endforeach
+            @empty
+                <div class="trend-item">
+                    <span>No sales yet</span>
+                    <span>0</span>
+                </div>
+            @endforelse
         </div>
 
     </div>
@@ -304,3 +340,5 @@
     });
 </script>
 @endsection
+
+

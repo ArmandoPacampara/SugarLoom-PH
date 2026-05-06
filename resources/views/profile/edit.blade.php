@@ -42,6 +42,8 @@
         .badge { padding: 4px 10px; border-radius: 999px; font-size: 11px; font-weight: bold; }
         .green { background: #dcfce7; color: #16a34a; }
         .blue { background: #dbeafe; color: #2563eb; }
+        .yellow { background: #fef9c3; color: #ca8a04; }
+        .red { background: #fee2e2; color: #dc2626; }
 
         .cart-count {
             position: absolute;
@@ -117,32 +119,33 @@
         <!-- Order History (Visual Layout) -->
         <div class="card">
             <h3>Recent Purchases</h3>
-            
-            <div class="order-item">
-                <div class="order-header">
-                    <span class="order-id">Order #SL-8842</span>
-                    <span class="badge green">Delivered</span>
-                </div>
-                <div class="order-header">
-                    <p class="order-desc">1x Gourmet S'mores, 2x Red Velvet</p>
-                    <span class="order-price">₱155.00</span>
-                </div>
-                <p class="order-desc" style="font-size: 12px; margin-top: 8px;">Placed on May 1, 2026</p>
-            </div>
 
-            <div class="order-item">
-                <div class="order-header">
-                    <span class="order-id">Order #SL-8109</span>
-                    <span class="badge blue">Preparing</span>
+            @forelse($orders as $order)
+                <div class="order-item">
+                    <div class="order-header">
+                        <span class="order-id">{{ $order->order_number }}</span>
+                        <span @class([
+                            'badge',
+                            'green' => $order->status === \App\Models\Order::STATUS_DELIVERED,
+                            'blue' => $order->status === \App\Models\Order::STATUS_PREPARING || $order->status === \App\Models\Order::STATUS_OUT_FOR_DELIVERY,
+                            'yellow' => $order->status === \App\Models\Order::STATUS_PENDING,
+                            'red' => $order->status === \App\Models\Order::STATUS_CANCELLED,
+                        ])>{{ $order->status_label }}</span>
+                    </div>
+                    <div class="order-header">
+                        <p class="order-desc">{{ $order->items_summary }}</p>
+                        <span class="order-price">PHP {{ number_format($order->total, 2) }}</span>
+                    </div>
+                    <p class="order-desc" style="font-size: 12px; margin-top: 8px;">Placed on {{ $order->placed_at?->format('F j, Y') }}</p>
+                    <p class="order-desc" style="font-size: 12px; margin-top: 6px;">
+                        <a href="{{ route('track-order', ['tracking_number' => $order->order_number]) }}">Track this order</a>
+                    </p>
                 </div>
-                <div class="order-header">
-                    <p class="order-desc">1x Baked Sushi Tray</p>
-                    <span class="order-price">₱650.00</span>
-                </div>
-                <p class="order-desc" style="font-size: 12px; margin-top: 8px;">Placed on April 28, 2026</p>
-            </div>
-
-        </div>
+            @empty
+                <p class="order-desc">No orders yet.</p>
+            @endforelse
+</div>
     </div>
 </div>
 @endsection
+
