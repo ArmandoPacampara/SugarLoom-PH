@@ -1,874 +1,164 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Our Story</title>
-    <script src="https://cdn.tailwindcss.com"></script> 
-</head>
-    <style>
-        :root {
-            /* Exact color matching from screenshot */
-            --pink-nav:    #e06b87;
-            --pink-bg-base:#f6ccd6;
-            --pink-btn:    #ce5a7a;
-           
-            --text-dark:   #2b1b24; /* Dark plum for logo and headings */
-            --text-accent: #835372; /* Muted purple for "woven!" */
-            --text-body:   #665560; /* Paragraph text */
-           
-            --cream:       #fdf6f0;
-            --white:       #ffffff;
-            --radius-card: 20px;
-            --shadow-card: 0 8px 32px rgba(201,75,118,0.10);
-
-            --text-dark: #2b1b24;
-            --text-muted: #665560;
-            --pink-btn: #ce5a7a;
-            --text-accent: #835372;
-        }
-
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-
-        body {
-            font-family: 'Poppins', sans-serif;
-            background: var(--cream);
-            color: var(--text-body);
-            overflow-x: hidden;
-        }
-
-        h1, h2, h3 {
-            font-family: 'Poppins', sans-serif;
-            color: var(--text-dark);
-            letter-spacing: -0.03em;
-        }
-
-        /* ── NAVBAR ── */
-        .navbar {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 4rem;
-            height: 70px;
-            background: var(--pink-nav);
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
-
-        .logo {
-            font-size: 1.1rem;
-            font-weight: 900;
-            color: white;
-            letter-spacing: 0;
-            text-decoration: none;
-        }
-
-        .nav-links {
-            position: absolute;
-            left: 50%;
-            transform: translateX(-50%);
-            display: flex;
-            gap: 2.5rem;
-        }
-
-        .nav-links a {
-            color: var(--white);
-            text-decoration: none;
-            font-size: 0.9rem;
-            font-weight: 400;
-            transition: opacity 0.2s;
-        }
-        .nav-links form { margin: 0; }
-        .nav-links button {
-            background: transparent;
-            border: 0;
-            color: var(--white);
-            cursor: pointer;
-            font: inherit;
-            padding: 0;
-        }
-       
-        .nav-links a:hover,
-        .nav-links button:hover { opacity: 0.8; }
-
-        .nav-actions { display: flex; gap: 0.8rem; }
-       
-        .nav-actions > button,
-        .nav-actions > a,
-        .nav-actions > span {
-            width: 38px; height: 38px;
-            border-radius: 50%;
-            border: 1px solid rgba(255,255,255,0.5);
-            background: transparent;
-            color: var(--text-dark);
-            cursor: pointer;
-            display: grid;
-            place-items: center;
-            transition: background 0.2s;
-            padding: 0;
-            position: relative;
-        }
-       
-        .nav-actions > button:hover,
-        .nav-actions > a:hover,
-        .nav-actions > span:hover { background: rgba(255,255,255,0.2); }
-       
-        .nav-actions svg { width: 16px; height: 16px; fill: currentColor; }
-
-        .cart-count {
-            position: absolute;
-            top: -9px;
-            right: -7px;
-            color: white;
-            font-size: 0.72rem;
-            font-weight: 800;
-            line-height: 1;
-            text-shadow: 0 1px 2px rgba(43, 27, 36, 0.45);
-        }
-
-        .cart-count.is-empty { display: none; }
-
-        .login-btn { background: transparent; border: 0; font: inherit; }
-
-        body.modal-open {
-            overflow: hidden;
-        }
-
-        .login-overlay {
-            align-items: center;
-            background: rgba(43, 27, 36, 0.48);
-            backdrop-filter: blur(8px);
-            display: none;
-            inset: 0;
-            justify-content: center;
-            padding: 2rem;
-            position: fixed;
-            z-index: 999;
-        }
-
-        .login-overlay.is-open {
-            display: flex;
-        }
-
-        .login-popup {
-            background:
-                radial-gradient(circle at 88% 16%, rgba(255,255,255,0.95) 0 10rem, transparent 10.2rem),
-                linear-gradient(105deg, #f7cbd5 0%, #fff5f0 100%);
-            border: 1px solid rgba(255,255,255,0.8);
-            border-radius: 26px;
-            box-shadow: 0 28px 80px rgba(43, 27, 36, 0.28);
-            display: grid;
-            grid-template-columns: minmax(0, 0.95fr) minmax(320px, 0.82fr);
-            gap: 1.5rem;
-            max-width: 920px;
-            min-height: 480px;
-            overflow: hidden;
-            padding: 2.1rem;
-            position: relative;
-            width: min(100%, 920px);
-        }
-
-        .login-copy {
-            align-self: center;
-            padding: 1rem 0.5rem 1rem 0.7rem;
-        }
-
-        .login-copy h2 {
-            color: var(--text-dark);
-            font-size: clamp(2.9rem, 5vw, 4.6rem);
-            font-weight: 900;
-            letter-spacing: 0;
-            line-height: 0.96;
-            margin-bottom: 1.15rem;
-        }
-
-        .login-copy h2 span {
-            color: var(--text-accent);
-            display: block;
-        }
-
-        .login-copy p {
-            color: var(--text-body);
-            font-size: 0.98rem;
-            font-weight: 300;
-            line-height: 1.65;
-            max-width: 410px;
-        }
-
-        .login-panel {
-            align-self: center;
-            background: rgba(255,255,255,0.97);
-            border: 1px solid rgba(255,255,255,0.8);
-            border-radius: 22px;
-            box-shadow: 0 18px 50px rgba(206, 90, 122, 0.18);
-            padding: 2.25rem 2.25rem 1.8rem;
-        }
-
-        .login-panel h2 {
-            color: var(--text-dark);
-            font-size: 2rem;
-            font-weight: 900;
-            letter-spacing: 0;
-            line-height: 1;
-            margin-bottom: 0.55rem;
-        }
-
-        .login-panel .subtext {
-            color: var(--text-muted);
-            font-size: 0.94rem;
-            margin-bottom: 1.55rem;
-        }
-
-        .login-close {
-            background: rgba(255,255,255,0.72);
-            border: 1px solid rgba(255,255,255,0.9);
-            border-radius: 50%;
-            color: var(--text-muted);
-            cursor: pointer;
-            font-size: 1.25rem;
-            font-weight: 800;
-            height: 34px;
-            line-height: 1;
-            position: absolute;
-            right: 1rem;
-            top: 1rem;
-            width: 34px;
-            z-index: 2;
-        }
-
-        .login-close:hover {
-            color: var(--pink-btn);
-        }
-
-        .login-field {
-            margin-bottom: 1rem;
-        }
-
-        .login-field label {
-            color: var(--text-dark);
-            display: block;
-            font-size: 0.86rem;
-            font-weight: 800;
-            margin-bottom: 0.48rem;
-        }
-
-        .login-field input[type="email"],
-        .login-field input[type="password"] {
-            background: #edf5ff;
-            border: 1.5px solid #f0c8d3;
-            border-radius: 999px;
-            color: var(--text-dark);
-            font: inherit;
-            font-size: 0.86rem;
-            outline: none;
-            padding: 0.82rem 1rem;
-            width: 100%;
-        }
-
-        .login-field input:focus {
-            border-color: #ef7fa1;
-            box-shadow: 0 0 0 3px rgba(239, 127, 161, 0.2);
-        }
-
-        .login-hint {
-            color: var(--text-muted);
-            display: block;
-            font-size: 0.66rem;
-            margin-top: 0.26rem;
-        }
-
-        .login-row {
-            align-items: center;
-            display: flex;
-            justify-content: space-between;
-            gap: 0.75rem;
-            margin: 1.1rem 0 1.35rem;
-        }
-
-        .login-remember {
-            align-items: center;
-            color: var(--text-body);
-            display: flex;
-            font-size: 0.82rem;
-            font-weight: 700;
-            gap: 0.45rem;
-        }
-
-        .login-remember input {
-            accent-color: var(--pink-btn);
-        }
-
-        .login-forgot,
-        .login-register a {
-            color: var(--pink-btn);
-            font-size: 0.82rem;
-            font-weight: 800;
-            text-decoration: none;
-        }
-
-        .login-submit {
-            background: var(--pink-btn);
-            border: 0;
-            border-radius: 999px;
-            box-shadow: 0 12px 28px rgba(206, 90, 122, 0.28);
-            color: var(--white);
-            cursor: pointer;
-            font: inherit;
-            font-size: 0.92rem;
-            font-weight: 900;
-            padding: 0.86rem 1rem;
-            width: 100%;
-        }
-
-        .login-register {
-            color: var(--text-muted);
-            font-size: 0.84rem;
-            margin-top: 1.25rem;
-            text-align: center;
-        }
-
-        .login-errors,
-        .login-status {
-            border-radius: 12px;
-            font-size: 0.74rem;
-            line-height: 1.45;
-            margin-bottom: 0.85rem;
-            padding: 0.65rem 0.75rem;
-        }
-
-        .login-errors {
-            background: #fff1f2;
-            color: #be123c;
-        }
-
-        .login-status {
-            background: #ecfdf3;
-            color: #166534;
-        }
-
-
-        /* ── HERO ── */
-        .hero {
-            background-color: var(--pink-bg-base);
-            min-height: calc(100vh - 70px);
-            display: flex;
-            align-items: center;
-            padding: 0 4rem;
-            position: relative;
-            overflow: hidden;
-        }
-
-        /* The distinct curved shape behind the cookies */
-        .hero::before {
-            content: '';
-            position: absolute;
-            top: -10%;
-            right: -10%;
-            width: 65vw;
-            height: 120vh;
-            background: linear-gradient(135deg, #fef4f6 0%, #f1a9bf 80%);
-            border-radius: 50% 0 0 50%;
-            z-index: 1;
-        }
-
-        .hero-text {
-            width: 65%;           /* Increased from 55% */
-            max-width: 750px;     /* Increased from 600px */
-            position: relative;
-            z-index: 3;
-            margin-top: -2rem;
-        }
-
-        .hero-text h1 {
-            font-size: clamp(3.5rem, 6vw, 5.5rem);
-            line-height: 0.95; /* Extra tight to match design */
-            font-weight: 900;
-            margin-bottom: 1.5rem;
-            letter-spacing: -0.04em;
-        }
-
-        .hero-text h1 .accent {
-            color: var(--text-accent);
-            display: block;
-        }
-
-        .hero-text p {
-            font-size: 0.95rem;
-            font-weight: 300;
-            line-height: 1.8;
-            max-width: 440px;
-            margin-bottom: 2.5rem;
-        }
-
-        .hero-buttons { display: flex; gap: 1.25rem; flex-wrap: wrap; }
-
-        .btn {
-            border-radius: 999px;
-            padding: 0.85rem 2.2rem;
-            font-size: 0.95rem;
-            font-weight: 600;
-            font-family: 'Poppins', sans-serif;
-            cursor: pointer;
-            border: none;
-            transition: transform 0.2s, box-shadow 0.2s;
-            text-decoration: none;
-            display: inline-block;
-        }
-       
-        .btn:hover { transform: translateY(-2px); }
-       
-        .btn-primary {
-            background: var(--pink-btn);
-            color: white;
-            box-shadow: 0 8px 24px rgba(206, 90, 122, 0.3);
-        }
-       
-        .btn-white {
-            background: var(--white);
-            color: var(--text-body);
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
-        }
-
-        .hero-image {
-            position: absolute;
-            right: 0;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 45%;
-            max-width: 700px;
-            z-index: 2;
-            display: flex;
-            justify-content: flex-end;
-        }
-       
-        .hero-image img {
-            width: 100%;
-            display: block;
-            object-fit: contain;
-        }
-
-
-        /* ── SECTION COMMONS ── */
-        .section { padding: 5rem 4rem; }
-
-        .section-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-end;
-            margin-bottom: 3rem;
-        }
-
-        .section-header h2 { font-size: 2.5rem; font-weight: 800; }
-        .section-header p { font-size: 1rem; color: var(--text-body); margin-top: 0.5rem; font-weight: 300; }
-
-        .view-all {
-            font-size: 0.95rem;
-            color: var(--pink-btn);
-            font-weight: 600;
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-            gap: 0.3rem;
-            white-space: nowrap;
-            transition: gap 0.2s;
-        }
-        .view-all:hover { gap: 0.55rem; }
-
-
-        /* ── BEST SELLERS ── */
-        .best-sellers { background: var(--white); }
-
-
-        .products-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 2rem;
-        }
-
-
-        .product-card {
-            border: 1px solid #f4e9ec;
-            border-radius: var(--radius-card);
-            overflow: hidden;
-            background: var(--white);
-            box-shadow: var(--shadow-card);
-            transition: transform 0.25s, box-shadow 0.25s;
-        }
-       
-        .product-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 16px 40px rgba(201,75,118,0.15);
-        }
-
-
-        .product-card-img {
-            width: 100%;
-            height: 240px;
-            object-fit: cover;
-            display: block;
-            background: #fdf1f4;
-        }
-
-
-        .product-card-body { padding: 1.5rem; }
-
-
-        .product-card-top {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 0.75rem;
-        }
-       
-        .product-card-top h3 { font-size: 1.25rem; font-weight: 700; line-height: 1.2; }
-        .product-price { font-weight: 700; font-size: 1.1rem; color: var(--pink-btn); }
-
-
-        .product-desc { font-size: 0.9rem; font-weight: 300; line-height: 1.6; margin-bottom: 1.5rem; }
-
-
-        .btn-add {
-            width: 100%;
-            padding: 0.8rem;
-            border-radius: 999px;
-            border: 1.5px solid #f0e1e5;
-            background: white;
-            color: var(--text-dark);
-            font-size: 0.95rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-            font-family: 'Poppins', sans-serif;
-        }
-       
-        .btn-add:hover {
-            background: var(--pink-btn);
-            color: white;
-            border-color: var(--pink-btn);
-        }
-
-
-        /* ── FLAVOR QUIZ CTA ── */
-        .quiz-section { background: var(--cream); padding: 4rem; }
-
-
-        .quiz-card {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            border-radius: 28px;
-            overflow: hidden;
-            min-height: 300px;
-        }
-
-
-    .quiz-img-wrap {
-        flex: 1; /* Changed from 1.2 to 1 for perfect 50/50 balance */
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 3.5rem 3.5rem 3.5rem 0; /* Padding to give the image breathing room */
+@extends('layouts.app')
+
+@section('title', 'Our Story – SugarLoom PH')
+
+@section('styles')
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Sans:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+    :root {
+        --pink-nav:    #e06b87;
+        --pink-bg-base:#f6ccd6;
+        --pink-btn:    #ce5a7a;
+        --text-dark:   #2b1b24;
+        --text-accent: #835372;
+        --text-body:   #665560;
+        --cream:       #fdf6f0;
+        --white:       #ffffff;
     }
 
-    .quiz-img {
-        width: 100%; 
-        height: 100%;
-        max-height: 330px; /* Prevents it from getting too tall */
-        object-fit: cover; /* Ensures the image doesn't stretch/distort */
-        object-position: center;
-        border-radius: 16px; /* Rounds the image perfectly */
-        box-shadow: 0 8px 24px rgba(0,0,0,0.12); /* Adds a subtle shadow for depth */
+    h1, h2, h3, h4 { font-family: 'Playfair Display', serif; }
+    p, span, button, a { font-family: 'DM Sans', sans-serif; }
+
+    @keyframes float {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-10px); }
+    }
+    .float-anim { animation: float 4s ease-in-out infinite; }
+
+    .about-page {
+        padding: 3rem 4rem;
+        max-width: 1400px;
+        margin: 0 auto;
     }
 
-        .quiz-content {
-            background: #fae6eb;
-            padding: 4rem 3rem;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            gap: 1.25rem;
-        }
-       
-        .quiz-content h2 { font-size: 2.2rem; font-weight: 800; line-height: 1.2; }
-        .quiz-content p { font-size: 1rem; font-weight: 300; line-height: 1.7; }
+    @media (max-width: 1024px) {
+        .about-page { padding: 2rem; }
+    }
+</style>
+@endsection
 
+@section('content')
+<div class="about-page">
 
-        .btn-quiz {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            background: var(--pink-btn);
-            color: white;
-            border: none;
-            border-radius: 999px;
-            padding: 0.9rem 1.8rem;
-            font-size: 0.95rem;
-            font-weight: 600;
-            cursor: pointer;
-            width: fit-content;
-            transition: transform 0.2s, box-shadow 0.2s;
-            box-shadow: 0 8px 20px rgba(209, 91, 123, 0.25);
-            font-family: 'Poppins', sans-serif;
-        }
-        .btn-quiz:hover { transform: translateY(-2px); }
-
-
-        /* ── TESTIMONIALS ── */
-        .testimonials { background: var(--white); }
-
-
-        .testimonials .section-header {
-            flex-direction: column;
-            align-items: center;
-            text-align: center;
-            margin-bottom: 3.5rem;
-        }
-
-
-        .divider {
-            width: 60px; height: 4px;
-            background: var(--pink-btn);
-            border-radius: 2px;
-            margin: 1rem auto 0;
-        }
-
-
-        .reviews-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2rem; }
-
-
-        .review-card {
-            padding: 2.25rem;
-            border: 1px solid #f4e9ec;
-            border-radius: var(--radius-card);
-            background: var(--cream);
-        }
-
-
-        .review-quote {
-            font-size: 3.5rem;
-            color: #f09ab0;
-            line-height: 0.8;
-            font-weight: 900;
-            margin-bottom: 0.5rem;
-        }
-
-
-        .stars { color: #f4a623; font-size: 1rem; letter-spacing: 2px; margin-bottom: 1rem; }
-
-
-        .review-text { font-size: 0.95rem; font-weight: 300; line-height: 1.7; margin-bottom: 1.5rem; }
-
-
-        .reviewer { display: flex; align-items: center; gap: 1rem; }
-
-
-        .reviewer-avatar {
-            width: 44px; height: 44px;
-            border-radius: 50%;
-            background: #f09ab0;
-            display: grid;
-            place-items: center;
-            font-size: 1.1rem;
-            font-weight: 700;
-            color: white;
-            flex-shrink: 0;
-            overflow: hidden;
-        }
-        .reviewer-avatar img { width: 100%; height: 100%; object-fit: cover; }
-
-
-        .reviewer-name { font-size: 0.95rem; font-weight: 700; color: var(--text-dark); }
-        .reviewer-role { font-size: 0.8rem; font-weight: 500; color: var(--pink-btn); text-transform: uppercase; letter-spacing: 0.05em; }
-
-
-        /* ── TOAST ── */
-        .toast {
-            position: fixed;
-            bottom: 2rem;
-            left: 50%;
-            transform: translateX(-50%) translateY(80px);
-            background: var(--text-dark);
-            color: white;
-            padding: 0.8rem 1.8rem;
-            border-radius: 999px;
-            font-size: 0.95rem;
-            font-weight: 500;
-            z-index: 9999;
-            transition: transform 0.3s ease;
-            pointer-events: none;
-        }
-        .toast.show { transform: translateX(-50%) translateY(0); }
-
-
-        /* ── FOOTER ── */
-        footer {
-            background: var(--pink-nav);
-            padding: 2rem 4rem;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-        .footer-logo { font-size: 1.25rem; font-weight: 900; color: var(--text-dark); }
-        .footer-cart {
-            width: 44px; height: 44px;
-            border-radius: 50%;
-            background: rgba(255,255,255,0.2);
-            border: 1px solid rgba(255,255,255,0.4);
-            color: white;
-            display: grid;
-            place-items: center;
-            font-size: 1.1rem;
-            cursor: pointer;
-        }
-
-        /* ── RESPONSIVE ── */
-        @media (max-width: 1024px) {
-            .hero-text h1 { font-size: 3.5rem; }
-            .hero-image { width: 50%; }
-        }
-
-        @media (max-width: 900px) {
-            .section { padding: 4rem 2rem; }
-            .hero { padding: 4rem 2rem; flex-direction: column; align-items: flex-start; }
-            .hero::before { width: 100vw; height: 100vw; top: 20%; right: 0; border-radius: 50%; }
-            .hero-text { width: 100%; max-width: 100%; margin-bottom: 3rem; }
-            .hero-image { position: relative; width: 100%; transform: none; display: flex; justify-content: center; }
-            .hero-image img { width: 80%; }
-            .products-grid, .reviews-grid { grid-template-columns: 1fr 1fr; }
-            .quiz-card { grid-template-columns: 1fr; }
-            .quiz-img { height: 260px; }
-            .navbar { padding: 0 2rem; }
-            .nav-links { display: none; }
-            footer { padding: 2rem; }
-        }
-
-        @media (max-width: 600px) {
-            .products-grid, .reviews-grid { grid-template-columns: 1fr; }
-            .hero-text h1 { font-size: 3rem; }
-            .hero-buttons { flex-direction: column; width: 100%; }
-            .btn { text-align: center; width: 100%; }
-            .login-popup {
-                grid-template-columns: 1fr;
-                min-height: auto;
-                max-width: 520px;
-            }
-            .login-copy { display: none; }
-            .login-panel { padding: 2.3rem 1.4rem 1.5rem; }
-        }
-        @include('partials.navbar-styles')
-        @include('partials.login-modal-styles')
-    </style>
-<body>
-
-<nav class="navbar">
-    <a href="{{ route('home') }}" class="logo">SugarLoom PH</a>
-    <div class="nav-links">
-        @auth
-            @if(auth()->user()->isAdmin())
-                <a href="{{ route('admin.dashboard') }}">Admin</a>
-            @else
-                <a href="{{ route('catalog') }}">Catalog</a>
-                <a href="{{ route('track-order') }}">Track Order</a>
-                <a href="{{ route('about') }}">About Us</a>
-            @endif
-            <form method="POST" action="{{ route('logout') }}">
-                @csrf
-                <button type="submit">Logout</button>
-            </form>
-        @else
-            <a href="{{ route('catalog') }}">Catalog</a>
-            <a href="{{ route('track-order') }}">Track Order</a>
-            <a href="{{ route('about') }}">About Us</a>
-        @endauth
-    </div>
-    <div class="nav-actions">
-        <a href="{{ route('cart.index') }}" aria-label="Cart">
-            <svg viewBox="0 0 24 24"><path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"/></svg>
-            @php($cartCount = collect(session('cart', []))->sum('quantity'))
-            <span class="cart-count {{ $cartCount ? '' : 'is-empty' }}" data-cart-count>{{ $cartCount }}</span>
-        </a>
-        @auth
-            <a href="{{ route('profile.edit') }}" aria-label="Account" title="Account">
-                <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
-            </a>
-        @else
-            <button type="button" class="login-btn" data-login-open aria-label="Login" title="Login">
-                <svg viewBox="0 0 24 24">
-                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/>
-                </svg>
-            </button>
-        @endauth
-    </div>
-</nav>
-
-
-@include('partials.login-modal')
-
-
-<div class="bg-[#f6efef] text-gray-800">
-
-    <!-- HERO -->
-    <section class="max-w-7xl mx-auto px-6 py-16 flex flex-col md:flex-row items-center gap-10">
+    <!-- HERO SECTION -->
+    <section class="relative min-h-[85vh] flex items-center mb-16 overflow-hidden rounded-[50px] bg-gradient-to-br from-[#fffcfc] to-[#fef2f4] border border-pink-100/50 shadow-sm" data-aos="zoom-out" data-aos-duration="1200">
         
-        <div class="flex-1">
-            <p class="text-sm tracking-wide text-gray-500 mb-4">EST. PASIG CITY</p>
-
-            <h1 class="text-5xl font-bold leading-tight">
-                Our Story — <br>
-                Where <span class="text-rose-400">Sweet</span><br>
-                <span class="text-rose-400">Dreams</span> are<br>
-                Woven
-            </h1>
-
-            <p class="mt-6 text-gray-600 max-w-md">
-                From a humble home kitchen to a digital curator of artisanal delights,
-                every crumb tells a story of passion and patience.
-            </p>
-
-            <button class="mt-6 bg-rose-400 text-white px-6 py-3 rounded-full shadow-md">
-                Read Our Journey
-            </button>
+        {{-- Abstract Decorative Background --}}
+        <div class="absolute top-0 right-0 w-2/3 h-full overflow-hidden pointer-events-none">
+            <div class="absolute -top-20 -right-20 w-[600px] h-[600px] bg-pink-100/40 rounded-full blur-3xl opacity-60"></div>
+            <div class="absolute top-1/2 -right-40 w-[400px] h-[400px] bg-rose-100/30 rounded-full blur-2xl opacity-50"></div>
         </div>
 
-        <div class="flex-1 relative">
-            <div class="bg-orange-400 rounded-3xl p-6">
-                <!-- IMAGE: public/images/cookies4.jpeg -->
-                <img src="{{ asset('images/cookies4.jpeg') }}" class="mx-auto">
+        <div class="relative z-10 w-full flex flex-col lg:flex-row items-center gap-16 px-12 lg:px-20 py-16">
+            
+            {{-- Text Side --}}
+            <div class="flex-1 text-center lg:text-left" data-aos="fade-right" data-aos-delay="200">
+                <div class="inline-flex items-center gap-2 px-4 py-2 bg-white/80 border border-pink-100 rounded-full shadow-sm mb-8">
+                    <span class="flex h-2 w-2 rounded-full bg-rose-500 animate-pulse"></span>
+                    <span class="text-[10px] font-bold uppercase tracking-[0.2em] text-rose-500">Established 2024 • Pasig City</span>
+                </div>
+
+                <h1 class="text-6xl xl:text-7xl font-black text-[#2b1b24] leading-[0.95] tracking-tighter mb-8 italic">
+                    Our Story —<br>
+                    <span class="text-[#ce5a7a] not-italic">Where Sweet</span><br>
+                    <span class="relative inline-block">
+                        Dreams
+                        <svg class="absolute -bottom-2 left-0 w-full h-3 text-pink-200/60" viewBox="0 0 100 10" preserveAspectRatio="none">
+                            <path d="M0 5 Q 25 0, 50 5 T 100 5" stroke="currentColor" stroke-width="4" fill="transparent" />
+                        </svg>
+                    </span>
+                    are Woven
+                </h1>
+
+                <p class="text-lg text-[#665560] font-light leading-relaxed max-w-lg mb-10 mx-auto lg:mx-0">
+                    From a humble home kitchen to a digital curator of artisanal delights, 
+                    every crumb tells a story of passion, patience, and the pursuit of the perfect bake.
+                </p>
+
+                <div class="flex flex-wrap items-center justify-center lg:justify-start gap-4">
+                    <a href="{{ route('catalog') }}" class="px-10 py-4 bg-[#ce5a7a] text-white rounded-full font-bold shadow-xl shadow-rose-200 hover:bg-[#b34a66] transition-all hover:scale-105 active:scale-95 text-lg">
+                        Shop the Loom
+                    </a>
+                    <button class="px-10 py-4 bg-white text-[#ce5a7a] border-2 border-pink-100 rounded-full font-bold hover:bg-pink-50 transition-all hover:border-[#ce5a7a] text-lg">
+                        Read Journey
+                    </button>
+                </div>
+
+                {{-- Key Highlights --}}
+                <div class="mt-12 flex items-center justify-center lg:justify-start gap-8 border-t border-pink-100/50 pt-10">
+                    <div>
+                        <span class="block text-3xl font-black text-[#2b1b24]">100%</span>
+                        <span class="text-[10px] font-bold uppercase tracking-widest text-[#835372]">Small Batch</span>
+                    </div>
+                    <div class="w-px h-10 bg-pink-100"></div>
+                    <div>
+                        <span class="block text-3xl font-black text-[#2b1b24]">Premium</span>
+                        <span class="text-[10px] font-bold uppercase tracking-widest text-[#835372]">Ingredients</span>
+                    </div>
+                </div>
             </div>
 
-            <div class="absolute bottom-0 left-0 bg-white p-4 rounded-xl shadow-md text-sm">
-                "We don’t just bake; we curate moments of pure joy."
+            {{-- Image Side --}}
+            <div class="flex-1 relative" data-aos="zoom-in" data-aos-delay="400">
+                <div class="relative z-10 rounded-[60px] overflow-hidden shadow-2xl rotate-2 hover:rotate-0 transition-transform duration-700 aspect-[4/5] max-w-[500px] mx-auto group">
+                    <img src="{{ asset('images/cookies4.jpeg') }}" class="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110">
+                    <div class="absolute inset-0 bg-gradient-to-t from-[#2b1b24]/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                </div>
+
+                {{-- Floating Experience Card --}}
+                <div class="absolute -bottom-6 -left-6 lg:-left-12 z-20 bg-white p-6 rounded-[30px] shadow-2xl border border-pink-50 max-w-[280px] float-anim" style="animation-duration: 5s">
+                    <div class="flex items-center gap-3 mb-3">
+                        <div class="flex -space-x-2">
+                            <div class="w-8 h-8 rounded-full bg-pink-100 border-2 border-white flex items-center justify-center text-xs">👨‍🍳</div>
+                            <div class="w-8 h-8 rounded-full bg-rose-100 border-2 border-white flex items-center justify-center text-xs">✨</div>
+                        </div>
+                        <span class="text-[10px] font-black uppercase text-[#ce5a7a] tracking-tighter">Artisanal Choice</span>
+                    </div>
+                    <p class="text-xs text-[#665560] leading-relaxed font-medium">
+                        "We don’t just bake; we curate moments of pure joy for your soul."
+                    </p>
+                </div>
+
+                {{-- Decorative Circle Badge --}}
+                <div class="absolute -top-6 -right-6 z-20 w-32 h-32 bg-[#2b1b24] text-white rounded-full flex flex-col items-center justify-center border-4 border-white shadow-xl rotate-12 float-anim" style="animation-delay: 1s">
+                    <span class="text-2xl font-bold">#1</span>
+                    <span class="text-[8px] font-bold uppercase tracking-[0.3em] text-pink-200">Local Bakery</span>
+                </div>
             </div>
+
         </div>
     </section>
 
 
     <!-- STORY -->
-    <section class="text-center max-w-4xl mx-auto px-6 py-16">
-        <h2 class="text-2xl font-semibold mb-6">The Confectionery Curator</h2>
+    <section class="text-center max-w-4xl mx-auto py-24" data-aos="fade-up">
+        <h2 class="text-4xl font-extrabold mb-8 text-[var(--text-dark)] tracking-tight">The Confectionery Curator</h2>
 
-        <p class="text-gray-600 mb-4">
-            What started in 2024 in a small home kitchen in <b>Pasig City</b>
+        <p class="text-xl text-[var(--text-body)] mb-6 leading-relaxed font-light">
+            What started in 2024 in a small home kitchen in <b class="font-bold text-[var(--text-dark)]">Pasig City</b>
             has blossomed into a curated digital experience.
         </p>
 
-        <p class="text-gray-600">
+        <p class="text-xl text-[var(--text-body)] leading-relaxed font-light">
             SugarLoom PH isn't just a bakery; it is a vision of Editorial Artisanship.
         </p>
     </section>
 
 
     <!-- IMAGE + CARD -->
-    <section class="max-w-6xl mx-auto px-6 py-10 grid md:grid-cols-2 gap-8">
-        <div class="rounded-2xl overflow-hidden shadow">
-            <!-- IMAGE: public/images/cookies2.jpeg -->
-            <img src="{{ asset('images/cookies2.jpeg') }}" class="w-full h-full object-cover">
+    <section class="grid md:grid-cols-2 gap-12 overflow-hidden py-12">
+        <div class="rounded-[32px] overflow-hidden shadow-2xl h-[400px]" data-aos="fade-right">
+            <img src="{{ asset('images/cookies2.jpeg') }}" class="w-full h-full object-cover hover:scale-110 transition-transform duration-1000">
         </div>
 
-        <div class="bg-rose-300 rounded-2xl p-10 flex items-center justify-center text-center">
+        <div class="bg-[var(--pink-btn)] rounded-[32px] p-16 flex items-center justify-center text-center shadow-2xl" data-aos="fade-left">
             <div>
-                <div class="text-3xl mb-4">✨</div>
-                <h3 class="text-xl font-semibold">Modern Legacy</h3>
-                <p class="text-sm mt-2">
-                    Blending traditional recipes with digital-first convenience.
+                <div class="text-5xl mb-6">✨</div>
+                <h3 class="text-3xl font-extrabold text-white mb-4">Modern Legacy</h3>
+                <p class="text-lg text-pink-50 font-light leading-relaxed">
+                    Blending traditional recipes with digital-first convenience. We believe in the timeless art of baking, reimagined for the modern palate.
                 </p>
             </div>
         </div>
@@ -876,42 +166,42 @@
 
 
     <!-- PROCESS -->
-    <section class="text-center py-16">
-        <h2 class="text-2xl font-semibold">Our Craft, Your Joy</h2>
-        <p class="text-gray-500 mb-10">The meticulous steps behind every creation.</p>
+    <section class="text-center py-24">
+        <h2 class="text-5xl font-extrabold mb-4 text-[var(--text-dark)] tracking-tight" data-aos="fade-up">Our Craft, Your Joy</h2>
+        <p class="text-xl text-[var(--text-body)] mb-16 font-light" data-aos="fade-up" data-aos-delay="100">The meticulous steps behind every creation.</p>
 
-        <div class="max-w-6xl mx-auto grid md:grid-cols-3 gap-8 px-6 items-stretch">
+        <div class="grid md:grid-cols-3 gap-12 items-stretch">
 
-            <!-- CARD 1 -->
-            <div class="flex flex-col h-full">
-                <img src="{{ asset('images/cookies1.jpeg') }}" 
-                     class="w-full h-64 object-cover rounded-2xl mb-4">
-
-                <h4 class="font-semibold">Small Batch Baking</h4>
-                <p class="text-sm text-gray-600 mt-2">
-                    Each order is baked in limited quantities.
+            <div class="flex flex-col h-full group" data-aos="fade-up" data-aos-delay="200">
+                <div class="overflow-hidden rounded-[32px] mb-8 shadow-lg">
+                    <img src="{{ asset('images/cookies1.jpeg') }}"
+                         class="w-full h-80 object-cover group-hover:scale-110 transition-transform duration-700">
+                </div>
+                <h4 class="text-2xl font-bold text-[var(--text-dark)] mb-3">Small Batch Baking</h4>
+                <p class="text-md text-[var(--text-body)] leading-relaxed font-light">
+                    Each order is baked in limited quantities to ensure the highest quality and freshness in every bite.
                 </p>
             </div>
 
-            <!-- CARD 2 -->
-            <div class="flex flex-col h-full">
-                <img src="{{ asset('images/ingredients.jpeg') }}" 
-                     class="w-full h-64 object-cover rounded-2xl mb-4">
-
-                <h4 class="font-semibold">Premium Ingredients</h4>
-                <p class="text-sm text-gray-600 mt-2">
-                    Only the finest elements for our loom.
+            <div class="flex flex-col h-full group" data-aos="fade-up" data-aos-delay="300">
+                <div class="overflow-hidden rounded-[32px] mb-8 shadow-lg">
+                    <img src="{{ asset('images/ingredients.jpeg') }}"
+                         class="w-full h-80 object-cover group-hover:scale-110 transition-transform duration-700">
+                </div>
+                <h4 class="text-2xl font-bold text-[var(--text-dark)] mb-3">Premium Ingredients</h4>
+                <p class="text-md text-[var(--text-body)] leading-relaxed font-light">
+                    Only the finest elements for our loom. We source high-quality chocolate, butter, and local flavors.
                 </p>
             </div>
 
-            <!-- CARD 3 -->
-            <div class="flex flex-col h-full">
-                <img src="{{ asset('images/cookies5.jpeg') }}" 
-                     class="w-full h-64 object-cover rounded-2xl mb-4">
-
-                <h4 class="font-semibold">Hand-Crafted with Love</h4>
-                <p class="text-sm text-gray-600 mt-2">
-                    Every decoration is applied by hand.
+            <div class="flex flex-col h-full group" data-aos="fade-up" data-aos-delay="400">
+                <div class="overflow-hidden rounded-[32px] mb-8 shadow-lg">
+                    <img src="{{ asset('images/cookies5.jpeg') }}"
+                         class="w-full h-80 object-cover group-hover:scale-110 transition-transform duration-700">
+                </div>
+                <h4 class="text-2xl font-bold text-[var(--text-dark)] mb-3">Hand-Crafted with Love</h4>
+                <p class="text-md text-[var(--text-body)] leading-relaxed font-light">
+                    Every decoration is applied by hand, ensuring that no two treats are exactly alike.
                 </p>
             </div>
 
@@ -920,26 +210,26 @@
 
 
     <!-- TEAM -->
-    <section class="max-w-5xl mx-auto px-6 py-16">
-        <h2 class="text-2xl font-semibold mb-10">The Artisans</h2>
+    <section class="py-24 bg-white/50 rounded-[60px] mb-24 px-12">
+        <h2 class="text-4xl font-extrabold mb-16 text-center text-[var(--text-dark)] tracking-tight" data-aos="fade-up">The Artisans</h2>
 
-        <div class="grid md:grid-cols-2 gap-8">
+        <div class="grid md:grid-cols-2 gap-12">
 
-            <div class="bg-white p-6 rounded-xl shadow flex gap-4 items-center">
-                <!-- IMAGE: public/images/neon.jpeg -->
-                <img src="{{ asset('images/neon.jpeg') }}" class="w-20 h-20 rounded-full">
+            <div class="bg-white p-8 rounded-3xl shadow-xl flex gap-8 items-center hover:shadow-2xl transition-all hover:-translate-y-2 border border-pink-50" data-aos="fade-right" data-aos-delay="100">
+                <img src="{{ asset('images/neon.jpeg') }}" class="w-28 h-28 rounded-2xl object-cover shadow-md">
                 <div>
-                    <h4 class="font-semibold">Neon Austria</h4>
-                    <p class="text-sm text-gray-500">Founder & Manager</p>
+                    <h4 class="text-2xl font-bold text-[var(--text-dark)]">Neon Austria</h4>
+                    <p class="text-md text-[var(--pink-btn)] font-semibold uppercase tracking-wider mt-1">Founder & Manager</p>
+                    <p class="text-sm text-[var(--text-body)] mt-2 font-light">Visionary behind SugarLoom's digital presence.</p>
                 </div>
             </div>
 
-            <div class="bg-white p-6 rounded-xl shadow flex gap-4 items-center">
-                <!-- IMAGE: public/images/shandy.jpeg -->
-                <img src="{{ asset('images/shandy.jpeg') }}" class="w-20 h-20 rounded-full">
+            <div class="bg-white p-8 rounded-3xl shadow-xl flex gap-8 items-center hover:shadow-2xl transition-all hover:-translate-y-2 border border-pink-50" data-aos="fade-left" data-aos-delay="200">
+                <img src="{{ asset('images/shandy.jpeg') }}" class="w-28 h-28 rounded-2xl object-cover shadow-md">
                 <div>
-                    <h4 class="font-semibold">Shandy Shanine C. Del Rosario</h4>
-                    <p class="text-sm text-gray-500">Head Pastry Artist</p>
+                    <h4 class="text-2xl font-bold text-[var(--text-dark)]">Shandy Shanine C. Del Rosario</h4>
+                    <p class="text-md text-[var(--pink-btn)] font-semibold uppercase tracking-wider mt-1">Head Pastry Artist</p>
+                    <p class="text-sm text-[var(--text-body)] mt-2 font-light">The master weaver of our artisanal flavors.</p>
                 </div>
             </div>
 
@@ -948,117 +238,26 @@
 
 
     <!-- CTA -->
-    <section class="text-center py-16">
-        <h2 class="text-3xl font-semibold mb-4">Ready to taste the dream?</h2>
-        <p class="text-gray-600 mb-6">
+    <section class="text-center py-24 bg-[var(--pink-btn)] rounded-[60px] px-16 shadow-2xl" data-aos="zoom-in">
+        <h2 class="text-5xl font-extrabold mb-6 text-white tracking-tight">Ready to taste the dream?</h2>
+        <p class="text-xl text-pink-50 mb-10 font-light">
             Browse our curated collection of artisanal treats.
         </p>
-
-        <button class="bg-rose-400 text-white px-8 py-3 rounded-full shadow-md">
+        <a href="{{ route('catalog') }}" class="inline-block bg-white text-[var(--pink-btn)] px-12 py-5 rounded-full shadow-2xl hover:bg-[var(--cream)] transition-all hover:scale-105 font-bold text-xl">
             Experience the Magic
-        </button>
+        </a>
     </section>
 
-
-    <!-- FOOTER -->
-    <footer class="text-center text-sm text-gray-500 py-10">
-        SugarLoom PH © 2024
-    </footer>
-
 </div>
+@endsection
 
+@section('scripts')
+<script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
 <script>
-function filterProducts(btn, filter) {
-    // Update active tab
-    document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
-    btn.classList.add('active');
-
-    // Filter cards
-    document.querySelectorAll('.catalog-card').forEach(card => {
-        const match = filter === 'all' || card.dataset.category === filter;
-        card.style.display = match ? '' : 'none';
-    });
-}
-
-function addToCart(productId) {
-    fetch('/cart/add', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || ''
-        },
-        body: JSON.stringify({ product_id: productId, quantity: 1 })
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (data.success) {
-            updateCartCount(data.count || 0);
-            showToast('Added to cart.');
-        }
-    })
-    .catch(() => showToast('Something went wrong. Please try again.'));
-}
-
-document.querySelectorAll('[data-id]').forEach(button => {
-    button.addEventListener('click', () => addToCart(button.dataset.id));
+AOS.init({
+    once: true,
+    duration: 800,
+    easing: 'ease-out-cubic'
 });
-
-let toastTimer;
-function showToast(message) {
-    const toast = document.getElementById('toast');
-    toast.textContent = message;
-    toast.classList.add('show');
-    clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => toast.classList.remove('show'), 2600);
-}
-
-function updateCartCount(count) {
-    document.querySelectorAll('[data-cart-count]').forEach(badge => {
-        badge.textContent = count;
-        badge.classList.toggle('is-empty', count < 1);
-    });
-}
-
-const loginModal = document.getElementById('loginModal');
-
-function openLoginModal() {
-    if (!loginModal) return;
-    loginModal.classList.add('is-open');
-    loginModal.setAttribute('aria-hidden', 'false');
-    document.body.classList.add('modal-open');
-    setTimeout(function() {
-        document.getElementById('modal-email')?.focus();
-    }, 50);
-}
-
-function closeLoginModal() {
-    if (!loginModal) return;
-    loginModal.classList.remove('is-open');
-    loginModal.setAttribute('aria-hidden', 'true');
-    document.body.classList.remove('modal-open');
-}
-
-document.querySelectorAll('[data-login-open]').forEach(btn => {
-    btn.addEventListener('click', openLoginModal);
-});
-
-document.querySelectorAll('[data-login-close]').forEach(btn => {
-    btn.addEventListener('click', closeLoginModal);
-});
-
-loginModal?.addEventListener('click', function(e) {
-    if (e.target === loginModal) closeLoginModal();
-});
-
-document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') closeLoginModal();
-});
-
-if (loginModal?.classList.contains('is-open')) {
-    document.body.classList.add('modal-open');
-}
 </script>
-
-</body>
-</html>
+@endsection

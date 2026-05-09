@@ -1,694 +1,448 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Catalog – SugarLoom PH</title>
+@extends('layouts.app')
+
+@section('title', 'Catalog – SugarLoom PH')
+
+@section('styles')
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --pink-deep:   #d8547b; 
-            --pink-nav: #e06b87;
-            --pink-light:  #f8bac9;
-            --pink-pale:   #ffd7e1;
-            --cream:       #fffcfc; 
-            --dark:        #1a1018;
-            --text-body:   #4a3d45;
-            --text-muted:  #8a7080;
-            --white:       #ffffff;
-            --gray-btn:    #f3eff1;
-            --radius-card: 24px;
-            --radius-pill: 999px;
-            --text-dark: #2b1b24;
-            --text-muted: #665560;
-            --pink-btn: #ce5a7a;
-            --text-accent: #835372;
-        }
-
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-
-        body {
-            font-family: 'DM Sans', sans-serif;
-            background: var(--cream);
-            color: var(--dark);
-            overflow-x: hidden;
-        }
-
-        /* ── NAVBAR ──────────────────────────────────── */
-
-        .navbar {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 4rem;
-            height: 70px;
-            background: var(--pink-nav);
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
-
-        .logo {
-            font-family: 'DM Sans', sans-serif;
-            font-size: 1.1rem;
-            font-weight: 900;
-            color: white;
-            letter-spacing: 0;
-            text-decoration: none;
-        }
-
-        .logo-icon {
-            width: 32px; height: 32px;
-            background: var(--white);
-            border-radius: 50%;
-            display: grid;
-            place-items: center;
-            color: var(--pink-deep);
-            font-size: 1rem;
-        }
-
-        .nav-links {
-            position: absolute;
-            left: 50%;
-            transform: translateX(-50%);
-            display: flex;
-            gap: 2.5rem;
-        }
-
-        .nav-links a {
-            color: var(--white);
-            text-decoration: none;
-            font-size: 0.9rem;
-            font-weight: 400;
-            transition: opacity 0.2s;
-        }
-        .nav-links form { margin: 0; }
-        .nav-links button {
-            background: transparent;
-            border: 0;
-            color: var(--white);
-            cursor: pointer;
-            font: inherit;
-            padding: 0;
-        }
-
-        .nav-links a:hover,
-        .nav-links button:hover { opacity: 0.8; }
-        .nav-links a.active { color: var(--white); }
-
-        .nav-actions {
-            display: flex;
-            gap: 0.8rem;
-        }
-
-        .nav-actions > button,
-        .nav-actions > a,
-        .nav-actions > span {
-            width: 38px; height: 38px;
-            border-radius: 50%;
-            border: 1px solid rgba(255,255,255,0.5);
-            background: transparent;
-            color: var(--dark);
-            cursor: pointer;
-            display: grid;
-            place-items: center;
-            transition: background 0.2s;
-            padding: 0;
-            position: relative;
-        }
-
-        .nav-actions > button:hover,
-        .nav-actions > a:hover,
-        .nav-actions > span:hover { background: rgba(255,255,255,0.2); }
-
-        .nav-actions svg { width: 16px; height: 16px; fill: currentColor; }
-
-        .cart-count {
-            position: absolute;
-            top: -9px;
-            right: -7px;
-            color: white;
-            font-size: 0.72rem;
-            font-weight: 800;
-            line-height: 1;
-            text-shadow: 0 1px 2px rgba(26, 16, 24, 0.45);
-        }
-
-        .cart-count.is-empty { display: none; }
-
-        .login-btn { background: transparent; border: 0; font: inherit; }
-
-        /* ── PAGE HEADER ─────────────────────────────── */
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 2.5rem 2rem;
-        }
-
-        .page-header {
-            display: flex;
-            align-items: flex-start;
-            justify-content: space-between;
-            gap: 2rem;
-            margin-bottom: 2.5rem;
-        }
-
-        .page-header-left h1 {
-            font-family: 'DM Sans', sans-serif;
-            font-weight: 700;
-            font-size: 2.5rem;
-            color: var(--dark);
-            line-height: 1.2;
-            letter-spacing: -0.03em;
-        }
-
-        .page-header-left p {
-            font-size: 0.95rem;
-            color: var(--text-muted);
-            margin-top: 0.5rem;
-            max-width: 360px;
-            line-height: 1.5;
-        }
-
-        /* Baker's Choice Card */
-        .bakers-choice {
-            background: var(--pink-deep);
-            border-radius: 20px;
-            padding: 1.5rem;
-            color: white;
-            min-width: 380px;
-            position: relative;
-        }
-
-        .bakers-choice-top {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 0.2rem;
-        }
-
-        .bakers-choice h3 {
-            font-size: 1.1rem;
-            font-weight: 700;
-        }
-
-        .bakers-price {
-            font-size: 1.2rem;
-            font-weight: 700;
-        }
-
-        .bakers-choice p {
-            font-size: 0.85rem;
-            opacity: 0.9;
-            margin-bottom: 1.2rem;
-            max-width: 250px;
-        }
-
-        .btn-quick-add {
-            width: 100%;
-            padding: 0.7rem;
-            border-radius: var(--radius-pill);
-            border: none;
-            background: white;
-            color: var(--pink-deep);
-            font-size: 0.9rem;
-            font-weight: 700;
-            cursor: pointer;
-        }
-
-        /* ── FEATURED TOP PICK ───────────────────────── */
-        .top-pick-card {
-            display: flex;
-            border-radius: var(--radius-card);
-            overflow: hidden;
-            background: var(--pink-pale);
-            min-height: 260px;
-            margin-bottom: 3rem;
-        }
-
-        .top-pick-content {
-            flex: 1;
-            padding: 3rem;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-        }
-
-        .top-pick-badge {
-            background: rgba(216, 84, 123, 0.15);
-            color: var(--pink-deep);
-            border-radius: var(--radius-pill);
-            padding: 0.3rem 0.8rem;
-            font-size: 0.7rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            width: fit-content;
-            margin-bottom: 1rem;
-            letter-spacing: 0.05em;
-        }
-
-        .top-pick-content h2 {
-            font-family: 'DM Sans', sans-serif;
-            font-size: 2.2rem;
-            font-weight: 700;
-            color: var(--dark);
-            line-height: 1.1;
-            margin-bottom: 0.5rem;
-        }
-
-        .top-pick-content p {
-            font-size: 0.9rem;
-            color: var(--text-body);
-            line-height: 1.5;
-            max-width: 300px;
-            margin-bottom: 1.5rem;
-        }
-
-        .top-pick-actions {
-            display: flex;
-            align-items: center;
-            gap: 1.5rem;
-        }
-
-        .top-pick-price {
-            font-size: 1.2rem;
-            font-weight: 700;
-            color: var(--dark);
-        }
-
-        .btn-cart {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            background: var(--pink-deep);
-            color: white;
-            border: none;
-            border-radius: var(--radius-pill);
-            padding: 0.6rem 1.5rem;
-            font-size: 0.9rem;
-            font-weight: 600;
-            cursor: pointer;
-        }
-
-        .top-pick-img-wrap {
-            flex: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 1.5rem 1.5rem 1.5rem 0; 
-            background: #8b5a33; /* You can remove this background if your actual images look better without it! */
-        }
-
-        .top-pick-img {
-            width: 100%; 
-            height: 100%;
-            max-height: 240px; 
-            object-fit: cover; 
-            object-position: center;
-            border-radius: 16px; 
-            box-shadow: 0 8px 24px rgba(0,0,0,0.12); 
-        }
-
-        /* ── PRODUCTS SECTION ────────────────────────── */
-        .products-section-header {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .products-section-header h2 {
-            font-size: 1.25rem;
-            font-weight: 700;
-        }
-
-        .filter-bar {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            background: var(--pink-deep);
-            border-radius: var(--radius-pill);
-            padding: 0.5rem;
-            margin-bottom: 2rem;
-        }
-
-        .filter-tabs {
-            display: flex;
-            gap: 0.5rem;
-        }
-
-        .filter-tab {
-            border: none;
-            border-radius: var(--radius-pill);
-            padding: 0.5rem 1.2rem;
-            font-size: 0.85rem;
-            font-weight: 600;
-            cursor: pointer;
-            background: transparent;
-            color: white;
-            font-family: 'DM Sans', sans-serif;
-            transition: 0.2s;
-        }
-
-        .filter-tab.active {
-            background: white;
-            color: var(--pink-deep);
-        }
-
-        .sort-label {
-            font-size: 0.75rem;
-            color: white;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            padding-right: 1rem;
-            opacity: 0.9;
-        }
-
-        /* Product Grid */
-        .catalog-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 1.5rem;
-        }
-
-        .catalog-card {
-            background: var(--white);
-            border-radius: var(--radius-card);
-            padding: 0.8rem;
-            transition: transform 0.2s;
-        }
-
-        .catalog-card:hover { transform: translateY(-4px); }
-
-        .catalog-img-wrap {
-            position: relative;
-            height: 280px;
-            border-radius: 16px;
-            overflow: hidden;
-            margin-bottom: 1rem;
-        }
-
-        .catalog-img-wrap img {
-            width: 100%; height: 100%;
-            object-fit: cover;
-        }
-
-        .catalog-price-badge {
-            position: absolute;
-            top: 12px; right: 12px;
-            background: white;
-            border-radius: var(--radius-pill);
-            padding: 0.3rem 0.6rem;
-            font-size: 0.8rem;
-            font-weight: 700;
-            color: var(--dark);
-        }
-
-        .catalog-card-body {
-            padding: 0 0.5rem;
-        }
-
-        .catalog-name-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 0.3rem;
-        }
-
-        .catalog-name {
-            font-size: 1.05rem;
-            font-weight: 700;
-        }
-
-        .catalog-rating {
-            font-size: 0.8rem;
-            font-weight: 700;
-            color: #f4a623;
-        }
-
-        .catalog-desc {
-            font-size: 0.8rem;
-            color: var(--text-muted);
-            line-height: 1.5;
-            margin-bottom: 1.2rem;
-            height: 40px; 
-            overflow: hidden;
-        }
-
-        .btn-add-catalog {
-            width: 100%;
-            padding: 0.7rem;
-            border-radius: var(--radius-pill);
-            border: none;
-            background: var(--gray-btn);
-            color: var(--dark);
-            font-size: 0.85rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-
-        .btn-add-catalog:hover { background: #e5e0e3; }
-
-        .toast {
-            position: fixed;
-            right: 2rem;
-            bottom: 2rem;
-            transform: translateY(90px);
-            opacity: 0;
-            background: var(--dark);
-            color: white;
-            padding: 0.9rem 1.2rem;
-            border-radius: 999px;
-            box-shadow: 0 14px 34px rgba(26, 16, 24, 0.22);
-            font-size: 0.92rem;
-            font-weight: 700;
-            z-index: 9999;
-            pointer-events: none;
-            transition: transform 0.25s ease, opacity 0.25s ease;
-        }
-
-        .toast.show {
-            transform: translateY(0);
-            opacity: 1;
-        }
-body.modal-open {
-    overflow: hidden;
+:root {
+    --pink:        #d8547b;
+    --pink-pale:   #ffd7e1;
+    --pink-light:  #fbeaf0;
+    --dark:        #1a0f14;
+    --muted:       #7a5060;
+    --body:        #5a3545;
+    --white:       #ffffff;
+    --cream:       #fff6f8;
+    --border:      #fae8ee;
+    --radius-pill: 999px;
+    --radius-card: 22px;
+    --shadow-card: 0 4px 20px rgba(216,84,123,0.08);
+    --shadow-pink: 0 12px 30px rgba(216,84,123,0.2);
 }
 
-.login-overlay {
-    align-items: center;
-    background: rgba(43, 27, 36, 0.48);
-    backdrop-filter: blur(8px);
-    display: none;
-    inset: 0;
-    justify-content: center;
-    padding: 2rem;
-    position: fixed;
-    z-index: 999;
+/* ── ANIMATIONS ── */
+@keyframes fadeUp {
+    from { opacity:0; transform:translateY(24px); }
+    to   { opacity:1; transform:translateY(0); }
+}
+@keyframes float {
+    0%,100% { transform:translateY(0); }
+    50%     { transform:translateY(-8px); }
+}
+@keyframes shimmer {
+    0%   { background-position: -200% center; }
+    100% { background-position:  200% center; }
 }
 
-.login-overlay.is-open {
+/* ── PAGE ── */
+.catalog-page {
+    padding: 4rem 4rem 6rem;
+    max-width: 1400px;
+    margin: 0 auto;
+    background: var(--cream);
+}
+
+/* ── PAGE HEADER ── */
+.page-header {
     display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 2rem;
+    margin-bottom: 4rem;
+    animation: fadeUp 0.7s ease both;
 }
 
-.login-popup {
-    background:
-        radial-gradient(circle at 88% 16%, rgba(255,255,255,0.95) 0 10rem, transparent 10.2rem),
-        linear-gradient(105deg, #f7cbd5 0%, #fff5f0 100%);
-    border: 1px solid rgba(255,255,255,0.8);
-    border-radius: 26px;
-    box-shadow: 0 28px 80px rgba(43, 27, 36, 0.28);
-    display: grid;
-    grid-template-columns: minmax(0, 0.95fr) minmax(320px, 0.82fr);
-    gap: 1.5rem;
-    max-width: 920px;
-    min-height: 480px;
-    overflow: hidden;
-    padding: 2.1rem;
-    position: relative;
-    width: min(100%, 920px);
+.page-header-left h1 {
+    font-family: 'Playfair Display', serif;
+    font-weight: 700;
+    font-size: 3.2rem;
+    color: var(--dark);
+    line-height: 1.05;
+    letter-spacing: -0.03em;
 }
 
-.login-copy {
-    align-self: center;
-    padding: 1rem 0.5rem 1rem 0.7rem;
+.page-header-left h1 em {
+    color: var(--pink);
+    font-style: italic;
 }
 
-.login-copy h2 {
-    color: var(--text-dark);
-    font-size: clamp(2.9rem, 5vw, 4.6rem);
-    font-weight: 900;
-    letter-spacing: 0;
-    line-height: 0.96;
-    margin-bottom: 1.15rem;
-}
-
-.login-copy h2 span {
-    color: var(--text-accent);
-    display: block;
-}
-
-.login-copy p {
-    color: var(--text-body);
-    font-size: 0.98rem;
+.page-header-left p {
+    font-size: 0.95rem;
+    color: var(--muted);
+    margin-top: 0.9rem;
+    max-width: 400px;
+    line-height: 1.75;
     font-weight: 300;
-    line-height: 1.65;
-    max-width: 410px;
 }
 
-.login-panel {
-    align-self: center;
-    background: rgba(255,255,255,0.97);
-    border: 1px solid rgba(255,255,255,0.8);
-    border-radius: 22px;
-    box-shadow: 0 18px 50px rgba(206, 90, 122, 0.18);
-    padding: 2.25rem 2.25rem 1.8rem;
+/* ── BAKER'S CHOICE ── */
+.bakers-choice {
+    background: var(--pink);
+    border-radius: 24px;
+    padding: 1.8rem 2rem;
+    color: white;
+    min-width: 340px;
+    animation: float 4s ease-in-out infinite;
+    box-shadow: var(--shadow-pink);
 }
 
-.login-field {
-    margin-bottom: 1rem;
-}
-
-.login-field label {
-    color: var(--text-dark);
-    display: block;
-    font-size: 0.86rem;
-    font-weight: 800;
-    margin-bottom: 0.48rem;
-}
-
-.login-field input[type="email"],
-.login-field input[type="password"] {
-    background: #edf5ff;
-    border: 1.5px solid #f0c8d3;
-    border-radius: 999px;
-    color: var(--text-dark);
-    font: inherit;
-    font-size: 0.86rem;
-    outline: none;
-    padding: 0.82rem 1rem;
-    width: 100%;
-}
-
-.login-field input:focus {
-    border-color: #ef7fa1;
-    box-shadow: 0 0 0 3px rgba(239, 127, 161, 0.2);
-}
-
-.login-row {
-    align-items: center;
+.bakers-choice-top {
     display: flex;
     justify-content: space-between;
-    gap: 0.75rem;
-    margin: 1.1rem 0 1.35rem;
+    align-items: flex-start;
+    margin-bottom: 0.4rem;
 }
 
-.login-remember {
-    align-items: center;
-    display: flex;
-    font-size: 0.82rem;
+.bakers-choice h3 {
+    font-size: 1rem;
     font-weight: 700;
-    gap: 0.45rem;
+    color: white;
+    max-width: 180px;
+    line-height: 1.3;
 }
 
-.login-submit {
-    background: var(--pink-btn);
-    border: 0;
-    border-radius: 999px;
-    box-shadow: 0 12px 28px rgba(206, 90, 122, 0.28);
-    color: var(--white);
-    cursor: pointer;
-    font: inherit;
-    font-size: 0.92rem;
-    font-weight: 900;
-    padding: 0.86rem 1rem;
-    width: 100%;
-}
-
-.login-close {
-    background: rgba(255,255,255,0.72);
-    border: 1px solid rgba(255,255,255,0.9);
-    border-radius: 50%;
-    cursor: pointer;
+.bakers-price {
     font-size: 1.25rem;
     font-weight: 800;
-    height: 34px;
+    color: white;
+}
+
+.bakers-choice p {
+    font-size: 0.82rem;
+    opacity: 0.88;
+    margin-bottom: 1.3rem;
+    line-height: 1.6;
+    color: white;
+}
+
+.btn-quick-add {
+    width: 100%;
+    padding: 0.8rem;
+    border-radius: var(--radius-pill);
+    border: 2px solid rgba(255,255,255,0.5);
+    background: white;
+    color: var(--pink);
+    font-size: 0.9rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.25s;
+    font-family: 'Poppins', sans-serif;
+    letter-spacing: 0.01em;
+}
+
+.btn-quick-add:hover {
+    background: rgba(255,255,255,0.9);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0,0,0,0.12);
+}
+
+/* ── TOP PICK ── */
+.top-pick-card {
+    display: flex;
+    border-radius: 32px;
+    overflow: hidden;
+    min-height: 340px;
+    margin-bottom: 5rem;
+    box-shadow: var(--shadow-pink);
+    animation: fadeUp 0.8s 0.1s ease both;
+}
+
+.top-pick-content {
+    flex: 1.2;
+    padding: 4rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    background: var(--pink-pale);
+}
+
+.top-pick-badge {
+    background: rgba(216,84,123,0.14);
+    color: #b03060;
+    border-radius: var(--radius-pill);
+    padding: 0.35rem 0.9rem;
+    font-size: 0.65rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    width: fit-content;
+    margin-bottom: 1.2rem;
+    letter-spacing: 0.12em;
+}
+
+.top-pick-content h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 2.8rem;
+    font-weight: 700;
+    color: var(--dark);
+    line-height: 1.1;
+    margin-bottom: 0.9rem;
+}
+
+.top-pick-content p {
+    font-size: 0.95rem;
+    color: var(--body);
+    line-height: 1.75;
+    max-width: 360px;
+    margin-bottom: 2rem;
+    font-weight: 300;
+}
+
+.top-pick-actions {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.top-pick-price {
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: var(--dark);
+}
+
+.btn-cart {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: var(--pink);
+    color: white;
+    border: none;
+    border-radius: var(--radius-pill);
+    padding: 0.85rem 2rem;
+    font-size: 0.95rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s;
+    box-shadow: 0 8px 20px rgba(216,84,123,0.3);
+    font-family: 'Poppins', sans-serif;
+}
+
+.btn-cart:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 14px 28px rgba(216,84,123,0.4);
+}
+
+.top-pick-img-wrap {
+    flex: 1;
+    overflow: hidden;
+    background: var(--pink-pale);
+}
+
+.top-pick-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.6s ease;
+}
+
+.top-pick-card:hover .top-pick-img {
+    transform: scale(1.05);
+}
+
+/* ── SECTION HEADER ── */
+.products-section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.5rem;
+}
+
+.products-section-header h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.9rem;
+    font-weight: 700;
+    color: var(--dark);
+    letter-spacing: -0.02em;
+}
+
+/* ── FILTER BAR ── */
+.filter-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--pink);
+    border-radius: var(--radius-pill);
+    padding: 0.5rem;
+    margin-bottom: 3rem;
+    box-shadow: 0 6px 20px rgba(216,84,123,0.2);
+}
+
+.filter-tabs { display: flex; gap: 0.4rem; }
+
+.filter-tab {
+    border: none;
+    border-radius: var(--radius-pill);
+    padding: 0.55rem 1.3rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    background: transparent;
+    color: rgba(255,255,255,0.85);
+    font-family: 'Poppins', sans-serif;
+    transition: all 0.25s;
+}
+
+.filter-tab.active {
+    background: white;
+    color: var(--pink);
+    box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+}
+
+.filter-tab:not(.active):hover {
+    background: rgba(255,255,255,0.15);
+    color: white;
+}
+
+.sort-label {
+    font-size: 0.72rem;
+    color: rgba(255,255,255,0.85);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    padding-right: 1.2rem;
+}
+
+/* ── CATALOG GRID ── */
+.catalog-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2rem;
+}
+
+.catalog-card {
+    background: white;
+    border-radius: var(--radius-card);
+    padding: 1rem;
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-card);
+    transition: transform 0.35s cubic-bezier(0.165,0.84,0.44,1),
+                box-shadow 0.35s ease,
+                border-color 0.35s ease;
+    animation: fadeUp 0.6s ease both;
+}
+
+.catalog-card:hover {
+    transform: translateY(-8px) scale(1.015);
+    box-shadow: 0 20px 40px rgba(216,84,123,0.14);
+    border-color: var(--pink-pale);
+}
+
+.catalog-img-wrap {
+    position: relative;
+    height: 240px;
+    border-radius: 16px;
+    overflow: hidden;
+    margin-bottom: 1.2rem;
+    background: var(--pink-light);
+}
+
+.catalog-img-wrap img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    transition: transform 0.55s ease;
+}
+
+.catalog-card:hover .catalog-img-wrap img {
+    transform: scale(1.08);
+}
+
+.catalog-price-badge {
     position: absolute;
-    right: 1rem;
-    top: 1rem;
-    width: 34px;
+    top: 12px; right: 12px;
+    background: white;
+    border-radius: var(--radius-pill);
+    padding: 0.3rem 0.7rem;
+    font-size: 0.78rem;
+    font-weight: 800;
+    color: var(--dark);
+    box-shadow: 0 3px 10px rgba(0,0,0,0.1);
 }
 
-@media (max-width: 600px) {
-    .login-popup {
-        grid-template-columns: 1fr;
-        min-height: auto;
-        max-width: 520px;
-    }
-    .login-copy { display: none; }
+.catalog-card-body { padding: 0 0.2rem; }
+
+.catalog-name-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.4rem;
 }
 
-        @include('partials.navbar-styles')
-        @include('partials.login-modal-styles')
+.catalog-name {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--dark);
+}
+
+.catalog-rating {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #f4a623;
+}
+
+.catalog-desc {
+    font-size: 0.8rem;
+    color: var(--muted);
+    line-height: 1.6;
+    margin-bottom: 1.3rem;
+    height: 40px;
+    overflow: hidden;
+    font-weight: 300;
+}
+
+.btn-add-catalog {
+    width: 100%;
+    padding: 0.75rem;
+    border-radius: var(--radius-pill);
+    border: 1.5px solid var(--border);
+    background: white;
+    color: var(--dark);
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.25s;
+    font-family: 'Poppins', sans-serif;
+}
+
+.btn-add-catalog:hover {
+    background: var(--pink);
+    color: white;
+    border-color: var(--pink);
+    transform: scale(1.02);
+    box-shadow: 0 6px 16px rgba(216,84,123,0.25);
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 1024px) {
+    .catalog-page { padding: 3rem 2rem 5rem; }
+    .catalog-grid { grid-template-columns: 1fr 1fr; }
+    .page-header { flex-direction: column; }
+    .bakers-choice { min-width: 100%; }
+}
+
+@media (max-width: 768px) {
+    .top-pick-card { flex-direction: column; }
+    .top-pick-img-wrap { min-height: 240px; }
+    .top-pick-content { padding: 2.5rem 2rem; }
+    .catalog-grid { grid-template-columns: 1fr; }
+    .filter-bar { border-radius: 20px; flex-direction: column; padding: 1rem; gap: 0.8rem; }
+    .filter-tabs { flex-wrap: wrap; justify-content: center; }
+    .sort-label { padding-right: 0; }
+    .page-header-left h1 { font-size: 2.4rem; }
+}
     </style>
-</head>
-<body>
+@endsection
 
-<nav class="navbar">
-    <a href="{{ route('home') }}" class="logo">SugarLoom PH</a>
-    <div class="nav-links">
-        @auth
-            @if(auth()->user()->isAdmin())
-                <a href="{{ route('admin.dashboard') }}">Admin</a>
-            @else
-                <a href="{{ route('catalog') }}">Catalog</a>
-                <a href="{{ route('track-order') }}">Track Order</a>
-                <a href="{{ route('about') }}">About Us</a>
-            @endif
-            <form method="POST" action="{{ route('logout') }}">
-                @csrf
-                <button type="submit">Logout</button>
-            </form>
-        @else
-            <a href="{{ route('catalog') }}">Catalog</a>
-            <a href="{{ route('track-order') }}">Track Order</a>
-            <a href="{{ route('about') }}">About Us</a>
-        @endauth
-    </div>
-    <div class="nav-actions">
-        <a href="{{ route('cart.index') }}" aria-label="Cart">
-            <svg viewBox="0 0 24 24"><path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"/></svg>
-            @php($cartCount = collect(session('cart', []))->sum('quantity'))
-            <span class="cart-count {{ $cartCount ? '' : 'is-empty' }}" data-cart-count>{{ $cartCount }}</span>
-        </a>
-        @auth
-            <a href="{{ route('profile.edit') }}" aria-label="Account" title="Account">
-                <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
-            </a>
-        @else
-            <button type="button" class="login-btn" data-login-open aria-label="Login" title="Login">
-                <svg viewBox="0 0 24 24">
-                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/>
-                </svg>
-            </button>
-        @endauth
-    </div>
-</nav>
-
-@include('partials.login-modal')
-
-<div class="container">
+@section('content')
+<div class="catalog-page">
     <div class="page-header">
-        <div class="page-header-left">
+        <div class="page-header-left" data-aos="fade-right">
             <h1>Artisanal Confections</h1>
             <p>Hand-crafted batches, premium ingredients, and a touch of sweetness delivered from our oven to your home.</p>
         </div>
 
         @if($bakersChoice)
-        <div class="bakers-choice">
+        <div class="bakers-choice" data-aos="fade-left">
             <div class="bakers-choice-top">
                 <h3>Baker's Choice: {{ $bakersChoice->name }}</h3>
                 <div class="bakers-price">₱{{ number_format($bakersChoice->price, 0) }}</div>
@@ -700,7 +454,7 @@ body.modal-open {
     </div>
 
     @if($topPick)
-    <section class="top-pick-card">
+    <section class="top-pick-card" data-aos="fade-up" data-aos-duration="1000">
         <div class="top-pick-content">
             <span class="top-pick-badge">Top Pick</span>
             <h2>{{ $topPick->name }}</h2>
@@ -717,11 +471,11 @@ body.modal-open {
     @endif
 
     <section class="products-section">
-        <div class="products-section-header">
+        <div class="products-section-header" data-aos="fade-up">
             <h2>✨ Recommended for You</h2>
         </div>
 
-        <div class="filter-bar">
+        <div class="filter-bar" data-aos="fade-up">
             <div class="filter-tabs">
                 <button class="filter-tab active" data-filter="all" onclick="filterProducts(this, 'all')">All Flavors</button>
                 <button class="filter-tab" data-filter="sweet" onclick="filterProducts(this, 'sweet')">Sweet</button>
@@ -734,7 +488,7 @@ body.modal-open {
         <div class="catalog-grid" id="productsGrid">
             @isset($products)
             @foreach($products as $product)
-            <div class="catalog-card" data-category="{{ $product->category }}">
+            <div class="catalog-card" data-category="{{ $product->category }}" data-aos="fade-up" data-aos-delay="{{ ($loop->index % 3) * 100 }}">
                 <div class="catalog-img-wrap">
                     <img src="{{ $product->image ? asset($product->image) : asset('images/placeholder-cookie.png') }}" alt="{{ $product->name }}">
                     <span class="catalog-price-badge">₱{{ number_format($product->price, 0) }}</span>
@@ -755,101 +509,43 @@ body.modal-open {
         </div>
     </section>
 </div>
+@endsection
 
-<div class="toast" id="toast" role="status" aria-live="polite"></div>
-
+@section('scripts')
+<script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
 <script>
+AOS.init({
+    once: true,
+    duration: 800,
+    easing: 'ease-out-cubic'
+});
+
 function filterProducts(btn, filter) {
     // Update active tab
     document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
     btn.classList.add('active');
 
-    // Filter cards
-    document.querySelectorAll('.catalog-card').forEach(card => {
-        const match = filter === 'all' || card.dataset.category === filter;
-        card.style.display = match ? '' : 'none';
+    // Filter cards with a small animation
+    const cards = document.querySelectorAll('.catalog-card');
+    cards.forEach(card => {
+        card.style.opacity = '0';
+        card.style.transform = 'scale(0.95)';
+        
+        setTimeout(() => {
+            const match = filter === 'all' || card.dataset.category === filter;
+            card.style.display = match ? '' : 'none';
+            if (match) {
+                setTimeout(() => {
+                    card.style.opacity = '1';
+                    card.style.transform = 'scale(1)';
+                }, 50);
+            }
+        }, 300);
     });
-}
-
-function addToCart(productId) {
-    fetch('/cart/add', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || ''
-        },
-        body: JSON.stringify({ product_id: productId, quantity: 1 })
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (data.success) {
-            updateCartCount(data.count || 0);
-            showToast('Added to cart.');
-        }
-    })
-    .catch(() => showToast('Something went wrong. Please try again.'));
 }
 
 document.querySelectorAll('[data-id]').forEach(button => {
     button.addEventListener('click', () => addToCart(button.dataset.id));
 });
-
-let toastTimer;
-function showToast(message) {
-    const toast = document.getElementById('toast');
-    toast.textContent = message;
-    toast.classList.add('show');
-    clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => toast.classList.remove('show'), 2600);
-}
-
-function updateCartCount(count) {
-    document.querySelectorAll('[data-cart-count]').forEach(badge => {
-        badge.textContent = count;
-        badge.classList.toggle('is-empty', count < 1);
-    });
-}
-
-const loginModal = document.getElementById('loginModal');
-
-function openLoginModal() {
-    if (!loginModal) return;
-    loginModal.classList.add('is-open');
-    loginModal.setAttribute('aria-hidden', 'false');
-    document.body.classList.add('modal-open');
-    setTimeout(function() {
-        document.getElementById('modal-email')?.focus();
-    }, 50);
-}
-
-function closeLoginModal() {
-    if (!loginModal) return;
-    loginModal.classList.remove('is-open');
-    loginModal.setAttribute('aria-hidden', 'true');
-    document.body.classList.remove('modal-open');
-}
-
-document.querySelectorAll('[data-login-open]').forEach(btn => {
-    btn.addEventListener('click', openLoginModal);
-});
-
-document.querySelectorAll('[data-login-close]').forEach(btn => {
-    btn.addEventListener('click', closeLoginModal);
-});
-
-loginModal?.addEventListener('click', function(e) {
-    if (e.target === loginModal) closeLoginModal();
-});
-
-document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') closeLoginModal();
-});
-
-if (loginModal?.classList.contains('is-open')) {
-    document.body.classList.add('modal-open');
-}
 </script>
-
-</body>
-</html>
+@endsection

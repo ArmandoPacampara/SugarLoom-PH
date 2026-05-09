@@ -4,6 +4,7 @@ use App\Http\Controllers\CartController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\TrackOrderController;
 use Illuminate\Support\Facades\Route;
 
 require __DIR__.'/auth.php';
@@ -12,10 +13,17 @@ Route::get('/', [PageController::class, 'home'])->name('home');
 Route::get('/catalog', [PageController::class, 'catalog'])->name('catalog');
 Route::get('/about', [PageController::class, 'about'])->name('about');
 Route::get('/show', [PageController::class, 'show'])->name('show');
-Route::get('/track-order', fn() => view('track-order'))->name('track-order');
+Route::get('/track-order', [TrackOrderController::class, 'index'])->name('track-order');
 
 Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/admin', [DashboardController::class, 'index'])->name('admin.dashboard');
+    Route::get('/admin/inventory', [DashboardController::class, 'inventory'])->name('admin.inventory');
+    Route::get('/admin/orders', [DashboardController::class, 'orders'])->name('admin.orders');
+    Route::get('/admin/analytics', [DashboardController::class, 'analytics'])->name('admin.analytics');
+    Route::get('/admin/products/{product}/edit', [DashboardController::class, 'editProduct'])->name('admin.products.edit');
+    Route::patch('/admin/products/{product}', [DashboardController::class, 'updateProduct'])->name('admin.products.update');
+    Route::patch('/admin/orders/{order}/status', [DashboardController::class, 'updateOrderStatus'])->name('admin.orders.status');
+    Route::patch('/admin/products/{product}/stock', [DashboardController::class, 'updateProductStock'])->name('admin.products.stock');
     Route::redirect('/dashboard', '/admin')->name('dashboard');
 });
 
