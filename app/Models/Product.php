@@ -64,4 +64,16 @@ class Product extends Model
     {
         return $query->active()->where('category', $category)->orderBy('sort_order');
     }
+
+    /* ── Methods ────────────────────────────────────── */
+
+    public function isInStock(): bool
+    {
+        return $this->stock_quantity > 0;
+    }
+
+    public function isOutOfStock(): bool
+    {
+        return $this->stock_quantity <= 0;
+    }
 }

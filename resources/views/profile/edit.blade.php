@@ -45,18 +45,145 @@
         .yellow { background: #fef9c3; color: #ca8a04; }
         .red { background: #fee2e2; color: #dc2626; }
 
-        .cart-count {
-            position: absolute;
-            top: -9px;
-            right: -7px;
-            color: white;
-            font-size: 0.72rem;
-            font-weight: 800;
-            line-height: 1;
-            text-shadow: 0 1px 2px rgba(43, 27, 36, 0.45);
+        .rating-badge { 
+            display: inline-block; 
+            background: #fde68a; 
+            color: #92400e; 
+            padding: 4px 10px; 
+            border-radius: 999px; 
+            font-size: 11px; 
+            font-weight: bold;
         }
-
-        .cart-count.is-empty { display: none; }
+        
+        .btn-rate {
+            background: #fb7185;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+        
+        .btn-rate:hover { opacity: 0.9; }
+        
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+        }
+        
+        .modal.active { display: flex; align-items: center; justify-content: center; }
+        
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        
+        .modal-header {
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .modal-header h3 { margin: 0; color: #1a1018; }
+        
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #999;
+        }
+        
+        .close-modal:hover { color: #333; }
+        
+        .rating-input {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            justify-content: center;
+        }
+        
+        .star-btn {
+            background: none;
+            border: none;
+            font-size: 32px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        .star-btn:hover { transform: scale(1.2); }
+        
+        .star-btn.active { color: #fbbf24; }
+        
+        .modal-form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .modal-form textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+            font-family: inherit;
+            resize: vertical;
+            min-height: 100px;
+            box-sizing: border-box;
+        }
+        
+        .modal-form textarea:focus {
+            outline: none;
+            border-color: #fb7185;
+            box-shadow: 0 0 0 3px #fde68a;
+        }
+        
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+        
+        .btn-submit {
+            background: #fb7185;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 999px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+        
+        .btn-submit:hover { opacity: 0.9; }
+        
+        .btn-cancel {
+            background: #f3eff1;
+            color: #4a3d45;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 999px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+        
+        .btn-cancel:hover { opacity: 0.85; }
     </style>
 @endsection
 
@@ -138,9 +265,20 @@
                             <span class="order-price">PHP {{ number_format($order->total, 2) }}</span>
                         </div>
                         <p class="order-desc" style="font-size: 12px; margin-top: 8px;">Placed on {{ $order->placed_at?->format('F j, Y') }}</p>
-                        <p class="order-desc" style="font-size: 12px; margin-top: 6px;">
-                            <a href="{{ route('track-order', ['tracking_number' => $order->order_number]) }}">Track this order</a>
-                        </p>
+                        
+                        <div style="display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap; align-items: center;">
+                            <a href="{{ route('track-order', ['tracking_number' => $order->order_number]) }}" style="font-size: 12px; color: #fb7185; text-decoration: none;">Track this order</a>
+                            
+                            @if($order->status === \App\Models\Order::STATUS_DELIVERED)
+                                @if($order->rating)
+                                    <span class="rating-badge">
+                                        ★ {{ $order->rating }}/5 - Rated
+                                    </span>
+                                @else
+                                    <button type="button" class="btn-rate" data-order-id="{{ $order->id }}">Rate Order</button>
+                                @endif
+                            @endif
+                        </div>
                     </div>
                 @empty
                     <p class="order-desc">No orders yet.</p>
@@ -149,4 +287,87 @@
         @endif
     </div>
 </div>
+
+<!-- Rating Modal -->
+<div id="ratingModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Rate Your Order</h3>
+            <button type="button" class="close-modal" onclick="closeRatingModal()">×</button>
+        </div>
+        
+        <form id="ratingForm" method="POST">
+            @csrf
+            <input type="hidden" id="orderIdInput" name="order_id">
+            
+            <div>
+                <label style="display: block; margin-bottom: 10px; font-weight: bold; color: #1a1018;">How would you rate your order?</label>
+                <div class="rating-input">
+                    <button type="button" class="star-btn" data-rating="1" onclick="setRating(1)">★</button>
+                    <button type="button" class="star-btn" data-rating="2" onclick="setRating(2)">★</button>
+                    <button type="button" class="star-btn" data-rating="3" onclick="setRating(3)">★</button>
+                    <button type="button" class="star-btn" data-rating="4" onclick="setRating(4)">★</button>
+                    <button type="button" class="star-btn" data-rating="5" onclick="setRating(5)">★</button>
+                </div>
+                <input type="hidden" id="ratingValue" name="rating" value="0">
+            </div>
+            
+            <div>
+                <label for="reviewComment" style="display: block; margin-bottom: 6px; font-weight: bold; color: #1a1018;">Share your experience (optional)</label>
+                <textarea id="reviewComment" name="review_comment" placeholder="Tell us what you think about your order..."></textarea>
+            </div>
+            
+            <div class="modal-buttons">
+                <button type="button" class="btn-cancel" onclick="closeRatingModal()">Cancel</button>
+                <button type="submit" class="btn-submit">Submit Rating</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    let currentOrderId = null;
+
+    // Handle rate button clicks
+    document.querySelectorAll('.btn-rate').forEach(btn => {
+        btn.addEventListener('click', function() {
+            openRatingModal(this.dataset.orderId);
+        });
+    });
+
+    function openRatingModal(orderId) {
+        currentOrderId = orderId;
+        document.getElementById('ratingValue').value = 0;
+        document.getElementById('reviewComment').value = '';
+        document.querySelectorAll('.star-btn').forEach(btn => btn.classList.remove('active'));
+        
+        const form = document.getElementById('ratingForm');
+        form.action = `/orders/${orderId}/rating`;
+        
+        document.getElementById('ratingModal').classList.add('active');
+    }
+
+    function closeRatingModal() {
+        document.getElementById('ratingModal').classList.remove('active');
+        currentOrderId = null;
+    }
+
+    function setRating(stars) {
+        document.getElementById('ratingValue').value = stars;
+        document.querySelectorAll('.star-btn').forEach((btn, index) => {
+            if (index < stars) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
+        });
+    }
+
+    // Close modal when clicking outside
+    document.getElementById('ratingModal').addEventListener('click', function(event) {
+        if (event.target === this) {
+            closeRatingModal();
+        }
+    });
+</script>
 @endsection
