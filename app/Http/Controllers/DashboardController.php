@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\OrderStatusNotification;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
@@ -9,6 +10,7 @@ use App\Http\Requests\ProductUpdateRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
@@ -80,6 +82,63 @@ class DashboardController extends Controller
         ]);
     }
 
+    public function orders(): View
+    {
+        $orders = Order::with('items')
+            ->latest('placed_at')
+            ->latest()
+            ->paginate(12);
+
+        return view('admin.orders', [
+            'orders' => $orders,
+            'statuses' => Order::statuses(),
+        ]);
+    }
+
+    public function analytics(): View
+    {
+        $orders = Order::with('items')
+            ->where('status', '!=', Order::STATUS_CANCELLED)
+            ->where('placed_at', '>=', now()->subDays(13)->startOfDay())
+            ->get();
+
+        $lineLabels = collect(range(13, 0))->map(fn (int $daysAgo) => now()->subDays($daysAgo)->format('M d'));
+        $lineRevenue = $lineLabels->map(function (string $label) use ($orders) {
+            return round($orders
+                ->filter(fn (Order $order) => $order->placed_at?->format('M d') === $label)
+                ->sum('total'), 2);
+        });
+
+        $topProducts = OrderItem::query()
+            ->selectRaw('product_name, SUM(quantity) as total_quantity')
+            ->whereHas('order', fn ($query) => $query->where('status', '!=', Order::STATUS_CANCELLED))
+            ->groupBy('product_name')
+            ->orderByDesc('total_quantity')
+            ->take(8)
+            ->get();
+
+        $statusCounts = Order::query()
+            ->selectRaw('status, COUNT(*) as total')
+            ->groupBy('status')
+            ->pluck('total', 'status');
+
+        $monthlyRevenue = Order::where('status', '!=', Order::STATUS_CANCELLED)
+            ->where('placed_at', '>=', now()->startOfMonth())
+            ->sum('total');
+
+        return view('admin.analytics', [
+            'lineLabels' => $lineLabels->values(),
+            'lineRevenue' => $lineRevenue->values(),
+            'barLabels' => $topProducts->pluck('product_name')->values(),
+            'barValues' => $topProducts->pluck('total_quantity')->map(fn ($value) => (int) $value)->values(),
+            'pieLabels' => collect(Order::statuses())->values(),
+            'pieValues' => collect(array_keys(Order::statuses()))->map(fn (string $status) => (int) ($statusCounts[$status] ?? 0))->values(),
+            'monthlyRevenue' => $monthlyRevenue,
+            'ordersThisMonth' => Order::where('placed_at', '>=', now()->startOfMonth())->count(),
+            'averageOrderValue' => Order::where('status', '!=', Order::STATUS_CANCELLED)->avg('total') ?? 0,
+        ]);
+    }
+
     public function editProduct(Product $product): View
     {
         $categories = ['sweet', 'savory', 'beverage', 'specialty'];
@@ -115,9 +174,18 @@ class DashboardController extends Controller
     {
         $validated = $request->validate([
             'status' => ['required', Rule::in(array_keys(Order::statuses()))],
+            'lalamove_tracking_number' => [
+                Rule::requiredIf($request->status === Order::STATUS_OUT_FOR_DELIVERY),
+                'nullable',
+                'string',
+                'max:120',
+            ],
         ]);
 
-        DB::transaction(function () use ($order, $validated) {
+        $shouldNotify = false;
+        $notificationStatus = null;
+
+        DB::transaction(function () use ($order, $validated, &$shouldNotify, &$notificationStatus) {
             $previousStatus = $order->status;
             $newStatus = $validated['status'];
 
@@ -135,14 +203,35 @@ class DashboardController extends Controller
                 }
             }
 
-            $order->update(['status' => $newStatus]);
+            $updates = [
+                'status' => $newStatus,
+            ];
+
+            if (array_key_exists('lalamove_tracking_number', $validated)) {
+                $updates['lalamove_tracking_number'] = $validated['lalamove_tracking_number'];
+            }
+
+            $order->update($updates);
+
+            if ($previousStatus !== $newStatus && in_array($newStatus, [
+                Order::STATUS_OUT_FOR_DELIVERY,
+                Order::STATUS_CANCELLED,
+                Order::STATUS_DELIVERED,
+            ], true)) {
+                $shouldNotify = true;
+                $notificationStatus = $newStatus;
+            }
         });
 
         if ($validated['status'] === Order::STATUS_DELIVERED) {
             $order->update(['payment_status' => Order::PAYMENT_PAID]);
         }
 
-        return redirect()->route('admin.dashboard')->with('status', "{$order->order_number} status updated.");
+        if ($shouldNotify && $notificationStatus) {
+            Mail::to($order->customer_email)->send(new OrderStatusNotification($order->fresh('items'), $notificationStatus));
+        }
+
+        return back()->with('status', "{$order->order_number} status updated.");
     }
 
     public function updateProductStock(Request $request, Product $product): RedirectResponse

@@ -32,6 +32,7 @@ class Order extends Model
         'payment_method',
         'payment_status',
         'status',
+        'lalamove_tracking_number',
         'subtotal',
         'discount',
         'delivery_fee',

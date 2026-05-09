@@ -332,6 +332,14 @@
 </script>
 
 @include('partials.login-modal-script')
+@if(! request()->is('admin*') && (! auth()->check() || auth()->user()->isCustomer()))
+<script
+  src="https://www.tuqlas.com/chatbot.js"
+  data-key="tq_live_79b4eda62537a5c11e8f96e96142e08ae0e9265b"
+  data-api="https://www.tuqlas.com"
+  defer
+></script>
+@endif
 @yield('scripts')
 
 </body>

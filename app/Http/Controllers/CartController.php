@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\OrderStatusNotification;
 use App\Models\Order;
 use App\Models\Product;
 use Illuminate\Http\RedirectResponse;
@@ -9,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\View\View;
 
 class CartController extends Controller
@@ -147,6 +149,7 @@ class CartController extends Controller
         $validated['promo_code'] = $promoCode ?: null;
         $totals = $this->calculateTotals($cart, $promoCode);
         $order = $this->createOrder($cart, $validated, $totals);
+        $this->sendOrderNotification($order, 'placed');
 
         session([
             'latest_order_id' => $order->id,
@@ -196,6 +199,8 @@ class CartController extends Controller
 
                     $order->update(['status' => Order::STATUS_CANCELLED]);
                 });
+
+                $this->sendOrderNotification($order->fresh('items'), Order::STATUS_CANCELLED);
             }
         }
 
@@ -389,5 +394,10 @@ class CartController extends Controller
         } while (Order::where('order_number', $number)->exists());
 
         return $number;
+    }
+
+    private function sendOrderNotification(Order $order, string $notificationType): void
+    {
+        Mail::to($order->customer_email)->send(new OrderStatusNotification($order, $notificationType));
     }
 }

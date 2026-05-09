@@ -149,6 +149,12 @@
                         <span>Current status</span>
                         <strong>{{ $order->status_label }}</strong>
                     </div>
+                    @if(in_array($order->status, [\App\Models\Order::STATUS_OUT_FOR_DELIVERY, \App\Models\Order::STATUS_DELIVERED], true) && $order->lalamove_tracking_number)
+                        <div class="summary-row">
+                            <span>Lalamove tracking number</span>
+                            <strong>{{ $order->lalamove_tracking_number }}</strong>
+                        </div>
+                    @endif
                 </div>
 
                 <div class="timeline">

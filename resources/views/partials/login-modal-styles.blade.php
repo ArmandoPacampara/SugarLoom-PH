@@ -125,7 +125,8 @@ body.modal-open {
 }
 
 .login-field input[type="email"],
-.login-field input[type="password"] {
+.login-field input[type="password"],
+.login-field input[type="text"].login-password-input {
     background: #edf5ff;
     border: 1.5px solid #f0c8d3;
     border-radius: 999px;
@@ -135,6 +136,29 @@ body.modal-open {
     outline: none;
     padding: 0.82rem 1rem;
     width: 100%;
+}
+
+.login-password-wrap {
+    position: relative;
+}
+
+.login-password-wrap input {
+    padding-right: 4.5rem;
+}
+
+.login-password-toggle {
+    background: transparent;
+    border: 0;
+    color: var(--pink-btn, #ce5a7a);
+    cursor: pointer;
+    font: inherit;
+    font-size: 0.72rem;
+    font-weight: 900;
+    padding: 0.25rem 0.65rem;
+    position: absolute;
+    right: 0.54rem;
+    top: 50%;
+    transform: translateY(-50%);
 }
 
 .login-field input:focus {

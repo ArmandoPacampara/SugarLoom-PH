@@ -35,12 +35,15 @@
 
                 <div class="login-field">
                     <label for="modal-password">Password</label>
-                    <input id="modal-password" type="password" name="password" required autocomplete="current-password">
+                    <div class="login-password-wrap">
+                        <input id="modal-password" class="login-password-input" type="password" name="password" required autocomplete="current-password">
+                        <button class="login-password-toggle" type="button" data-password-toggle="modal-password" aria-label="Show password">Show</button>
+                    </div>
                 </div>
 
                 <div class="login-row">
                     <label class="login-remember" for="modal-remember">
-                        <input id="modal-remember" type="checkbox" name="remember">
+                        <input id="modal-remember" type="checkbox" name="remember" value="1" @checked(old('remember'))>
                         <span>Remember me</span>
                     </label>
 

@@ -69,7 +69,7 @@
         <div class="alert-success">Your profile has been updated successfully!</div>
     @endif
 
-    <div class="grid-2">
+    <div @class(['grid-2' => $user->isCustomer()])>
         <!-- Account Details Form -->
         <div class="card">
             <h3>Profile Details</h3>
@@ -116,36 +116,37 @@
             </form>
         </div>
 
-        <!-- Order History (Visual Layout) -->
-        <div class="card">
-            <h3>Recent Purchases</h3>
+        @if($user->isCustomer())
+            <!-- Order History (Visual Layout) -->
+            <div class="card">
+                <h3>Recent Purchases</h3>
 
-            @forelse($orders as $order)
-                <div class="order-item">
-                    <div class="order-header">
-                        <span class="order-id">{{ $order->order_number }}</span>
-                        <span @class([
-                            'badge',
-                            'green' => $order->status === \App\Models\Order::STATUS_DELIVERED,
-                            'blue' => $order->status === \App\Models\Order::STATUS_PREPARING || $order->status === \App\Models\Order::STATUS_OUT_FOR_DELIVERY,
-                            'yellow' => $order->status === \App\Models\Order::STATUS_PENDING,
-                            'red' => $order->status === \App\Models\Order::STATUS_CANCELLED,
-                        ])>{{ $order->status_label }}</span>
+                @forelse($orders as $order)
+                    <div class="order-item">
+                        <div class="order-header">
+                            <span class="order-id">{{ $order->order_number }}</span>
+                            <span @class([
+                                'badge',
+                                'green' => $order->status === \App\Models\Order::STATUS_DELIVERED,
+                                'blue' => $order->status === \App\Models\Order::STATUS_PREPARING || $order->status === \App\Models\Order::STATUS_OUT_FOR_DELIVERY,
+                                'yellow' => $order->status === \App\Models\Order::STATUS_PENDING,
+                                'red' => $order->status === \App\Models\Order::STATUS_CANCELLED,
+                            ])>{{ $order->status_label }}</span>
+                        </div>
+                        <div class="order-header">
+                            <p class="order-desc">{{ $order->items_summary }}</p>
+                            <span class="order-price">PHP {{ number_format($order->total, 2) }}</span>
+                        </div>
+                        <p class="order-desc" style="font-size: 12px; margin-top: 8px;">Placed on {{ $order->placed_at?->format('F j, Y') }}</p>
+                        <p class="order-desc" style="font-size: 12px; margin-top: 6px;">
+                            <a href="{{ route('track-order', ['tracking_number' => $order->order_number]) }}">Track this order</a>
+                        </p>
                     </div>
-                    <div class="order-header">
-                        <p class="order-desc">{{ $order->items_summary }}</p>
-                        <span class="order-price">PHP {{ number_format($order->total, 2) }}</span>
-                    </div>
-                    <p class="order-desc" style="font-size: 12px; margin-top: 8px;">Placed on {{ $order->placed_at?->format('F j, Y') }}</p>
-                    <p class="order-desc" style="font-size: 12px; margin-top: 6px;">
-                        <a href="{{ route('track-order', ['tracking_number' => $order->order_number]) }}">Track this order</a>
-                    </p>
-                </div>
-            @empty
-                <p class="order-desc">No orders yet.</p>
-            @endforelse
-</div>
+                @empty
+                    <p class="order-desc">No orders yet.</p>
+                @endforelse
+            </div>
+        @endif
     </div>
 </div>
 @endsection
-

@@ -18,6 +18,8 @@ Route::get('/track-order', [TrackOrderController::class, 'index'])->name('track-
 Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/admin', [DashboardController::class, 'index'])->name('admin.dashboard');
     Route::get('/admin/inventory', [DashboardController::class, 'inventory'])->name('admin.inventory');
+    Route::get('/admin/orders', [DashboardController::class, 'orders'])->name('admin.orders');
+    Route::get('/admin/analytics', [DashboardController::class, 'analytics'])->name('admin.analytics');
     Route::get('/admin/products/{product}/edit', [DashboardController::class, 'editProduct'])->name('admin.products.edit');
     Route::patch('/admin/products/{product}', [DashboardController::class, 'updateProduct'])->name('admin.products.update');
     Route::patch('/admin/orders/{order}/status', [DashboardController::class, 'updateOrderStatus'])->name('admin.orders.status');

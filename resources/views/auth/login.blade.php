@@ -197,7 +197,8 @@
         }
 
         input[type="email"],
-        input[type="password"] {
+        input[type="password"],
+        input[type="text"].password-input {
             background: var(--input-bg);
             border: 1.5px solid #dce8f8;
             border-radius: 999px;
@@ -210,9 +211,33 @@
         }
 
         input[type="email"]:focus,
-        input[type="password"]:focus {
+        input[type="password"]:focus,
+        input[type="text"].password-input:focus {
             border-color: #ef7fa1;
             box-shadow: 0 0 0 4px rgba(239, 127, 161, 0.20);
+        }
+
+        .password-wrap {
+            position: relative;
+        }
+
+        .password-wrap input {
+            padding-right: 4.6rem;
+        }
+
+        .password-toggle {
+            background: transparent;
+            border: 0;
+            color: var(--pink-deep);
+            cursor: pointer;
+            font: inherit;
+            font-size: 0.78rem;
+            font-weight: 900;
+            padding: 0.3rem 0.7rem;
+            position: absolute;
+            right: 0.62rem;
+            top: 50%;
+            transform: translateY(-50%);
         }
 
         /* Remember + forgot row */
@@ -343,12 +368,15 @@
 
                     <div class="field">
                         <label for="password">Password</label>
-                        <input id="password" type="password" name="password" required autocomplete="current-password">
+                        <div class="password-wrap">
+                            <input id="password" class="password-input" type="password" name="password" required autocomplete="current-password">
+                            <button class="password-toggle" type="button" data-password-toggle="password" aria-label="Show password">Show</button>
+                        </div>
                     </div>
 
                     <div class="row">
                         <label class="remember" for="remember_me">
-                            <input id="remember_me" type="checkbox" name="remember">
+                            <input id="remember_me" type="checkbox" name="remember" value="1" @checked(old('remember'))>
                             <span>Remember me</span>
                         </label>
 
@@ -373,6 +401,18 @@
             setTimeout(() => {
                 document.getElementById('modal-overlay').classList.add('active');
             }, 100);
+
+            document.querySelectorAll('[data-password-toggle]').forEach(function(button) {
+                button.addEventListener('click', function() {
+                    const input = document.getElementById(button.dataset.passwordToggle);
+                    if (!input) return;
+
+                    const shouldShow = input.type === 'password';
+                    input.type = shouldShow ? 'text' : 'password';
+                    button.textContent = shouldShow ? 'Hide' : 'Show';
+                    button.setAttribute('aria-label', shouldShow ? 'Hide password' : 'Show password');
+                });
+            });
         });
     </script>
 

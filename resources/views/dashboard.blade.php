@@ -217,8 +217,8 @@
     <div class="tabs" style="display: flex; background: white; border-radius: 12px; padding: 4px; margin-bottom: 24px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
         <a href="{{ route('admin.dashboard') }}" class="tab active" style="flex: 1; padding: 12px 24px; border-radius: 8px; text-align: center; text-decoration: none; color: white; font-weight: 500; background: #fb7185; box-shadow: 0 2px 8px rgba(251, 113, 133, 0.3);">Dashboard</a>
         <a href="{{ route('admin.inventory') }}" class="tab" style="flex: 1; padding: 12px 24px; border-radius: 8px; text-align: center; text-decoration: none; color: #6b7280; font-weight: 500; transition: all 0.2s;">Inventory</a>
-        <a href="#" class="tab" style="flex: 1; padding: 12px 24px; border-radius: 8px; text-align: center; text-decoration: none; color: #6b7280; font-weight: 500; transition: all 0.2s;">Orders</a>
-        <a href="#" class="tab" style="flex: 1; padding: 12px 24px; border-radius: 8px; text-align: center; text-decoration: none; color: #6b7280; font-weight: 500; transition: all 0.2s;">Analytics</a>
+        <a href="{{ route('admin.orders') }}" class="tab" style="flex: 1; padding: 12px 24px; border-radius: 8px; text-align: center; text-decoration: none; color: #6b7280; font-weight: 500; transition: all 0.2s;">Orders</a>
+        <a href="{{ route('admin.analytics') }}" class="tab" style="flex: 1; padding: 12px 24px; border-radius: 8px; text-align: center; text-decoration: none; color: #6b7280; font-weight: 500; transition: all 0.2s;">Analytics</a>
     </div>
 
     <!-- STATS -->
@@ -258,7 +258,7 @@
             <h3>Quick Actions</h3>
             <div style="display: flex; flex-direction: column; gap: 16px;">
                 <a href="{{ route('admin.inventory') }}" class="btn btn-primary" style="text-align: center; text-decoration: none;">📦 Manage Inventory</a>
-                <button class="btn btn-light">📊 View Reports</button>
+                <a href="{{ route('admin.analytics') }}" class="btn btn-light" style="text-align: center; text-decoration: none;">View Reports</a>
                 <button class="btn btn-light">👥 Customer Support</button>
             </div>
         </div>
@@ -295,6 +295,7 @@
                                         <option value="{{ $value }}" @selected($order->status === $value)>{{ $label }}</option>
                                     @endforeach
                                 </select>
+                                <input class="status-select" type="text" name="lalamove_tracking_number" value="{{ $order->lalamove_tracking_number }}" placeholder="Lalamove no." style="width: 140px;">
                                 <button class="mini-btn" type="submit">Save</button>
                             </form>
                         </td>
@@ -340,5 +341,3 @@
     });
 </script>
 @endsection
-
-

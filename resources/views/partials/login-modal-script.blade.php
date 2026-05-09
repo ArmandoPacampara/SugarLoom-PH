@@ -26,6 +26,18 @@
         trigger.addEventListener('click', closeLoginModal);
     });
 
+    document.querySelectorAll('[data-password-toggle]').forEach(function(trigger) {
+        trigger.addEventListener('click', function() {
+            const input = document.getElementById(trigger.dataset.passwordToggle);
+            if (!input) return;
+
+            const shouldShow = input.type === 'password';
+            input.type = shouldShow ? 'text' : 'password';
+            trigger.textContent = shouldShow ? 'Hide' : 'Show';
+            trigger.setAttribute('aria-label', shouldShow ? 'Hide password' : 'Show password');
+        });
+    });
+
     loginModal?.addEventListener('click', function(event) {
         if (event.target === loginModal) {
             closeLoginModal();
