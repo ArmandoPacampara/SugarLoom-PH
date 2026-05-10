@@ -40,6 +40,9 @@ class Order extends Model
         'total',
         'promo_code',
         'placed_at',
+        'rating',
+        'review_comment',
+        'reviewed_at',
     ];
 
     protected $casts = [
@@ -49,6 +52,7 @@ class Order extends Model
         'tax' => 'decimal:2',
         'total' => 'decimal:2',
         'placed_at' => 'datetime',
+        'reviewed_at' => 'datetime',
     ];
 
     public static function statuses(): array

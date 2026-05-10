@@ -412,6 +412,54 @@
     box-shadow: 0 6px 16px rgba(216,84,123,0.25);
 }
 
+.btn-add-catalog:hover {
+    background: var(--pink);
+    color: white;
+    border-color: var(--pink);
+    transform: scale(1.02);
+    box-shadow: 0 6px 16px rgba(216,84,123,0.25);
+}
+
+.btn-add-catalog:disabled {
+    background: #f3eff1;
+    color: #a0a0a0;
+    border-color: #e0d0d5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.btn-add-catalog:disabled:hover {
+    background: #f3eff1;
+    color: #a0a0a0;
+    transform: none;
+}
+
+.btn-cart:disabled,
+.btn-quick-add:disabled {
+    background: #ddd !important;
+    color: #999 !important;
+    cursor: not-allowed;
+}
+
+.stock-badge {
+    display: inline-block;
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 0.4rem 0.8rem;
+    border-radius: var(--radius-pill);
+    margin-bottom: 0.6rem;
+}
+
+.stock-badge.in-stock {
+    background: #dcfce7;
+    color: #16a34a;
+}
+
+.stock-badge.out-of-stock {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
 /* ── RESPONSIVE ── */
 @media (max-width: 1024px) {
     .catalog-page { padding: 3rem 2rem 5rem; }
@@ -448,7 +496,11 @@
                 <div class="bakers-price">₱{{ number_format($bakersChoice->price, 0) }}</div>
             </div>
             <p>{{ $bakersChoice->short_description ?? $bakersChoice->description }}</p>
-            <button class="btn-quick-add" data-id="{{ $bakersChoice->id }}">Quick Add</button>
+            @if($bakersChoice->isOutOfStock())
+                <button class="btn-quick-add" disabled>Out of Stock</button>
+            @else
+                <button class="btn-quick-add" data-id="{{ $bakersChoice->id }}">Quick Add</button>
+            @endif
         </div>
         @endif
     </div>
@@ -461,7 +513,11 @@
             <p>{{ $topPick->description }}</p>
             <div class="top-pick-actions">
                 <span class="top-pick-price">₱{{ number_format($topPick->price, 0) }}</span>
-                <button class="btn-cart" data-id="{{ $topPick->id }}">🛒 Add to Cart</button>
+                @if($topPick->isOutOfStock())
+                    <button class="btn-cart" disabled>Out of Stock</button>
+                @else
+                    <button class="btn-cart" data-id="{{ $topPick->id }}">🛒 Add to Cart</button>
+                @endif
             </div>
         </div>
         <div class="top-pick-img-wrap">
@@ -501,7 +557,13 @@
                         @endif
                     </div>
                     <p class="catalog-desc">{{ $product->description }}</p>
-                    <button class="btn-add-catalog" data-id="{{ $product->id }}">+ Add to Cart</button>
+                    @if($product->isOutOfStock())
+                        <div class="stock-badge out-of-stock">Out of Stock</div>
+                        <button class="btn-add-catalog" disabled>Out of Stock</button>
+                    @else
+                        <div class="stock-badge in-stock">In Stock ({{ $product->stock_quantity }})</div>
+                        <button class="btn-add-catalog" data-id="{{ $product->id }}">+ Add to Cart</button>
+                    @endif
                 </div>
             </div>
             @endforeach
@@ -545,7 +607,9 @@ function filterProducts(btn, filter) {
 }
 
 document.querySelectorAll('[data-id]').forEach(button => {
-    button.addEventListener('click', () => addToCart(button.dataset.id));
+    if (!button.disabled) {
+        button.addEventListener('click', () => addToCart(button.dataset.id));
+    }
 });
 </script>
 @endsection

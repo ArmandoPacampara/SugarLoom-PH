@@ -245,8 +245,38 @@
             transform: scale(1.05);
         }
 
+        .btn-add:disabled {
+            background: #f3eff1;
+            color: #a0a0a0;
+            border-color: #e0d0d5;
+            cursor: not-allowed;
+            transform: none;
+        }
 
-        /* ── FLAVOR QUIZ CTA ── */
+        .btn-add:disabled:hover {
+            background: #f3eff1;
+            color: #a0a0a0;
+            transform: none;
+        }
+
+        .stock-badge {
+            display: inline-block;
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 0.4rem 0.8rem;
+            border-radius: 999px;
+            margin-bottom: 0.8rem;
+        }
+
+        .stock-badge.in-stock {
+            background: #dcfce7;
+            color: #16a34a;
+        }
+
+        .stock-badge.out-of-stock {
+            background: #fee2e2;
+            color: #dc2626;
+        }
         .quiz-section { background: var(--cream); padding: 4rem; }
 
 
@@ -468,7 +498,13 @@
                     <span class="product-price">₱{{ number_format($product->price, 0) }}</span>
                 </div>
                 <p class="product-desc">{{ $product->description }}</p>
-                <button class="btn-add" data-product-id="{{ $product->id }}">Add to Box</button>
+                @if($product->isOutOfStock())
+                    <div class="stock-badge out-of-stock">Out of Stock</div>
+                    <button class="btn-add" disabled>Out of Stock</button>
+                @else
+                    <div class="stock-badge in-stock">In Stock ({{ $product->stock_quantity }})</div>
+                    <button class="btn-add" data-product-id="{{ $product->id }}">Add to Box</button>
+                @endif
             </div>
         </div>
         @endforeach
@@ -495,26 +531,37 @@
     </div>
 
     <div class="reviews-grid">
-        @foreach($testimonials as $review)
+        @forelse($testimonials->concat($orderRatings ?? []) as $review)
         <div class="review-card" data-aos="fade-up" data-aos-delay="{{ $loop->index * 150 }}">
             <div class="review-quote">"</div>
-            <div class="stars">★★★★★</div>
-            <p class="review-text">{{ $review->content }}</p>
+            <div class="stars">
+                @if(isset($review->stars) && $review->stars)
+                    @for($i = 0; $i < 5; $i++)
+                        @if($i < $review->stars)★@else☆@endif
+                    @endfor
+                @else
+                    @for($i = 0; $i < 5; $i++)
+                        @if($i < ($review->rating ?? 0))★@else☆@endif
+                    @endfor
+                @endif
+            </div>
+            <p class="review-text">{{ $review->content ?? $review->review_comment ?? 'Wonderful experience with the order!' }}</p>
             <div class="reviewer">
                 <div class="reviewer-avatar">
-                    @if($review->avatar)
-                        <img src="{{ asset('storage/' . $review->avatar) }}" alt="{{ $review->name }}">
+                    @if(isset($review->avatar) && $review->avatar)
+                        <img src="{{ asset('storage/' . $review->avatar) }}" alt="{{ $review->name ?? $review->customer_name }}">
                     @else
-                        {{ strtoupper(substr($review->name, 0, 1)) }}
+                        {{ strtoupper(substr($review->name ?? $review->customer_name ?? 'A', 0, 1)) }}
                     @endif
                 </div>
                 <div>
-                    <div class="reviewer-name">{{ $review->name }}</div>
-                    <div class="reviewer-role">{{ $review->label }}</div>
+                    <div class="reviewer-name">{{ $review->name ?? $review->customer_name }}</div>
+                    <div class="reviewer-role">{{ $review->label ?? 'Verified Buyer' }}</div>
                 </div>
             </div>
         </div>
-        @endforeach
+        @empty
+        @endforelse
     </div>
 </section>
 @endsection
@@ -530,36 +577,11 @@
 
     // Use data attributes instead of inline onclick to avoid Blade/JS conflicts
     document.querySelectorAll('.btn-add[data-product-id]').forEach(function(btn) {
-        btn.addEventListener('click', function() {
-            addToCart(this.dataset.productId);
-        });
+        if (!btn.disabled) {
+            btn.addEventListener('click', function() {
+                addToCart(this.dataset.productId);
+            });
+        }
     });
-
-    function addToCart(productId) {
-        fetch('/cart/add', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-            },
-            body: JSON.stringify({ product_id: productId, quantity: 1 })
-        })
-        .then(function(res) { return res.json(); })
-        .then(function(data) {
-            updateCartCount(data.count || 0);
-            showToast(data.message || 'Added to box! 🍪');
-            
-            // Animation for cart
-            const cartAction = document.getElementById('cartAction');
-            if (cartAction) {
-                cartAction.classList.add('cart-shake');
-                setTimeout(() => cartAction.classList.remove('cart-shake'), 400);
-            }
-        })
-        .catch(function() {
-            showToast('Something went wrong. Please try again.');
-        });
-    }
 </script>
 @endsection

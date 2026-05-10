@@ -39,6 +39,29 @@ class CartController extends Controller
 
         $product = Product::active()->findOrFail($validated['product_id']);
         $quantity = $validated['quantity'] ?? 1;
+
+        // Check if product is in stock
+        if ($product->isOutOfStock()) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => "{$product->name} is out of stock.",
+                ], 400);
+            }
+            return redirect()->route('cart.index')->with('error', "{$product->name} is out of stock.");
+        }
+
+        // Check if requested quantity exceeds available stock
+        if ($quantity > $product->stock_quantity) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => "Only {$product->stock_quantity} item(s) of {$product->name} available.",
+                ], 400);
+            }
+            return redirect()->route('cart.index')->with('error', "Only {$product->stock_quantity} item(s) of {$product->name} available.");
+        }
+
         $cart = session('cart', []);
 
         $item = $cart[$product->id] ?? [
@@ -49,6 +72,18 @@ class CartController extends Controller
             'image' => $product->image,
             'quantity' => 0,
         ];
+
+        // Check if total quantity in cart would exceed stock
+        $totalQuantity = $item['quantity'] + $quantity;
+        if ($totalQuantity > $product->stock_quantity) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => "Only {$product->stock_quantity} item(s) of {$product->name} available. You have {$item['quantity']} in your cart.",
+                ], 400);
+            }
+            return redirect()->route('cart.index')->with('error', "Only {$product->stock_quantity} item(s) of {$product->name} available. You have {$item['quantity']} in your cart.");
+        }
 
         $item['quantity'] += $quantity;
         $cart[$product->id] = $item;
@@ -127,6 +162,17 @@ class CartController extends Controller
 
         if ($cart->isEmpty()) {
             return redirect()->route('cart.index')->withErrors(['cart' => 'Add at least one item before checking out.']);
+        }
+
+        // Validate stock before processing checkout
+        foreach ($cart as $item) {
+            $product = Product::find($item['id']);
+            if (!$product || $product->isOutOfStock()) {
+                return redirect()->route('cart.index')->with('error', "{$item['name']} is no longer in stock. Please update your cart.");
+            }
+            if ($item['quantity'] > $product->stock_quantity) {
+                return redirect()->route('cart.index')->with('error', "Only {$product->stock_quantity} item(s) of {$item['name']} available. Please update your cart.");
+            }
         }
 
         $validated = $request->validate([

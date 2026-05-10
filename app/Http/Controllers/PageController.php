@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Order;
 use App\Models\Product;
 use App\Models\Testimonial;
 use Illuminate\Http\Request;
@@ -15,8 +16,15 @@ class PageController extends Controller
     {
         $bestSellers = Product::bestSellers()->take(3)->get();
         $testimonials = Testimonial::active()->take(3)->get();
+        
+        // Fetch order ratings from delivered orders
+        $orderRatings = Order::where('status', Order::STATUS_DELIVERED)
+            ->whereNotNull('rating')
+            ->latest('reviewed_at')
+            ->take(3)
+            ->get();
 
-        return view('home', compact('bestSellers', 'testimonials'));
+        return view('home', compact('bestSellers', 'testimonials', 'orderRatings'));
     }
     public function about()
     {
