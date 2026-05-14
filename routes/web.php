@@ -19,12 +19,16 @@ Route::get('/track-order', [TrackOrderController::class, 'index'])->name('track-
 Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/admin', [DashboardController::class, 'index'])->name('admin.dashboard');
     Route::get('/admin/inventory', [DashboardController::class, 'inventory'])->name('admin.inventory');
-    Route::get('/admin/orders', [DashboardController::class, 'orders'])->name('admin.orders');
-    Route::get('/admin/analytics', [DashboardController::class, 'analytics'])->name('admin.analytics');
+    Route::get('/admin/products/create', [DashboardController::class, 'createProduct'])->name('admin.products.create');
+    Route::post('/admin/products', [DashboardController::class, 'storeProduct'])->name('admin.products.store');
     Route::get('/admin/products/{product}/edit', [DashboardController::class, 'editProduct'])->name('admin.products.edit');
     Route::patch('/admin/products/{product}', [DashboardController::class, 'updateProduct'])->name('admin.products.update');
+    Route::delete('/admin/products/{product}', [DashboardController::class, 'destroyProduct'])->name('admin.products.destroy');
+    
+    Route::get('/admin/orders', [DashboardController::class, 'orders'])->name('admin.orders');
+    Route::get('/admin/orders/create', [DashboardController::class, 'createOrder'])->name('admin.orders.create');
+    Route::post('/admin/orders', [DashboardController::class, 'storeOrder'])->name('admin.orders.store');
     Route::patch('/admin/orders/{order}/status', [DashboardController::class, 'updateOrderStatus'])->name('admin.orders.status');
-    Route::patch('/admin/products/{product}/stock', [DashboardController::class, 'updateProductStock'])->name('admin.products.stock');
     Route::redirect('/dashboard', '/admin')->name('dashboard');
 });
 

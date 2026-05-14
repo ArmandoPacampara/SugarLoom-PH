@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Edit Product | SugarLoom PH')
+@section('title', 'Add New Product | SugarLoom PH')
 
 @section('styles')
     <style>
@@ -107,27 +107,6 @@
             letter-spacing: normal;
         }
 
-        .image-section {
-            display: flex;
-            gap: 20px;
-            align-items: flex-start;
-        }
-
-        .image-preview {
-            width: 150px;
-            height: 150px;
-            border-radius: 12px;
-            overflow: hidden;
-            border: 1px solid #e5e7eb;
-            flex-shrink: 0;
-        }
-
-        .image-preview img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
         .error-message {
             color: #dc2626;
             font-size: 12px;
@@ -208,8 +187,8 @@
     <div class="card">
         <div class="header">
             <div>
-                <h1>Edit Product</h1>
-                <p class="subtitle">Refine your product details and availability</p>
+                <h1>Add New Product</h1>
+                <p class="subtitle">Create a new entry for your inventory</p>
             </div>
             <a href="{{ route('admin.inventory') }}" class="back-link">← Back to Inventory</a>
         </div>
@@ -225,38 +204,37 @@
             </div>
         @endif
 
-        <form action="{{ route('admin.products.update', $product) }}" method="POST" enctype="multipart/form-data">
+        <form action="{{ route('admin.products.store') }}" method="POST" enctype="multipart/form-data">
             @csrf
-            @method('PATCH')
 
             <div class="form-grid">
                 <div class="form-group full">
                     <label>Product Name *</label>
-                    <input type="text" name="name" value="{{ old('name', $product->name) }}" placeholder="e.g. Classic Chocolate Chip" required>
+                    <input type="text" name="name" value="{{ old('name') }}" placeholder="e.g. Classic Chocolate Chip" required>
                     @error('name') <p class="error-message">{{ $message }}</p> @enderror
                 </div>
 
                 <div class="form-group full">
                     <label>Short Description</label>
-                    <input type="text" name="short_description" value="{{ old('short_description', $product->short_description) }}" placeholder="A brief hook for the catalog" maxlength="500">
+                    <input type="text" name="short_description" value="{{ old('short_description') }}" placeholder="A brief hook for the catalog" maxlength="500">
                     @error('short_description') <p class="error-message">{{ $message }}</p> @enderror
                 </div>
 
                 <div class="form-group full">
                     <label>Full Description *</label>
-                    <textarea name="description" placeholder="Describe the flavors, ingredients, and why customers will love it..." required>{{ old('description', $product->description) }}</textarea>
+                    <textarea name="description" placeholder="Describe the flavors, ingredients, and why customers will love it..." required>{{ old('description') }}</textarea>
                     @error('description') <p class="error-message">{{ $message }}</p> @enderror
                 </div>
 
                 <div class="form-group">
                     <label>Price (PHP) *</label>
-                    <input type="number" name="price" step="0.01" min="0.01" value="{{ old('price', $product->price) }}" required>
+                    <input type="number" name="price" step="0.01" min="0.01" value="{{ old('price') }}" required>
                     @error('price') <p class="error-message">{{ $message }}</p> @enderror
                 </div>
 
                 <div class="form-group">
                     <label>Stock Quantity *</label>
-                    <input type="number" name="stock_quantity" min="0" max="9999" value="{{ old('stock_quantity', $product->stock_quantity) }}" required>
+                    <input type="number" name="stock_quantity" min="0" max="9999" value="{{ old('stock_quantity', 0) }}" required>
                     @error('stock_quantity') <p class="error-message">{{ $message }}</p> @enderror
                 </div>
 
@@ -264,33 +242,24 @@
                     <label>Category *</label>
                     <select name="category" required>
                         <option value="">-- Select Category --</option>
-                        <option value="sweet" @selected(old('category', $product->category) === 'sweet')>Sweet</option>
-                        <option value="savory" @selected(old('category', $product->category) === 'savory')>Savory</option>
-                        <option value="beverage" @selected(old('category', $product->category) === 'beverage')>Beverage</option>
-                        <option value="specialty" @selected(old('category', $product->category) === 'specialty')>Specialty</option>
+                        <option value="sweet" @selected(old('category') === 'sweet')>Sweet</option>
+                        <option value="savory" @selected(old('category') === 'savory')>Savory</option>
+                        <option value="beverage" @selected(old('category') === 'beverage')>Beverage</option>
+                        <option value="specialty" @selected(old('category') === 'specialty')>Specialty</option>
                     </select>
                     @error('category') <p class="error-message">{{ $message }}</p> @enderror
                 </div>
 
                 <div class="form-group">
                     <label>Customer Rating (0-5)</label>
-                    <input type="number" name="rating" step="0.1" min="0" max="5" value="{{ old('rating', $product->rating) }}">
+                    <input type="number" name="rating" step="0.1" min="0" max="5" value="{{ old('rating', 0) }}">
                     @error('rating') <p class="error-message">{{ $message }}</p> @enderror
                 </div>
 
                 <div class="form-group full">
                     <label>Product Image</label>
-                    <div class="image-section">
-                        @if ($product->image)
-                            <div class="image-preview">
-                                <img src="{{ asset($product->image) }}" alt="{{ $product->name }}" onerror="this.src='{{ asset('images/placeholder.png') }}'">
-                            </div>
-                        @endif
-                        <div style="flex-grow: 1;">
-                            <input type="file" name="image" accept="image/*">
-                            <p class="muted" style="margin-top: 8px;">Recommended size: 800x800px. PNG or JPG.</p>
-                        </div>
-                    </div>
+                    <input type="file" name="image" accept="image/*">
+                    <p class="muted" style="margin-top: 8px; font-size: 12px; color: #6b7280;">Recommended size: 800x800px. PNG or JPG.</p>
                     @error('image') <p class="error-message">{{ $message }}</p> @enderror
                 </div>
 
@@ -298,11 +267,11 @@
                     <label>Product Status & Featured</label>
                     <div class="checkbox-group">
                         <div class="checkbox-item">
-                            <input type="checkbox" id="is_active" name="is_active" value="1" @checked(old('is_active', $product->is_active))>
+                            <input type="checkbox" id="is_active" name="is_active" value="1" @checked(old('is_active', 1))>
                             <label for="is_active">Show in Catalog</label>
                         </div>
                         <div class="checkbox-item">
-                            <input type="checkbox" id="is_bakers_choice" name="is_bakers_choice" value="1" @checked(old('is_bakers_choice', $product->is_bakers_choice))>
+                            <input type="checkbox" id="is_bakers_choice" name="is_bakers_choice" value="1" @checked(old('is_bakers_choice'))>
                             <label for="is_bakers_choice">Baker's Choice ✨</label>
                         </div>
                     </div>
@@ -310,8 +279,8 @@
             </div>
 
             <div class="button-group">
-                <a href="{{ route('admin.inventory') }}" class="btn btn-secondary">Discard Changes</a>
-                <button type="submit" class="btn btn-primary">Save Product Details</button>
+                <a href="{{ route('admin.inventory') }}" class="btn btn-secondary">Discard</a>
+                <button type="submit" class="btn btn-primary">Create Product</button>
             </div>
         </form>
     </div>

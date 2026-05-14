@@ -60,51 +60,15 @@ class DashboardController extends Controller
             ->take(5)
             ->get();
 
-        return view('dashboard', [
-            'totalSales' => $totalSales,
-            'salesProgress' => min(100, (int) round(($totalSales / 100000) * 100)),
-            'activeOrders' => $activeOrders,
-            'nextDelivery' => $nextDelivery ?: 'no active deliveries',
-            'lowStockCount' => $lowStockCount,
-            'demandData' => $demandData,
-            'orders' => $orders,
-            'statuses' => Order::statuses(),
-            'trending' => $trending,
-        ]);
-    }
-
-    public function inventory(): View
-    {
-        $products = Product::orderBy('name')->get();
-
-        return view('admin.inventory', [
-            'products' => $products,
-        ]);
-    }
-
-    public function orders(): View
-    {
-        $orders = Order::with('items')
-            ->latest('placed_at')
-            ->latest()
-            ->paginate(12);
-
-        return view('admin.orders', [
-            'orders' => $orders,
-            'statuses' => Order::statuses(),
-        ]);
-    }
-
-    public function analytics(): View
-    {
-        $orders = Order::with('items')
+        // Analytics Data
+        $allRecentOrders = Order::with('items')
             ->where('status', '!=', Order::STATUS_CANCELLED)
             ->where('placed_at', '>=', now()->subDays(13)->startOfDay())
             ->get();
 
         $lineLabels = collect(range(13, 0))->map(fn (int $daysAgo) => now()->subDays($daysAgo)->format('M d'));
-        $lineRevenue = $lineLabels->map(function (string $label) use ($orders) {
-            return round($orders
+        $lineRevenue = $lineLabels->map(function (string $label) use ($allRecentOrders) {
+            return round($allRecentOrders
                 ->filter(fn (Order $order) => $order->placed_at?->format('M d') === $label)
                 ->sum('total'), 2);
         });
@@ -126,7 +90,17 @@ class DashboardController extends Controller
             ->where('placed_at', '>=', now()->startOfMonth())
             ->sum('total');
 
-        return view('admin.analytics', [
+        return view('dashboard', [
+            'totalSales' => $totalSales,
+            'salesProgress' => min(100, (int) round(($totalSales / 100000) * 100)),
+            'activeOrders' => $activeOrders,
+            'nextDelivery' => $nextDelivery ?: 'no active deliveries',
+            'lowStockCount' => $lowStockCount,
+            'demandData' => $demandData,
+            'orders' => $orders,
+            'statuses' => Order::statuses(),
+            'trending' => $trending,
+            // Analytics
             'lineLabels' => $lineLabels->values(),
             'lineRevenue' => $lineRevenue->values(),
             'barLabels' => $topProducts->pluck('product_name')->values(),
@@ -137,6 +111,154 @@ class DashboardController extends Controller
             'ordersThisMonth' => Order::where('placed_at', '>=', now()->startOfMonth())->count(),
             'averageOrderValue' => Order::where('status', '!=', Order::STATUS_CANCELLED)->avg('total') ?? 0,
         ]);
+    }
+
+    public function inventory(Request $request): View
+    {
+        $query = Product::query();
+        
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('description', 'like', "%{$search}%");
+            });
+        }
+
+        if ($request->filled('category') && $request->category !== 'all') {
+            $query->where('category', $request->category);
+        }
+
+        if ($request->filled('status')) {
+            if ($request->status === 'active') {
+                $query->where('is_active', true);
+            } elseif ($request->status === 'hidden') {
+                $query->where('is_active', false);
+            } elseif ($request->status === 'low_stock') {
+                $query->where('stock_quantity', '<=', 10)->where('stock_quantity', '>', 0);
+            } elseif ($request->status === 'out_of_stock') {
+                $query->where('stock_quantity', 0);
+            }
+        }
+
+        $products = $query->orderBy('name')->get();
+
+        return view('admin.inventory', [
+            'products' => $products,
+            'hasFilters' => $request->anyFilled(['search', 'category', 'status']),
+        ]);
+    }
+
+    public function createProduct(): View
+    {
+        $categories = ['sweet', 'savory', 'beverage', 'specialty'];
+        return view('admin.products.create', compact('categories'));
+    }
+
+    public function storeProduct(ProductUpdateRequest $request): RedirectResponse
+    {
+        $validated = $request->validated();
+
+        if ($request->hasFile('image')) {
+            $imagePath = $request->file('image')->store('products', 'public');
+            $validated['image'] = 'storage/' . $imagePath;
+        }
+
+        $product = Product::create($validated);
+
+        return redirect()->route('admin.inventory')->with('status', "{$product->name} has been added to inventory.");
+    }
+
+    public function destroyProduct(Product $product): RedirectResponse
+    {
+        $name = $product->name;
+        
+        // Delete image if exists
+        if ($product->image && Storage::disk('public')->exists(str_replace('storage/', '', $product->image))) {
+            Storage::disk('public')->delete(str_replace('storage/', '', $product->image));
+        }
+
+        $product->delete();
+
+        return redirect()->route('admin.inventory')->with('status', "{$name} has been removed from inventory.");
+    }
+
+    public function orders(): View
+    {
+        $orders = Order::with('items')
+            ->latest('placed_at')
+            ->latest()
+            ->paginate(12);
+
+        return view('admin.orders', [
+            'orders' => $orders,
+            'statuses' => Order::statuses(),
+        ]);
+    }
+
+    public function createOrder(): View
+    {
+        $products = Product::active()->orderBy('name')->get();
+        return view('admin.orders.create', compact('products'));
+    }
+
+    public function storeOrder(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'customer_name' => 'required|string|max:255',
+            'customer_email' => 'nullable|email|max:255',
+            'customer_phone' => 'nullable|string|max:20',
+            'items' => 'required|array|min:1',
+            'items.*.product_id' => 'required|exists:products,id',
+            'items.*.quantity' => 'required|integer|min:1',
+        ]);
+
+        DB::transaction(function () use ($validated) {
+            $subtotal = 0;
+            $orderItems = [];
+
+            foreach ($validated['items'] as $itemData) {
+                $product = Product::findOrFail($itemData['product_id']);
+                $quantity = $itemData['quantity'];
+                
+                if ($product->stock_quantity < $quantity) {
+                    throw new \Exception("Insufficient stock for {$product->name}.");
+                }
+
+                $lineTotal = $product->price * $quantity;
+                $subtotal += $lineTotal;
+
+                $orderItems[] = new OrderItem([
+                    'product_id' => $product->id,
+                    'product_name' => $product->name,
+                    'unit_price' => $product->price,
+                    'quantity' => $quantity,
+                    'line_total' => $lineTotal,
+                ]);
+
+                $product->decrement('stock_quantity', $quantity);
+            }
+
+            $order = Order::create([
+                'order_number' => 'WALK-' . strtoupper(uniqid()),
+                'customer_name' => $validated['customer_name'],
+                'customer_email' => $validated['customer_email'] ?? 'walkin@sugarloom.ph',
+                'customer_phone' => $validated['customer_phone'] ?? 'N/A',
+                'shipping_address' => 'Walk-in Store',
+                'city' => 'Manila',
+                'postal_code' => '1000',
+                'payment_method' => 'cash',
+                'payment_status' => Order::PAYMENT_PAID,
+                'status' => Order::STATUS_DELIVERED,
+                'subtotal' => $subtotal,
+                'total' => $subtotal,
+                'placed_at' => now(),
+            ]);
+
+            $order->items()->saveMany($orderItems);
+        });
+
+        return redirect()->route('admin.orders')->with('status', 'Walk-in order recorded successfully.');
     }
 
     public function editProduct(Product $product): View
@@ -232,16 +354,5 @@ class DashboardController extends Controller
         }
 
         return back()->with('status', "{$order->order_number} status updated.");
-    }
-
-    public function updateProductStock(Request $request, Product $product): RedirectResponse
-    {
-        $validated = $request->validate([
-            'stock_quantity' => ['required', 'integer', 'min:0', 'max:9999'],
-        ]);
-
-        $product->update(['stock_quantity' => $validated['stock_quantity']]);
-
-        return redirect()->route('admin.dashboard')->with('status', "{$product->name} stock updated.");
     }
 }

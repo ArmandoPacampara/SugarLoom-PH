@@ -22,9 +22,7 @@ class ProductUpdateRequest extends FormRequest
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'category' => 'required|string|in:sweet,savory,beverage,specialty',
             'is_active' => 'boolean',
-            'is_best_seller' => 'boolean',
             'is_bakers_choice' => 'boolean',
-            'is_top_pick' => 'boolean',
             'rating' => 'nullable|numeric|min:0|max:5',
             'sort_order' => 'nullable|integer|min:0',
         ];
