@@ -32,7 +32,7 @@ class RegisteredUserController extends Controller
             'shipping_address' => ['required', 'string', 'max:255'],
             'city' => ['required', 'string', 'max:80'],
             'postal_code' => ['required', 'string', 'max:20'],
-            'password' => ['required', 'confirmed', Rules\Password::defaults()],
+            'password' => ['required', 'confirmed', Rules\Password::min(8)->letters()->numbers()],
         ]);
 
         $code = (string) random_int(100000, 999999);

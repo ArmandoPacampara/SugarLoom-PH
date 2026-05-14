@@ -43,14 +43,25 @@ class PageController extends Controller
         $topPick      = Product::topPick()->first();
 
         $category = $request->query('category', 'all');
+        $search = $request->query('search');
 
         $products = Product::active()
             ->when($category !== 'all', fn($q) => $q->where('category', $category))
+            ->when($search, function ($q) use ($search) {
+                $q->where(function ($sub) use ($search) {
+                    $sub->where('name', 'like', "%{$search}%")
+                        ->orWhere('description', 'like', "%{$search}%");
+                });
+            })
             ->orderByDesc('rating')
             ->orderBy('sort_order')
             ->get();
 
-        return view('catalog', compact('bakersChoice', 'topPick', 'products', 'category'));
+        if ($request->ajax()) {
+            return view('partials.product-list', compact('products', 'search'))->render();
+        }
+
+        return view('catalog', compact('bakersChoice', 'topPick', 'products', 'category', 'search'));
     }
 
     // public function show($slug)

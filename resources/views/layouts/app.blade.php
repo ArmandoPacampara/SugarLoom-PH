@@ -26,6 +26,7 @@
         body {
             font-family: 'Poppins', sans-serif;
             background: var(--cream);
+            position: relative;
             color: var(--text-body);
             overflow-x: hidden;
             display: flex;
@@ -33,7 +34,49 @@
             min-height: 100vh;
         }
 
-        main { flex: 1; }
+        /* ── ENHANCED BACKGROUND ── */
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-image: 
+                linear-gradient(rgba(253, 241, 244, 0.8) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(253, 241, 244, 0.8) 1px, transparent 1px);
+            background-size: 40px 40px;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        .bg-decor {
+            position: fixed;
+            width: 100vw;
+            height: 100vh;
+            top: 0;
+            left: 0;
+            z-index: -2;
+            overflow: hidden;
+            pointer-events: none;
+        }
+
+        .blob {
+            position: absolute;
+            background: var(--pink-pale);
+            filter: blur(80px);
+            border-radius: 50%;
+            opacity: 0.4;
+            animation: move 25s infinite alternate;
+        }
+
+        .blob-1 { width: 400px; height: 400px; top: -100px; right: -100px; background: #ffe4e9; }
+        .blob-2 { width: 350px; height: 350px; bottom: 10%; left: -50px; background: #fff0f3; animation-delay: -5s; }
+        .blob-3 { width: 300px; height: 300px; top: 40%; right: 15%; background: #fdf1f4; animation-delay: -10s; }
+
+        @keyframes move {
+            from { transform: translate(0, 0) scale(1); }
+            to   { transform: translate(40px, 60px) scale(1.1); }
+        }
+
+        main { flex: 1; position: relative; z-index: 1; }
 
         h1, h2, h3 {
             font-family: 'Poppins', sans-serif;
@@ -271,19 +314,28 @@
     @yield('styles')
 
 </head>
-<body>
+<body class="antialiased">
+
+<div class="bg-decor">
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+    <div class="blob blob-3"></div>
+</div>
 
 @include('partials.navbar')
 @include('partials.login-modal')
+@include('partials.cookie-consent')
 
 <main>
     @yield('content')
 </main>
 
+@unless(request()->is('admin*'))
 <footer>
     <a href="/" class="footer-logo">SugarLoom PH</a>
     <button class="footer-cart" aria-label="Cart">🛒</button>
 </footer>
+@endunless
 
 <div class="toast" id="toast"></div>
 

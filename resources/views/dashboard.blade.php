@@ -20,17 +20,10 @@
             scroll-behavior: smooth;
         }
 
-        /* ── ANIMATIONS ── */
-        @keyframes growUp {
-            from { transform: scaleY(0); transform-origin: bottom; }
-            to { transform: scaleY(1); transform-origin: bottom; }
-        }
-        .bar { animation: growUp 1s ease-out backwards; }
-
         .container {
             max-width: 1200px;
             margin: auto;
-            padding: 24px;
+            padding: 24px 24px 80px; /* Added 80px bottom padding */
         }
 
         .flex { display: flex; }
@@ -42,10 +35,11 @@
         .grid-2-1 { grid-template-columns: 2fr 1fr; }
 
         .card {
-            margin: 20px 0;
-            background: white;
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
             padding: 24px;
             border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.4);
             box-shadow: 0 8px 20px rgba(0,0,0,0.05);
             transition: all 0.3s;
         }
@@ -87,21 +81,6 @@
             border-radius: 10px;
         }
 
-        .chart {
-            display: flex;
-            align-items: flex-end;
-            gap: 10px;
-            height: 160px;
-        }
-
-        .bar {
-            flex: 1;
-            background: #fda4af;
-            border-radius: 10px 10px 0 0;
-            transition: all 0.3s;
-        }
-        .bar:hover { background: #fb7185; transform: scaleX(1.1); }
-
         table {
             width: 100%;
             border-collapse: collapse;
@@ -119,19 +98,8 @@
             border-top: 1px solid #eee;
         }
 
-        .badge {
-            padding: 4px 10px;
-            border-radius: 999px;
-            font-size: 12px;
-            font-weight: bold;
-        }
-
-        .blue { background: #dbeafe; color: #2563eb; }
-        .green { background: #dcfce7; color: #16a34a; }
-        .yellow { background: #fef9c3; color: #ca8a04; }
-        .red { background: #fee2e2; color: #dc2626; }
         .status-form { display: flex; gap: 8px; align-items: center; }
-        .status-select, .stock-input {
+        .status-select {
             border: 1px solid #f3d4dc;
             border-radius: 999px;
             padding: 7px 10px;
@@ -148,24 +116,11 @@
             cursor: pointer;
         }
 
-        .inventory-item { margin-bottom: 16px; }
-        
-        .inventory-top {
-            display: flex;
-            justify-content: space-between;
-            font-size: 14px;
-            margin-bottom: 4px;
-        }
-
-        .text-red { color: #ef4444; font-weight: bold; }
-
         .trending {
             background: #fb7185;
             color: white;
             padding: 24px;
             border-radius: 20px;
-            margin-top: 24px;
-            max-width: 400px;
             transition: all 0.3s;
             box-shadow: 0 8px 25px rgba(251, 113, 133, 0.3);
         }
@@ -182,16 +137,21 @@
             font-weight: bold;
         }
         .mt-24 { margin-top: 24px; }
-        .mt-10 { margin-top: 10px; }
-        .mt-0 { margin-top: 0; }
         .mb-10 { margin-bottom: 10px; }
-        .mb-16 { margin-bottom: 16px; }
         .m-0 { margin: 0; }
-        .w-full { width: 100%; }
         .text-gray { color: gray; }
         .text-bold { font-weight: bold; }
         .fs-14 { font-size: 14px; }
         .empty-state { color: gray; padding: 12px 0; }
+
+        .chart-wrap { position: relative; height: 300px; }
+        
+        .stat-label { color: #6b7280; font-size: 12px; text-transform: uppercase; font-weight: 700; }
+        .stat-value { color: #be123c; font-size: 28px; font-weight: 800; margin-top: 8px; }
+
+        @media (max-width: 800px) {
+            .grid-3, .grid-2-1 { grid-template-columns: 1fr; }
+        }
     </style>
 @endsection
 
@@ -203,12 +163,11 @@
         <h1>Admin Dashboard</h1>
         <div class="flex gap">
             <button class="btn btn-light">Export Report</button>
-            <button class="btn btn-primary">+ New Batch</button>
         </div>
     </div>
 
     @if (session('status'))
-        <div class="card" style="margin: 0 0 20px; color: #166534; background: #dcfce7;">
+        <div class="card" style="margin: 0 0 20px; color: #166534; background: #dcfce7; padding: 12px 24px; border-radius: 12px;">
             {{ session('status') }}
         </div>
     @endif
@@ -218,58 +177,74 @@
         <a href="{{ route('admin.dashboard') }}" class="tab active" style="flex: 1; padding: 12px 24px; border-radius: 8px; text-align: center; text-decoration: none; color: white; font-weight: 500; background: #fb7185; box-shadow: 0 2px 8px rgba(251, 113, 133, 0.3);">Dashboard</a>
         <a href="{{ route('admin.inventory') }}" class="tab" style="flex: 1; padding: 12px 24px; border-radius: 8px; text-align: center; text-decoration: none; color: #6b7280; font-weight: 500; transition: all 0.2s;">Inventory</a>
         <a href="{{ route('admin.orders') }}" class="tab" style="flex: 1; padding: 12px 24px; border-radius: 8px; text-align: center; text-decoration: none; color: #6b7280; font-weight: 500; transition: all 0.2s;">Orders</a>
-        <a href="{{ route('admin.analytics') }}" class="tab" style="flex: 1; padding: 12px 24px; border-radius: 8px; text-align: center; text-decoration: none; color: #6b7280; font-weight: 500; transition: all 0.2s;">Analytics</a>
     </div>
 
-    <!-- STATS -->
+    <!-- MAIN STATS -->
     <div class="grid grid-3">
-        <div class="card m-0" data-aos="fade-up" data-aos-delay="100">
-            <p class="text-gray mt-0">TOTAL SALES</p>
-            <h2>PHP {{ number_format($totalSales ?? 0, 2) }}</h2>
+        <div class="card" data-aos="fade-up" data-aos-delay="100">
+            <div class="stat-label">REVENUE THIS MONTH</div>
+            <div class="stat-value">PHP {{ number_format($monthlyRevenue, 2) }}</div>
             <div class="progress">
                 <div class="progress-bar" @style(['width' => ($salesProgress ?? 50) . '%'])></div>
             </div>
         </div>
 
-        <div class="card m-0" data-aos="fade-up" data-aos-delay="200">
-            <p class="text-gray mt-0">ACTIVE ORDERS</p>
-            <h2>{{ $activeOrders ?? 0 }}</h2>
-            <p class="text-gray fs-14">Next delivery: {{ $nextDelivery ?? 'N/A' }}</p>
+        <div class="card" data-aos="fade-up" data-aos-delay="200">
+            <div class="stat-label">ORDERS THIS MONTH</div>
+            <div class="stat-value">{{ $ordersThisMonth }}</div>
+            <p class="text-gray fs-14">Active: {{ $activeOrders ?? 0 }} (Next: {{ $nextDelivery ?? 'N/A' }})</p>
         </div>
 
-        <div class="card m-0" data-aos="fade-up" data-aos-delay="300">
-            <p class="text-gray mt-0">LOW STOCK ALERTS</p>
-            <h2>{{ $lowStockCount ?? 0 }} Items</h2>
-        </div>
-    </div>
-
-    <!-- MAIN GRID -->
-    <div class="grid grid-2-1 mt-24">
-        <div class="card m-0" data-aos="fade-right">
-            <h3>Demand Prediction</h3>
-            <div class="chart">
-                @foreach($demandData ?? [50,70,90,120,110,80,60] as $value)
-                    <div class="bar" @style(['height' => $value . 'px', 'animation-delay' => ($loop->index * 100) . 'ms'])></div>
-                @endforeach
-            </div>
-        </div>
-
-        <div class="card m-0" data-aos="fade-left">
-            <h3>Quick Actions</h3>
-            <div style="display: flex; flex-direction: column; gap: 16px;">
-                <a href="{{ route('admin.inventory') }}" class="btn btn-primary" style="text-align: center; text-decoration: none;">📦 Manage Inventory</a>
-                <a href="{{ route('admin.analytics') }}" class="btn btn-light" style="text-align: center; text-decoration: none;">View Reports</a>
-                <button class="btn btn-light">👥 Customer Support</button>
-            </div>
+        <div class="card" data-aos="fade-up" data-aos-delay="300">
+            <div class="stat-label">AVERAGE ORDER VALUE</div>
+            <div class="stat-value">PHP {{ number_format($averageOrderValue, 2) }}</div>
+            <p class="text-gray fs-14">{{ $lowStockCount ?? 0 }} items with low stock</p>
         </div>
     </div>
 
-    <!-- ORDERS & TRENDING ROW -->
+    <!-- CHARTS ROW 1 -->
     <div class="grid grid-2-1 mt-24">
-        
-        <!-- ORDERS -->
-        <div class="card m-0" data-aos="fade-up">
+        <div class="card" data-aos="fade-right">
+            <h3>Revenue Trend (Last 14 Days)</h3>
+            <div class="chart-wrap"><canvas id="revenueLine"></canvas></div>
+        </div>
+
+        <div class="card" data-aos="fade-left">
+            <h3>Orders by Status</h3>
+            <div class="chart-wrap"><canvas id="statusPie"></canvas></div>
+        </div>
+    </div>
+
+    <!-- CHARTS ROW 2 & TRENDING -->
+    <div class="grid grid-2-1 mt-24">
+        <div class="card" data-aos="fade-up">
+            <h3>Top Products Sold</h3>
+            <div class="chart-wrap"><canvas id="productsBar"></canvas></div>
+        </div>
+
+        <div class="trending" data-aos="fade-up" data-aos-delay="200">
+            <h3 style="color: white;">Trending This Week</h3>
+            @forelse($trending ?? [] as $trend)
+                <div class="trend-item">
+                    <span>{{ $trend->product_name }}</span>
+                    <span>{{ $trend->total_quantity }} sold</span>
+                </div>
+            @empty
+                <div class="trend-item">
+                    <span>No sales yet</span>
+                    <span>0</span>
+                </div>
+            @endforelse
+        </div>
+    </div>
+
+    <!-- RECENT ORDERS -->
+    <div class="card mt-24" data-aos="fade-up">
+        <div class="flex between mb-16">
             <h3>Recent Orders</h3>
+            <a href="{{ route('admin.orders') }}" class="btn btn-light" style="font-size: 12px; padding: 6px 12px;">View All</a>
+        </div>
+        <div style="overflow-x: auto;">
             <table>
                 <thead>
                     <tr>
@@ -295,7 +270,6 @@
                                         <option value="{{ $value }}" @selected($order->status === $value)>{{ $label }}</option>
                                     @endforeach
                                 </select>
-                                <input class="status-select" type="text" name="lalamove_tracking_number" value="{{ $order->lalamove_tracking_number }}" placeholder="Lalamove no." style="width: 140px;">
                                 <button class="mini-btn" type="submit">Save</button>
                             </form>
                         </td>
@@ -303,29 +277,15 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="5" class="empty-state">No customer orders yet.</td>
+                        <td colspan="5" class="empty-state" style="text-align: center; padding: 32px 0;">
+                            <div style="font-size: 32px; margin-bottom: 8px;">🍪</div>
+                            No customer orders yet.
+                        </td>
                     </tr>
                     @endforelse
                 </tbody>
             </table>
         </div>
-
-        <!-- TRENDING -->
-        <div class="trending m-0" style="max-width: none;" data-aos="fade-up" data-aos-delay="200">
-            <h3 class="mt-0">Trending This Week</h3>
-            @forelse($trending ?? [] as $trend)
-                <div class="trend-item">
-                    <span>{{ $trend->product_name }}</span>
-                    <span>{{ $trend->total_quantity }} sold</span>
-                </div>
-            @empty
-                <div class="trend-item">
-                    <span>No sales yet</span>
-                    <span>0</span>
-                </div>
-            @endforelse
-        </div>
-
     </div>
 
 </div>
@@ -333,11 +293,86 @@
 
 @section('scripts')
 <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
     AOS.init({
         once: true,
         duration: 800,
         easing: 'ease-out-cubic'
+    });
+
+    const chartColors = ['#fb7185', '#f59e0b', '#22c55e', '#38bdf8', '#a78bfa', '#64748b', '#f97316', '#14b8a6'];
+
+    // Revenue Line Chart
+    new Chart(document.getElementById('revenueLine'), {
+        type: 'line',
+        data: {
+            labels: @json($lineLabels),
+            datasets: [{
+                label: 'Revenue',
+                data: @json($lineRevenue),
+                borderColor: '#fb7185',
+                backgroundColor: 'rgba(251, 113, 133, 0.15)',
+                fill: true,
+                tension: 0.35
+            }]
+        },
+        options: { 
+            responsive: true, 
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                y: { beginAtZero: true, grid: { color: '#f3f4f6' } },
+                x: { grid: { display: false } }
+            }
+        }
+    });
+
+    // Top Products Bar Chart
+    new Chart(document.getElementById('productsBar'), {
+        type: 'bar',
+        data: {
+            labels: @json($barLabels),
+            datasets: [{
+                label: 'Quantity sold',
+                data: @json($barValues),
+                backgroundColor: '#fb7185',
+                borderRadius: 6
+            }]
+        },
+        options: { 
+            responsive: true, 
+            maintainAspectRatio: false, 
+            indexAxis: 'y',
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                x: { beginAtZero: true, grid: { color: '#f3f4f6' } },
+                y: { grid: { display: false } }
+            }
+        }
+    });
+
+    // Status Pie Chart
+    new Chart(document.getElementById('statusPie'), {
+        type: 'pie',
+        data: {
+            labels: @json($pieLabels),
+            datasets: [{
+                data: @json($pieValues),
+                backgroundColor: chartColors
+            }]
+        },
+        options: { 
+            responsive: true, 
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'bottom' }
+            }
+        }
     });
 </script>
 @endsection

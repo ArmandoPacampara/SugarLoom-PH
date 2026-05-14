@@ -12,7 +12,7 @@
         .container {
             max-width: 1200px;
             margin: auto;
-            padding: 24px;
+            padding: 24px 24px 80px;
         }
 
         .header {
@@ -26,10 +26,10 @@
 
         .btn {
             padding: 10px 20px;
-            border-radius: 6px;
+            border-radius: 999px;
             border: none;
             cursor: pointer;
-            font-weight: 500;
+            font-weight: 600;
             text-decoration: none;
             display: inline-block;
             transition: all 0.2s;
@@ -37,202 +37,175 @@
         }
 
         .btn-light {
-            background: #f3f4f6;
+            background: white;
             color: #374151;
-        }
-
-        .btn-light:hover {
-            background: #e5e7eb;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
         }
 
         .btn-primary {
             background: #fb7185;
             color: white;
-        }
-
-        .btn-primary:hover {
-            background: #f43f5e;
+            box-shadow: 0 4px 12px rgba(251, 113, 133, 0.2);
         }
 
         .alert {
             background: #dcfce7;
             color: #166534;
-            padding: 12px;
-            border-radius: 6px;
+            padding: 12px 24px;
+            border-radius: 12px;
             margin-bottom: 20px;
             font-size: 14px;
         }
 
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 12px;
-            margin-bottom: 24px;
+        .tabs { 
+            display: flex; 
+            background: white; 
+            border-radius: 12px; 
+            padding: 4px; 
+            margin-bottom: 24px; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05); 
+        }
+        
+        .tab { 
+            flex: 1; 
+            padding: 12px 24px; 
+            border-radius: 8px; 
+            text-align: center; 
+            text-decoration: none; 
+            color: #6b7280; 
+            font-weight: 500; 
+            transition: all 0.2s; 
+        }
+        
+        .tab.active { 
+            background: #fb7185; 
+            color: white; 
+            box-shadow: 0 2px 8px rgba(251, 113, 133, 0.3); 
         }
 
-        .stat-card {
-            background: white;
-            padding: 16px;
-            border-radius: 8px;
-            text-align: center;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+        .card {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+            border-radius: 20px;
+            padding: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.05);
         }
 
-        .stat-number {
-            font-size: 28px;
-            font-weight: bold;
-            color: #fb7185;
-        }
-
-        .stat-label {
-            color: #6b7280;
-            font-size: 12px;
-            margin-top: 4px;
-        }
-
-        .product-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        /* ── SEARCH & FILTER ── */
+        .toolbar {
+            display: flex;
             gap: 16px;
+            margin-bottom: 24px;
+            background: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(8px);
+            padding: 16px;
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+            align-items: center;
         }
 
-        .product-card {
-            background: white;
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+        .search-box {
+            flex-grow: 1;
+            position: relative;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 16px;
+            border: 1px solid #e5e7eb;
+            border-radius: 999px;
+            font-size: 14px;
+            background: #f9fafb;
             transition: all 0.2s;
         }
 
-        .product-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        .search-input:focus {
+            outline: none;
+            border-color: #fb7185;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(251, 113, 133, 0.1);
         }
 
-        .product-image {
+        .filter-select {
+            padding: 10px 16px;
+            border: 1px solid #e5e7eb;
+            border-radius: 999px;
+            font-size: 14px;
+            background: #f9fafb;
+            cursor: pointer;
+        }
+
+        table {
             width: 100%;
-            height: 160px;
+            border-collapse: collapse;
+        }
+
+        th {
+            text-align: left;
+            padding: 12px 16px;
+            color: #6b7280;
+            font-weight: 600;
+            font-size: 13px;
+            text-transform: uppercase;
+            border-bottom: 2px solid #f3f4f6;
+        }
+
+        td {
+            padding: 16px;
+            border-bottom: 1px solid #f3f4f6;
+            vertical-align: middle;
+        }
+
+        .product-img {
+            width: 48px;
+            height: 48px;
+            border-radius: 8px;
             object-fit: cover;
             background: #f3f4f6;
         }
 
-        .product-info {
-            padding: 16px;
-        }
-
         .product-name {
-            font-size: 16px;
             font-weight: 600;
-            margin-bottom: 6px;
+            color: #111827;
         }
 
-        .product-description {
+        .product-cat {
+            font-size: 12px;
             color: #6b7280;
-            font-size: 13px;
-            margin-bottom: 10px;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
         }
 
-        .product-details {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
-            font-size: 14px;
-        }
-
-        .product-price {
-            font-weight: 600;
-            color: #fb7185;
-        }
-
-        .stock-badge {
+        .badge {
             padding: 4px 10px;
-            border-radius: 12px;
+            border-radius: 999px;
             font-size: 12px;
-            font-weight: 500;
+            font-weight: 600;
         }
 
-        .stock-high { background: #dcfce7; color: #166534; }
-        .stock-medium { background: #fef3c7; color: #92400e; }
-        .stock-low { background: #fee2e2; color: #dc2626; }
-        .stock-out { background: #f3f4f6; color: #6b7280; }
+        .badge-success { background: #dcfce7; color: #166534; }
+        .badge-warning { background: #fef3c7; color: #92400e; }
+        .badge-danger { background: #fee2e2; color: #dc2626; }
 
-        .status-badge {
-            display: inline-block;
-            padding: 3px 8px;
-            border-radius: 12px;
-            font-size: 11px;
-            font-weight: 500;
-            margin-bottom: 8px;
-        }
-
-        .status-available { background: #dcfce7; color: #166534; }
-        .status-unavailable { background: #fee2e2; color: #dc2626; }
-
-        .form-inline {
-            display: flex;
-            gap: 6px;
-            align-items: center;
-            margin-bottom: 8px;
-        }
-
-        .stock-input {
-            border: 1px solid #e5e7eb;
-            border-radius: 4px;
-            padding: 6px 8px;
-            width: 70px;
-            text-align: center;
-            font-size: 13px;
-        }
-
-        .btn-sm {
+        .btn-action {
             padding: 6px 12px;
+            border-radius: 6px;
             font-size: 12px;
-            border: none;
-            border-radius: 4px;
-            background: #fb7185;
-            color: white;
+            font-weight: 600;
             cursor: pointer;
-        }
-
-        .btn-sm:hover {
-            background: #f43f5e;
-        }
-
-        .btn-edit {
-            display: block;
-            width: 100%;
-            padding: 8px;
-            background: #f3f4f6;
-            color: #374151;
             border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 13px;
-            font-weight: 500;
+            transition: all 0.2s;
+            display: inline-block;
             text-decoration: none;
-            text-align: center;
         }
 
-        .btn-edit:hover {
-            background: #e5e7eb;
-        }
+        .btn-edit { background: #f3f4f6; color: #374151; }
+        .btn-delete { background: #fee2e2; color: #dc2626; margin-left: 4px; }
+        .btn-delete:hover { background: #fca5a5; }
 
-        .empty-state {
-            text-align: center;
-            color: #6b7280;
-            padding: 48px 20px;
-            background: white;
-            border-radius: 8px;
-        }
-
-        .empty-state h3 {
-            margin-bottom: 8px;
-            color: #374151;
+        @media (max-width: 768px) {
+            .hide-mobile { display: none; }
+            .toolbar { flex-direction: column; align-items: stretch; }
         }
     </style>
 @endsection
@@ -240,72 +213,129 @@
 @section('content')
 <div class="container">
     <div class="header">
-        <h1>Inventory</h1>
-        <a href="{{ route('admin.dashboard') }}" class="btn btn-light">← Dashboard</a>
+        <h1>Inventory Management</h1>
+        <div class="flex gap">
+            <a href="{{ route('admin.products.create') }}" class="btn btn-primary">+ Add New Product</a>
+        </div>
     </div>
 
     @if (session('status'))
         <div class="alert">{{ session('status') }}</div>
     @endif
 
-    <!-- STATS -->
-    <div class="stats-grid">
-        <div class="stat-card">
-            <div class="stat-number">{{ $products->count() }}</div>
-            <div class="stat-label">Total Products</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-number">{{ $products->where('stock_quantity', '>', 10)->count() }}</div>
-            <div class="stat-label">In Stock</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-number">{{ $products->where('stock_quantity', '<=', 10)->where('stock_quantity', '>', 0)->count() }}</div>
-            <div class="stat-label">Low Stock</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-number">{{ $products->where('stock_quantity', 0)->count() }}</div>
-            <div class="stat-label">Out of Stock</div>
-        </div>
+    <div class="tabs">
+        <a href="{{ route('admin.dashboard') }}" class="tab">Dashboard</a>
+        <a href="{{ route('admin.inventory') }}" class="tab active">Inventory</a>
+        <a href="{{ route('admin.orders') }}" class="tab">Orders</a>
     </div>
 
-    <!-- PRODUCTS GRID -->
-    @if($products->count() > 0)
-        <div class="product-grid">
-            @foreach($products as $product)
-                <div class="product-card">
-                    <img src="{{ asset($product->image) }}" alt="{{ $product->name }}" class="product-image" onerror="this.src='{{ asset('images/placeholder.png') }}'">
-                    <div class="product-info">
-                        <div class="product-name">{{ $product->name }}</div>
-                        <div class="product-description">{{ $product->description }}</div>
-
-                        <div class="product-details">
-                            <span class="product-price">PHP {{ number_format($product->price, 2) }}</span>
-                            <span class="stock-badge @if($product->stock_quantity > 20) stock-high @elseif($product->stock_quantity > 10) stock-medium @elseif($product->stock_quantity > 0) stock-low @else stock-out @endif">
-                                {{ $product->stock_quantity > 0 ? $product->stock_quantity . ' left' : 'Out of stock' }}
-                            </span>
-                        </div>
-
-                        <div class="status-badge @if($product->is_active) status-available @else status-unavailable @endif">
-                            @if($product->is_active) ✓ Available @else ✕ Unavailable @endif
-                        </div>
-
-                        <form method="POST" action="{{ route('admin.products.stock', $product) }}" class="form-inline">
-                            @csrf
-                            @method('PATCH')
-                            <input class="stock-input" type="number" name="stock_quantity" min="0" max="9999" value="{{ $product->stock_quantity }}">
-                            <button class="btn-sm" type="submit">Update</button>
-                        </form>
-
-                        <a href="{{ route('admin.products.edit', $product) }}" class="btn-edit">✏️ Edit</a>
-                    </div>
-                </div>
-            @endforeach
+    <!-- SEARCH & FILTERS -->
+    <form action="{{ route('admin.inventory') }}" method="GET" class="toolbar" id="filterForm">
+        <div class="search-box">
+            <input type="text" name="search" class="search-input" id="searchInput" placeholder="Search product name or description..." value="{{ request('search') }}" autocomplete="off">
         </div>
-    @else
-        <div class="empty-state">
-            <h3>No products yet</h3>
-            <p>Add your first product to get started</p>
-        </div>
-    @endif
+        
+        <select name="category" class="filter-select" onchange="this.form.submit()">
+            <option value="all">All Categories</option>
+            <option value="sweet" @selected(request('category') === 'sweet')>Sweet</option>
+            <option value="savory" @selected(request('category') === 'savory')>Savory</option>
+            <option value="beverage" @selected(request('category') === 'beverage')>Beverage</option>
+            <option value="specialty" @selected(request('category') === 'specialty')>Specialty</option>
+        </select>
+
+        <select name="status" class="filter-select" onchange="this.form.submit()">
+            <option value="">All Statuses</option>
+            <option value="active" @selected(request('status') === 'active')>Available</option>
+            <option value="hidden" @selected(request('status') === 'hidden')>Hidden</option>
+            <option value="low_stock" @selected(request('status') === 'low_stock')>Low Stock</option>
+            <option value="out_of_stock" @selected(request('status') === 'out_of_stock')>Out of Stock</option>
+        </select>
+    </form>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchInput = document.getElementById('searchInput');
+            const filterForm = document.getElementById('filterForm');
+            let timeout = null;
+
+            searchInput.addEventListener('input', function() {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => {
+                    filterForm.submit();
+                }, 500); // Wait 500ms after typing stops before submitting
+            });
+
+            // Keep cursor at the end of the input after reload
+            if (searchInput.value) {
+                searchInput.focus();
+                const val = searchInput.value;
+                searchInput.value = '';
+                searchInput.value = val;
+            }
+        });
+    </script>
+
+    <div class="card">
+        @if($products->count() > 0)
+            <div style="overflow-x: auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th class="hide-mobile">Category</th>
+                            <th>Price</th>
+                            <th>Stock Level</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($products as $product)
+                            <tr>
+                                <td>
+                                    <div style="display: flex; align-items: center; gap: 12px;">
+                                        <img src="{{ asset($product->image) }}" alt="" class="product-img" onerror="this.src='{{ asset('images/placeholder.png') }}'">
+                                        <div>
+                                            <div class="product-name">{{ $product->name }}</div>
+                                            <div class="product-cat hide-mobile">{{ ucfirst($product->category) }}</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="hide-mobile">
+                                    <span class="badge {{ $product->is_active ? 'badge-success' : 'badge-danger' }}">
+                                        {{ $product->is_active ? 'Active' : 'Hidden' }}
+                                    </span>
+                                </td>
+                                <td class="product-name">PHP {{ number_format($product->price, 2) }}</td>
+                                <td>
+                                    <span class="badge @if($product->stock_quantity > 20) badge-success @elseif($product->stock_quantity > 10) badge-warning @else badge-danger @endif">
+                                        {{ $product->stock_quantity }} in stock
+                                    </span>
+                                </td>
+                                <td>
+                                    <div style="display: flex;">
+                                        <a href="{{ route('admin.products.edit', $product) }}" class="btn-action btn-edit">Edit</a>
+                                        <form action="{{ route('admin.products.destroy', $product) }}" method="POST" onsubmit="return confirm('Are you sure you want to remove this product from inventory?')">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn-action btn-delete">Remove</button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        @else
+            <div style="text-align: center; padding: 64px 24px; color: #6b7280;">
+                <div style="font-size: 64px; margin-bottom: 16px; filter: grayscale(0.2);">🍪</div>
+                <h3 style="color: #374151; margin-bottom: 8px;">No Products Found</h3>
+                <p>We couldn't find any products matching your current search or filters.</p>
+                @if($hasFilters)
+                    <a href="{{ route('admin.inventory') }}" style="color: #fb7185; text-decoration: underline; margin-top: 12px; display: inline-block;">Clear all filters</a>
+                @endif
+            </div>
+        @endif
+    </div>
 </div>
 @endsection

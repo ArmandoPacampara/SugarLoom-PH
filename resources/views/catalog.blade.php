@@ -40,7 +40,7 @@
     padding: 4rem 4rem 6rem;
     max-width: 1400px;
     margin: 0 auto;
-    background: var(--cream);
+    background: transparent;
 }
 
 /* ── PAGE HEADER ── */
@@ -142,7 +142,7 @@
     display: flex;
     border-radius: 32px;
     overflow: hidden;
-    min-height: 340px;
+    height: 380px; /* Reduced fixed height */
     margin-bottom: 5rem;
     box-shadow: var(--shadow-pink);
     animation: fadeUp 0.8s 0.1s ease both;
@@ -150,7 +150,7 @@
 
 .top-pick-content {
     flex: 1.2;
-    padding: 4rem;
+    padding: 3rem; /* Reduced padding */
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -166,25 +166,25 @@
     font-weight: 800;
     text-transform: uppercase;
     width: fit-content;
-    margin-bottom: 1.2rem;
+    margin-bottom: 0.8rem; /* Reduced margin */
     letter-spacing: 0.12em;
 }
 
 .top-pick-content h2 {
     font-family: 'Playfair Display', serif;
-    font-size: 2.8rem;
+    font-size: 2.4rem; /* Reduced font size */
     font-weight: 700;
     color: var(--dark);
     line-height: 1.1;
-    margin-bottom: 0.9rem;
+    margin-bottom: 0.7rem; /* Reduced margin */
 }
 
 .top-pick-content p {
-    font-size: 0.95rem;
+    font-size: 0.9rem; /* Reduced font size */
     color: var(--body);
-    line-height: 1.75;
-    max-width: 360px;
-    margin-bottom: 2rem;
+    line-height: 1.6; /* Reduced line-height */
+    max-width: 400px;
+    margin-bottom: 1.5rem; /* Reduced margin */
     font-weight: 300;
 }
 
@@ -195,7 +195,7 @@
 }
 
 .top-pick-price {
-    font-size: 1.6rem;
+    font-size: 1.4rem; /* Reduced font size */
     font-weight: 800;
     color: var(--dark);
 }
@@ -208,8 +208,8 @@
     color: white;
     border: none;
     border-radius: var(--radius-pill);
-    padding: 0.85rem 2rem;
-    font-size: 0.95rem;
+    padding: 0.7rem 1.8rem; /* Reduced padding */
+    font-size: 0.9rem;
     font-weight: 700;
     cursor: pointer;
     transition: all 0.3s;
@@ -256,6 +256,43 @@
     letter-spacing: -0.02em;
 }
 
+.catalog-search {
+    display: flex;
+    background: white;
+    border-radius: var(--radius-pill);
+    padding: 0.3rem 0.5rem 0.3rem 1.2rem;
+    border: 1px solid var(--border);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+    width: 320px;
+}
+
+.catalog-search input {
+    border: none;
+    background: transparent;
+    padding: 0.5rem 0;
+    font-size: 0.85rem;
+    flex-grow: 1;
+    color: var(--dark);
+    font-family: 'Poppins', sans-serif;
+}
+
+.catalog-search input:focus {
+    outline: none;
+}
+
+.catalog-search button {
+    background: transparent;
+    border: none;
+    padding: 0.5rem;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: transform 0.2s;
+}
+
+.catalog-search button:hover {
+    transform: scale(1.15);
+}
+
 /* ── FILTER BAR ── */
 .filter-bar {
     display: flex;
@@ -281,6 +318,8 @@
     color: rgba(255,255,255,0.85);
     font-family: 'Poppins', sans-serif;
     transition: all 0.25s;
+    text-decoration: none;
+    display: inline-block;
 }
 
 .filter-tab.active {
@@ -311,10 +350,11 @@
 }
 
 .catalog-card {
-    background: white;
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(10px);
     border-radius: var(--radius-card);
     padding: 1rem;
-    border: 1px solid var(--border);
+    border: 1px solid rgba(250, 232, 238, 0.6);
     box-shadow: var(--shadow-card);
     transition: transform 0.35s cubic-bezier(0.165,0.84,0.44,1),
                 box-shadow 0.35s ease,
@@ -469,8 +509,8 @@
 }
 
 @media (max-width: 768px) {
-    .top-pick-card { flex-direction: column; }
-    .top-pick-img-wrap { min-height: 240px; }
+    .top-pick-card { flex-direction: column; height: auto; }
+    .top-pick-img-wrap { min-height: 240px; height: auto; }
     .top-pick-content { padding: 2.5rem 2rem; }
     .catalog-grid { grid-template-columns: 1fr; }
     .filter-bar { border-radius: 20px; flex-direction: column; padding: 1rem; gap: 0.8rem; }
@@ -529,46 +569,31 @@
     <section class="products-section">
         <div class="products-section-header" data-aos="fade-up">
             <h2>✨ Recommended for You</h2>
+            <form action="{{ route('catalog') }}" method="GET" class="catalog-search">
+                <input type="hidden" name="category" value="{{ $category }}">
+                <input type="text" name="search" placeholder="Search for treats..." value="{{ $search }}">
+                <button type="submit">🔍</button>
+            </form>
         </div>
 
         <div class="filter-bar" data-aos="fade-up">
             <div class="filter-tabs">
-                <button class="filter-tab active" data-filter="all" onclick="filterProducts(this, 'all')">All Flavors</button>
-                <button class="filter-tab" data-filter="sweet" onclick="filterProducts(this, 'sweet')">Sweet</button>
-                <button class="filter-tab" data-filter="savory" onclick="filterProducts(this, 'savory')">Savory</button>
-                <button class="filter-tab" data-filter="nutty" onclick="filterProducts(this, 'nutty')">Nutty</button>
+                <a href="{{ route('catalog', ['category' => 'all']) }}" class="filter-tab {{ $category === 'all' ? 'active' : '' }}">All Flavors</a>
+                <a href="{{ route('catalog', ['category' => 'sweet']) }}" class="filter-tab {{ $category === 'sweet' ? 'active' : '' }}">Sweet</a>
+                <a href="{{ route('catalog', ['category' => 'savory']) }}" class="filter-tab {{ $category === 'savory' ? 'active' : '' }}">Savory</a>
+                <a href="{{ route('catalog', ['category' => 'beverage']) }}" class="filter-tab {{ $category === 'beverage' ? 'active' : '' }}">Beverage</a>
+                <a href="{{ route('catalog', ['category' => 'specialty']) }}" class="filter-tab {{ $category === 'specialty' ? 'active' : '' }}">Specialty</a>
             </div>
-            <span class="sort-label">✎ Sorted by Popularity</span>
+            <span class="sort-label">✎ Sorted by Rating</span>
         </div>
 
         <div class="catalog-grid" id="productsGrid">
-            @isset($products)
-            @foreach($products as $product)
-            <div class="catalog-card" data-category="{{ $product->category }}" data-aos="fade-up" data-aos-delay="{{ ($loop->index % 3) * 100 }}">
-                <div class="catalog-img-wrap">
-                    <img src="{{ $product->image ? asset($product->image) : asset('images/placeholder-cookie.png') }}" alt="{{ $product->name }}">
-                    <span class="catalog-price-badge">₱{{ number_format($product->price, 0) }}</span>
-                </div>
-                <div class="catalog-card-body">
-                    <div class="catalog-name-row">
-                        <span class="catalog-name">{{ $product->name }}</span>
-                        @if($product->rating)
-                        <span class="catalog-rating">★ {{ number_format($product->rating, 1) }}</span>
-                        @endif
-                    </div>
-                    <p class="catalog-desc">{{ $product->description }}</p>
-                    @if($product->isOutOfStock())
-                        <div class="stock-badge out-of-stock">Out of Stock</div>
-                        <button class="btn-add-catalog" disabled>Out of Stock</button>
-                    @else
-                        <div class="stock-badge in-stock">In Stock ({{ $product->stock_quantity }})</div>
-                        <button class="btn-add-catalog" data-id="{{ $product->id }}">+ Add to Cart</button>
-                    @endif
-                </div>
-            </div>
-            @endforeach
-            @endisset
+            @include('partials.product-list')
         </div>
+
+        <template id="skeletonTemplate">
+            <x-skeleton-card count="6" />
+        </template>
     </section>
 </div>
 @endsection
@@ -576,40 +601,93 @@
 @section('scripts')
 <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
 <script>
-AOS.init({
-    once: true,
-    duration: 800,
-    easing: 'ease-out-cubic'
-});
-
-function filterProducts(btn, filter) {
-    // Update active tab
-    document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
-    btn.classList.add('active');
-
-    // Filter cards with a small animation
-    const cards = document.querySelectorAll('.catalog-card');
-    cards.forEach(card => {
-        card.style.opacity = '0';
-        card.style.transform = 'scale(0.95)';
-        
-        setTimeout(() => {
-            const match = filter === 'all' || card.dataset.category === filter;
-            card.style.display = match ? '' : 'none';
-            if (match) {
-                setTimeout(() => {
-                    card.style.opacity = '1';
-                    card.style.transform = 'scale(1)';
-                }, 50);
-            }
-        }, 300);
+document.addEventListener('DOMContentLoaded', () => {
+    AOS.init({
+        once: true,
+        duration: 800,
+        easing: 'ease-out-cubic'
     });
-}
 
-document.querySelectorAll('[data-id]').forEach(button => {
-    if (!button.disabled) {
-        button.addEventListener('click', () => addToCart(button.dataset.id));
-    }
+    const productsGrid = document.getElementById('productsGrid');
+    const filterTabs = document.querySelectorAll('.filter-tab');
+    const searchForm = document.querySelector('.catalog-search');
+    const skeletonTemplate = document.getElementById('skeletonTemplate');
+
+    const updateProducts = async (url) => {
+        // Show skeleton loaders
+        productsGrid.innerHTML = skeletonTemplate.innerHTML;
+        productsGrid.style.opacity = '1';
+        
+        try {
+            const response = await fetch(url, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+            const html = await response.text();
+            
+            // Add a small delay for smoother transition if it's too fast
+            setTimeout(() => {
+                productsGrid.innerHTML = html;
+                AOS.refreshHard();
+                attachCartListeners();
+            }, 300);
+            
+        } catch (error) {
+            console.error('Error fetching products:', error);
+            productsGrid.style.opacity = '1';
+        }
+    };
+
+    const attachCartListeners = () => {
+        document.querySelectorAll('.btn-add-catalog[data-id], .btn-quick-add[data-id], .btn-cart[data-id]').forEach(button => {
+            if (!button.disabled) {
+                // Remove existing listeners to avoid duplicates if any
+                const newButton = button.cloneNode(true);
+                button.parentNode.replaceChild(newButton, button);
+                newButton.addEventListener('click', () => {
+                    if (typeof window.addToCart === 'function') {
+                        window.addToCart(newButton.dataset.id);
+                    } else {
+                        console.error('addToCart function not found');
+                    }
+                });
+            }
+        });
+    };
+
+    filterTabs.forEach(tab => {
+        tab.addEventListener('click', (e) => {
+            e.preventDefault();
+            const url = new URL(tab.href);
+            
+            // Update active state
+            filterTabs.forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            
+            // Update URL in search form if needed
+            const category = url.searchParams.get('category');
+            searchForm.querySelector('input[name="category"]').value = category;
+
+            updateProducts(url);
+            
+            // Update browser URL without refresh
+            window.history.pushState({}, '', url);
+        });
+    });
+
+    searchForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const formData = new FormData(searchForm);
+        const params = new URLSearchParams(formData);
+        const url = `${searchForm.action}?${params.toString()}`;
+        
+        updateProducts(url);
+        window.history.pushState({}, '', url);
+    });
+
+    // Initial attachment
+    attachCartListeners();
 });
 </script>
 @endsection

@@ -45,14 +45,23 @@ class Product extends Model
     public function scopeBestSellers($query)
     {
         return $query->active()
-            ->where('is_best_seller', true)
-            ->orderBy('sort_order')
+            ->withCount(['orderItems as total_sales' => function ($query) {
+                $query->select(\DB::raw('sum(quantity)'));
+            }])
+            ->orderByDesc('total_sales')
             ->limit(3);
     }
 
     public function scopeTopPick($query)
     {
-        return $query->active()->where('is_top_pick', true);
+        return $query->active()
+            ->orderByDesc('rating')
+            ->limit(1);
+    }
+
+    public function orderItems()
+    {
+        return $this->hasMany(OrderItem::class);
     }
 
     public function scopeBakersChoice($query)

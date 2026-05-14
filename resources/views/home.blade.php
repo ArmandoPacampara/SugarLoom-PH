@@ -49,9 +49,10 @@
             right: -10%;
             width: 65vw;
             height: 120vh;
-            background: linear-gradient(135deg, #fef4f6 0%, #f1a9bf 80%);
+            background: linear-gradient(135deg, rgba(254, 244, 246, 0.9) 0%, rgba(241, 169, 191, 0.4) 80%);
             border-radius: 50% 0 0 50%;
             z-index: 1;
+            backdrop-filter: blur(10px);
         }
 
         .hero-text {
@@ -59,6 +60,7 @@
             max-width: 750px;
             position: relative;
             z-index: 3;
+            margin-left: 3.5rem;
             margin-top: -2rem;
         }
 
@@ -168,7 +170,7 @@
 
 
         /* ── BEST SELLERS ── */
-        .best-sellers { background: var(--white); position: relative; }
+        .best-sellers { background: transparent; position: relative; }
 
 
         .products-grid {
@@ -179,10 +181,11 @@
 
 
         .product-card {
-            border: 1px solid #f4e9ec;
+            border: 1px solid rgba(244, 233, 236, 0.6);
             border-radius: var(--radius-card);
             overflow: hidden;
-            background: var(--white);
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(10px);
             box-shadow: var(--shadow-card);
             transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
         }
@@ -277,8 +280,7 @@
             background: #fee2e2;
             color: #dc2626;
         }
-        .quiz-section { background: var(--cream); padding: 4rem; }
-
+        .quiz-section { background: transparent; padding: 4rem; }
 
         .quiz-card {
             display: grid;
@@ -288,9 +290,11 @@
             min-height: 300px;
             box-shadow: 0 20px 40px rgba(0,0,0,0.05);
             transition: transform 0.3s;
+            background: rgba(255, 255, 255, 0.4);
+            backdrop-filter: blur(8px);
         }
-        .quiz-card:hover { transform: scale(1.01); }
 
+        .quiz-card:hover { transform: scale(1.01); }
 
     .quiz-img-wrap {
         flex: 1; 
@@ -311,7 +315,8 @@
     }
 
         .quiz-content {
-            background: #fae6eb;
+            background: rgba(250, 230, 235, 0.6);
+            backdrop-filter: blur(5px);
             padding: 4rem 3rem;
             display: flex;
             flex-direction: column;
@@ -321,7 +326,6 @@
        
         .quiz-content h2 { font-size: 2.2rem; font-weight: 800; line-height: 1.2; }
         .quiz-content p { font-size: 1rem; font-weight: 300; line-height: 1.7; }
-
 
         .btn-quiz {
             display: inline-flex;
@@ -348,7 +352,7 @@
 
 
         /* ── TESTIMONIALS ── */
-        .testimonials { background: var(--white); }
+        .testimonials { background: transparent; }
 
 
         .testimonials .section-header {
@@ -374,9 +378,10 @@
 
         .review-card {
             padding: 2.25rem;
-            border: 1px solid #f4e9ec;
+            border: 1px solid rgba(244, 233, 236, 0.6);
             border-radius: var(--radius-card);
-            background: var(--cream);
+            background: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(10px);
             transition: all 0.3s;
         }
         .review-card:hover { 

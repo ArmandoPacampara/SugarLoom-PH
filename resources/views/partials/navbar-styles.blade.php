@@ -55,6 +55,66 @@
 .nav-actions {
     display: flex;
     gap: 0.8rem;
+    align-items: center;
+}
+
+.account-dropdown {
+    position: relative;
+}
+
+.account-btn {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    border: 1px solid rgba(255,255,255,0.5);
+    background: transparent;
+    color: white;
+    cursor: pointer;
+    display: grid;
+    place-items: center;
+    transition: background 0.2s;
+    padding: 0;
+}
+
+.account-btn:hover {
+    background: rgba(255,255,255,0.2);
+}
+
+.dropdown-menu {
+    position: absolute;
+    top: calc(100% + 10px);
+    right: 0;
+    background: white;
+    min-width: 160px;
+    border-radius: 12px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    display: none;
+    flex-direction: column;
+    padding: 8px 0;
+    z-index: 1000;
+}
+
+.dropdown-menu.show {
+    display: flex;
+}
+
+.dropdown-menu a, .dropdown-menu button {
+    padding: 10px 20px;
+    text-decoration: none;
+    color: var(--text-dark);
+    font-size: 0.9rem;
+    text-align: left;
+    transition: background 0.2s;
+    width: 100%;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+    font: inherit;
+}
+
+.dropdown-menu a:hover, .dropdown-menu button:hover {
+    background: #fdf2f8;
+    color: #fb7185;
 }
 
 .nav-actions > button,
@@ -65,7 +125,7 @@
     border-radius: 50%;
     border: 1px solid rgba(255,255,255,0.5);
     background: transparent;
-    color: var(--text-dark);
+    color: white;
     cursor: pointer;
     display: grid;
     place-items: center;
@@ -81,8 +141,8 @@
 }
 
 .nav-actions svg {
-    width: 16px;
-    height: 16px;
+    width: 18px;
+    height: 18px;
     fill: currentColor;
 }
 
