@@ -30,6 +30,7 @@
     .about-page {
         padding: 3rem 4rem;
         max-width: 1400px;
+        padding: 24px 24px 70px;
         margin: 0 auto;
     }
 
