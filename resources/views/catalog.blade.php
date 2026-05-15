@@ -544,7 +544,7 @@
                     data-product-image="{{ $bakersChoice->image ? asset($bakersChoice->image) : asset('images/placeholder-cookie.png') }}"
                     data-product-stock="{{ $bakersChoice->stock_quantity }}"
                     data-product-category="{{ $bakersChoice->category }}"
-                >View Details</button>
+                >Quick Add</button>
             @endif
         </div>
         @endif
@@ -571,7 +571,7 @@
                         data-product-image="{{ $topPick->image ? asset($topPick->image) : asset('images/placeholder-cookie.png') }}"
                         data-product-stock="{{ $topPick->stock_quantity }}"
                         data-product-category="{{ $topPick->category }}"
-                    >View Details</button>
+                    >Add to Cart</button>
                 @endif
             </div>
         </div>
