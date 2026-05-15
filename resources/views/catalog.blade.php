@@ -539,7 +539,17 @@
             @if($bakersChoice->isOutOfStock())
                 <button class="btn-quick-add" disabled>Out of Stock</button>
             @else
-                <button class="btn-quick-add" data-id="{{ $bakersChoice->id }}">Quick Add</button>
+                <button
+                    class="btn-quick-add"
+                    data-product-modal
+                    data-product-id="{{ $bakersChoice->id }}"
+                    data-product-name="{{ $bakersChoice->name }}"
+                    data-product-description="{{ $bakersChoice->description }}"
+                    data-product-price="{{ $bakersChoice->price }}"
+                    data-product-image="{{ $bakersChoice->image ? asset($bakersChoice->image) : asset('images/placeholder-cookie.png') }}"
+                    data-product-stock="{{ $bakersChoice->stock_quantity }}"
+                    data-product-category="{{ $bakersChoice->category }}"
+                >View Details</button>
             @endif
         </div>
         @endif
@@ -556,7 +566,17 @@
                 @if($topPick->isOutOfStock())
                     <button class="btn-cart" disabled>Out of Stock</button>
                 @else
-                    <button class="btn-cart" data-id="{{ $topPick->id }}">🛒 Add to Cart</button>
+                    <button
+                        class="btn-cart"
+                        data-product-modal
+                        data-product-id="{{ $topPick->id }}"
+                        data-product-name="{{ $topPick->name }}"
+                        data-product-description="{{ $topPick->description }}"
+                        data-product-price="{{ $topPick->price }}"
+                        data-product-image="{{ $topPick->image ? asset($topPick->image) : asset('images/placeholder-cookie.png') }}"
+                        data-product-stock="{{ $topPick->stock_quantity }}"
+                        data-product-category="{{ $topPick->category }}"
+                    >View Details</button>
                 @endif
             </div>
         </div>
@@ -568,7 +588,7 @@
 
     <section class="products-section">
         <div class="products-section-header" data-aos="fade-up">
-            <h2>✨ Recommended for You</h2>
+            <h2>Catalog List</h2>
             <form action="{{ route('catalog') }}" method="GET" class="catalog-search">
                 <input type="hidden" name="category" value="{{ $category }}">
                 <input type="text" name="search" placeholder="Search for treats..." value="{{ $search }}">
@@ -596,6 +616,8 @@
         </template>
     </section>
 </div>
+
+@include('partials.product-modal')
 @endsection
 
 @section('scripts')

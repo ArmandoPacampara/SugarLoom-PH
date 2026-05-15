@@ -17,7 +17,17 @@
             <button class="btn-add-catalog" disabled>Out of Stock</button>
         @else
             <div class="stock-badge in-stock">In Stock ({{ $product->stock_quantity }})</div>
-            <button class="btn-add-catalog" data-id="{{ $product->id }}">+ Add to Cart</button>
+            <button
+                class="btn-add-catalog"
+                data-product-modal
+                data-product-id="{{ $product->id }}"
+                data-product-name="{{ $product->name }}"
+                data-product-description="{{ $product->description }}"
+                data-product-price="{{ $product->price }}"
+                data-product-image="{{ $product->image ? asset($product->image) : asset('images/placeholder-cookie.png') }}"
+                data-product-stock="{{ $product->stock_quantity }}"
+                data-product-category="{{ $product->category }}"
+            >View Details</button>
         @endif
     </div>
 </div>

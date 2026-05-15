@@ -350,6 +350,154 @@
         }
         .btn-quiz span { display: inline-block; animation: pulse-soft 2s infinite; }
 
+        .quiz-modal {
+            position: fixed;
+            inset: 0;
+            z-index: 10001;
+            display: grid;
+            place-items: center;
+            padding: 1.5rem;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.24s ease;
+        }
+
+        .quiz-modal.is-open {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .quiz-modal-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(43, 27, 36, 0.52);
+            backdrop-filter: blur(6px);
+        }
+
+        .quiz-dialog {
+            position: relative;
+            width: min(720px, 100%);
+            background: white;
+            border-radius: 22px;
+            padding: 2rem;
+            box-shadow: 0 26px 80px rgba(43, 27, 36, 0.28);
+            transform: translateY(18px) scale(0.98);
+            transition: transform 0.24s ease;
+        }
+
+        .quiz-modal.is-open .quiz-dialog { transform: translateY(0) scale(1); }
+
+        .quiz-close {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            width: 36px;
+            height: 36px;
+            border: 0;
+            border-radius: 50%;
+            background: #fff2f5;
+            color: var(--text-dark);
+            font-size: 1.4rem;
+            cursor: pointer;
+        }
+
+        .quiz-progress {
+            height: 8px;
+            border-radius: 999px;
+            background: #f8dce4;
+            overflow: hidden;
+            margin-bottom: 1.5rem;
+        }
+
+        .quiz-progress span {
+            display: block;
+            height: 100%;
+            width: 0;
+            border-radius: inherit;
+            background: var(--pink-btn);
+            transition: width 0.25s ease;
+        }
+
+        .quiz-step-label {
+            color: var(--pink-btn);
+            font-size: 0.78rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin-bottom: 0.5rem;
+        }
+
+        .quiz-question {
+            font-size: 1.8rem;
+            line-height: 1.2;
+            margin-bottom: 1.25rem;
+        }
+
+        .quiz-options {
+            display: grid;
+            gap: 0.8rem;
+        }
+
+        .quiz-option {
+            width: 100%;
+            border: 1px solid #f0e1e5;
+            border-radius: 14px;
+            background: #fffafb;
+            color: var(--text-dark);
+            padding: 1rem 1.1rem;
+            text-align: left;
+            font: inherit;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease;
+        }
+
+        .quiz-option:hover {
+            transform: translateY(-2px);
+            border-color: var(--pink-btn);
+            background: #fff3f6;
+        }
+
+        .quiz-result {
+            display: none;
+            gap: 1.2rem;
+            align-items: center;
+        }
+
+        .quiz-result.is-visible {
+            display: grid;
+            grid-template-columns: 160px 1fr;
+        }
+
+        .quiz-result img {
+            width: 160px;
+            height: 160px;
+            border-radius: 16px;
+            object-fit: cover;
+            background: #fdf1f4;
+        }
+
+        .quiz-result h3 {
+            font-size: 1.7rem;
+            margin-bottom: 0.6rem;
+        }
+
+        .quiz-result p {
+            line-height: 1.6;
+            margin-bottom: 1rem;
+        }
+
+        .quiz-result-actions {
+            display: flex;
+            gap: 0.8rem;
+            flex-wrap: wrap;
+        }
+
+        .quiz-result-actions .btn {
+            width: auto;
+            padding: 0.75rem 1.2rem;
+        }
+
 
         /* ── TESTIMONIALS ── */
         .testimonials { background: transparent; }
@@ -450,6 +598,8 @@
             .quiz-card { grid-template-columns: 1fr; }
             .quiz-img { height: 260px; }
             footer { padding: 3rem 2rem; }
+            .quiz-result.is-visible { grid-template-columns: 1fr; }
+            .quiz-result img { width: 100%; height: 220px; }
         }
 
         @media (max-width: 600px) {
@@ -508,7 +658,17 @@
                     <button class="btn-add" disabled>Out of Stock</button>
                 @else
                     <div class="stock-badge in-stock">In Stock ({{ $product->stock_quantity }})</div>
-                    <button class="btn-add" data-product-id="{{ $product->id }}">Add to Box</button>
+                    <button
+                        class="btn-add"
+                        data-product-modal
+                        data-product-id="{{ $product->id }}"
+                        data-product-name="{{ $product->name }}"
+                        data-product-description="{{ $product->description }}"
+                        data-product-price="{{ $product->price }}"
+                        data-product-image="{{ $product->image ? asset($product->image) : asset('images/placeholder-cookie.png') }}"
+                        data-product-stock="{{ $product->stock_quantity }}"
+                        data-product-category="{{ $product->category }}"
+                    >View Details</button>
                 @endif
             </div>
         </div>
@@ -522,12 +682,37 @@
         <div class="quiz-content">
             <h2>Can't decide on a flavor?</h2>
             <p>Our flavor artisan can help you find your perfect match based on your taste profile. Whether you like it salty-sweet or intensely dark.</p>
-            <button class="btn-quiz">
-                <span>✦</span> Take the Flavor Quiz
+            <button class="btn-quiz" id="openQuiz" type="button">
+                <span>✦</span> Take the Quiz
             </button>
         </div>
     </div>
 </section>
+
+<div class="quiz-modal" id="quizModal" aria-hidden="true">
+    <div class="quiz-modal-overlay" data-quiz-close></div>
+    <div class="quiz-dialog" role="dialog" aria-modal="true" aria-labelledby="quizQuestion">
+        <button type="button" class="quiz-close" data-quiz-close aria-label="Close quiz">&times;</button>
+        <div class="quiz-progress" aria-label="Quiz progress"><span id="quizProgress"></span></div>
+        <div id="quizQuestionWrap">
+            <div class="quiz-step-label" id="quizStepLabel"></div>
+            <h2 class="quiz-question" id="quizQuestion"></h2>
+            <div class="quiz-options" id="quizOptions"></div>
+        </div>
+        <div class="quiz-result" id="quizResult">
+            <img id="quizResultImage" src="" alt="">
+            <div>
+                <div class="quiz-step-label">Your match</div>
+                <h3 id="quizResultName"></h3>
+                <p id="quizResultText"></p>
+                <div class="quiz-result-actions">
+                    <button type="button" class="btn btn-primary" id="quizResultDetails">View Details</button>
+                    <button type="button" class="btn btn-white" id="quizRestart">Retake Quiz</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
 <section class="section testimonials">
     <div class="section-header" data-aos="fade-up">
@@ -569,6 +754,8 @@
         @endforelse
     </div>
 </section>
+
+@include('partials.product-modal')
 @endsection
 
 @section('scripts')
@@ -580,12 +767,148 @@
         easing: 'ease-out-cubic'
     });
 
-    // Use data attributes instead of inline onclick to avoid Blade/JS conflicts
-    document.querySelectorAll('.btn-add[data-product-id]').forEach(function(btn) {
-        if (!btn.disabled) {
-            btn.addEventListener('click', function() {
-                addToCart(this.dataset.productId);
+    const quizProducts = @json($quizProductRecommendations);
+
+    const quizQuestions = [
+        {
+            text: 'What kind of treat are you craving right now?',
+            options: [
+                { label: 'Chocolatey and rich', category: 'sweet' },
+                { label: 'Salty-sweet and cozy', category: 'savory' },
+                { label: 'Something special for sharing', category: 'specialty' }
+            ]
+        },
+        {
+            text: 'Pick your ideal flavor mood.',
+            options: [
+                { label: 'Classic comfort', category: 'sweet' },
+                { label: 'Bold and indulgent', category: 'specialty' },
+                { label: 'Light with a drink on the side', category: 'beverage' }
+            ]
+        },
+        {
+            text: 'How adventurous is your sweet tooth today?',
+            options: [
+                { label: 'Keep it familiar', category: 'sweet' },
+                { label: 'Surprise me a little', category: 'specialty' },
+                { label: 'I want a savory twist', category: 'savory' }
+            ]
+        }
+    ];
+
+    const quizModal = document.getElementById('quizModal');
+    const quizQuestionWrap = document.getElementById('quizQuestionWrap');
+    const quizProgress = document.getElementById('quizProgress');
+    const quizStepLabel = document.getElementById('quizStepLabel');
+    const quizQuestion = document.getElementById('quizQuestion');
+    const quizOptions = document.getElementById('quizOptions');
+    const quizResult = document.getElementById('quizResult');
+    const quizResultImage = document.getElementById('quizResultImage');
+    const quizResultName = document.getElementById('quizResultName');
+    const quizResultText = document.getElementById('quizResultText');
+    const quizResultDetails = document.getElementById('quizResultDetails');
+    let quizIndex = 0;
+    let quizScores = {};
+
+    function openQuiz() {
+        quizIndex = 0;
+        quizScores = {};
+        quizResult.classList.remove('is-visible');
+        quizQuestionWrap.style.display = 'block';
+        quizModal.classList.add('is-open');
+        quizModal.setAttribute('aria-hidden', 'false');
+        document.body.classList.add('modal-open');
+        renderQuizQuestion();
+    }
+
+    function closeQuiz() {
+        quizModal.classList.remove('is-open');
+        quizModal.setAttribute('aria-hidden', 'true');
+        document.body.classList.remove('modal-open');
+    }
+
+    function renderQuizQuestion() {
+        const current = quizQuestions[quizIndex];
+        quizProgress.style.width = `${(quizIndex / quizQuestions.length) * 100}%`;
+        quizStepLabel.textContent = `Question ${quizIndex + 1} of ${quizQuestions.length}`;
+        quizQuestion.textContent = current.text;
+        quizOptions.innerHTML = '';
+
+        current.options.forEach(function(option) {
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'quiz-option';
+            button.textContent = option.label;
+            button.addEventListener('click', function() {
+                quizScores[option.category] = (quizScores[option.category] || 0) + 1;
+                quizIndex += 1;
+
+                if (quizIndex >= quizQuestions.length) {
+                    showQuizResult();
+                } else {
+                    renderQuizQuestion();
+                }
             });
+            quizOptions.appendChild(button);
+        });
+    }
+
+    function showQuizResult() {
+        const winningCategory = Object.keys(quizScores).sort(function(a, b) {
+            return quizScores[b] - quizScores[a];
+        })[0] || 'sweet';
+        const recommendation = quizProducts.find(function(product) {
+            return product.category === winningCategory && product.stock > 0;
+        }) || quizProducts.find(function(product) {
+            return product.stock > 0;
+        }) || quizProducts[0];
+
+        quizProgress.style.width = '100%';
+        quizQuestionWrap.style.display = 'none';
+        quizResult.classList.add('is-visible');
+
+        if (!recommendation) {
+            quizResultName.textContent = 'Catalog List';
+            quizResultText.textContent = 'Your best match is waiting in the catalog.';
+            quizResultImage.src = '{{ asset('images/cookies.png') }}';
+            quizResultDetails.textContent = 'View Catalog';
+            quizResultDetails.onclick = function() {
+                window.location.href = '{{ route('catalog') }}';
+            };
+            return;
+        }
+
+        quizResultImage.src = recommendation.image;
+        quizResultImage.alt = recommendation.name;
+        quizResultName.textContent = recommendation.name;
+        quizResultText.textContent = recommendation.description;
+        quizResultDetails.textContent = 'View Details';
+        Object.assign(quizResultDetails.dataset, {
+            productId: recommendation.id,
+            productName: recommendation.name,
+            productDescription: recommendation.description,
+            productPrice: recommendation.price,
+            productImage: recommendation.image,
+            productStock: recommendation.stock,
+            productCategory: recommendation.category
+        });
+        quizResultDetails.onclick = function() {
+            closeQuiz();
+            if (typeof window.openProductModal === 'function') {
+                window.openProductModal(quizResultDetails);
+            }
+        };
+    }
+
+    document.getElementById('openQuiz').addEventListener('click', openQuiz);
+    document.getElementById('quizRestart').addEventListener('click', openQuiz);
+    document.querySelectorAll('[data-quiz-close]').forEach(function(element) {
+        element.addEventListener('click', closeQuiz);
+    });
+
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape' && quizModal.classList.contains('is-open')) {
+            closeQuiz();
         }
     });
 </script>

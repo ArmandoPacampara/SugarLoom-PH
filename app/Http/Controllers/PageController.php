@@ -15,6 +15,22 @@ class PageController extends Controller
     public function home()
     {
         $bestSellers = Product::bestSellers()->take(3)->get();
+        $quizProducts = Product::active()
+            ->orderByDesc('rating')
+            ->orderBy('sort_order')
+            ->take(6)
+            ->get();
+        $quizProductRecommendations = $quizProducts
+            ->map(fn ($product) => [
+                'id' => $product->id,
+                'name' => $product->name,
+                'description' => $product->description,
+                'price' => (float) $product->price,
+                'image' => $product->image ? asset($product->image) : asset('images/placeholder-cookie.png'),
+                'stock' => $product->stock_quantity,
+                'category' => $product->category,
+            ])
+            ->values();
         $testimonials = Testimonial::active()->take(3)->get();
         
         // Fetch order ratings from delivered orders
@@ -24,7 +40,7 @@ class PageController extends Controller
             ->take(3)
             ->get();
 
-        return view('home', compact('bestSellers', 'testimonials', 'orderRatings'));
+        return view('home', compact('bestSellers', 'quizProductRecommendations', 'testimonials', 'orderRatings'));
     }
     public function about()
     {
