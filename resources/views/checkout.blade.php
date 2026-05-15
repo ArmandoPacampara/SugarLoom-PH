@@ -375,6 +375,35 @@
             margin-top: 10px;
         }
 
+        .points-box {
+            border: 1px solid #f0d8dd;
+            background: #fff8fa;
+            border-radius: 16px;
+            padding: 14px;
+            margin-top: 22px;
+        }
+
+        .points-box label {
+            margin-bottom: 8px;
+        }
+
+        .points-balance {
+            color: var(--muted);
+            font-size: 13px;
+            line-height: 1.5;
+            margin-bottom: 10px;
+        }
+
+        .override-box {
+            background: #fff7ed;
+            color: #9a3412;
+            border-radius: 12px;
+            padding: 12px 14px;
+            margin-bottom: 18px;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
         .discount-row {
             color: #1f7a4d;
             font-weight: 800;
@@ -514,6 +543,12 @@
                 <form method="POST" action="{{ route('checkout.process') }}" id="checkout-form">
                 @csrf
                 <input type="hidden" name="promo_code" value="{{ $totals['promo_code'] ?? $promoCode ?? '' }}">
+                @if(session('address_validation_can_override'))
+                    <input type="hidden" name="address_validation_override" value="1">
+                    <div class="override-box">
+                        Address validation could not confirm this location. Submit again to use the address as entered.
+                    </div>
+                @endif
                 <h1>Shipping Information</h1>
                 <div class="form-grid">
                     <div class="field full">
@@ -548,6 +583,28 @@
                 </div>
 
                 <h1 class="payment-title">Payment Method</h1>
+                @auth
+                    <div class="points-box">
+                        <label for="redeem_points">Reward Points</label>
+                        <p class="points-balance">
+                            Balance: {{ number_format($rewardPointBalance) }} points.
+                            @if($maxRedeemablePoints > 0)
+                                You can redeem up to {{ number_format($maxRedeemablePoints) }} points on this order.
+                            @else
+                                Points can be redeemed after discounts leave an eligible subtotal.
+                            @endif
+                        </p>
+                        <input
+                            id="redeem_points"
+                            type="number"
+                            name="redeem_points"
+                            min="0"
+                            max="{{ $maxRedeemablePoints }}"
+                            value="{{ old('redeem_points', 0) }}"
+                            placeholder="0"
+                        >
+                    </div>
+                @endauth
                 <div class="payment-options">
                     <label class="payment-option">
                         <input type="radio" name="payment_method" value="card" @checked(old('payment_method', 'card') === 'card')>

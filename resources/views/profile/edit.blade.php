@@ -32,6 +32,8 @@
         .btn-logout { background: #f3eff1; color: var(--text-body); border: none; padding: 10px 20px; border-radius: 999px; font-weight: bold; cursor: pointer; margin-top: 12px; transition: opacity 0.2s; }
         .btn-logout:hover { opacity: 0.85; }
         .alert-success { background: #dcfce7; color: #16a34a; padding: 12px; border-radius: 10px; margin-bottom: 20px; font-size: 14px; font-weight: bold; }
+        .points-card { background: #fff7ed; border: 1px solid #fed7aa; color: #9a3412; border-radius: 16px; padding: 16px; margin-bottom: 18px; }
+        .points-card strong { display: block; color: #7c2d12; font-size: 26px; line-height: 1; margin-top: 6px; }
         
         /* Order History Styles */
         .order-item { border: 1px solid #f3eff1; border-radius: 12px; padding: 16px; margin-bottom: 12px; }
@@ -196,10 +198,20 @@
         <div class="alert-success">Your profile has been updated successfully!</div>
     @endif
 
+    @if (session('success'))
+        <div class="alert-success">{{ session('success') }}</div>
+    @endif
+
     <div @class(['grid-2' => $user->isCustomer()])>
         <!-- Account Details Form -->
         <div class="card">
             <h3>Profile Details</h3>
+            @if($user->isCustomer())
+                <div class="points-card">
+                    Reward Points Balance
+                    <strong>{{ number_format($user->reward_points) }}</strong>
+                </div>
+            @endif
             <form method="POST" action="{{ route('profile.update') }}">
                 @csrf
                 @method('patch')
@@ -274,6 +286,9 @@
                                     <span class="rating-badge">
                                         ★ {{ $order->rating }}/5 - Rated
                                     </span>
+                                    @if($order->review_reward_points_awarded)
+                                        <span class="rating-badge">+{{ $order->review_reward_points }} pts</span>
+                                    @endif
                                 @else
                                     <button type="button" class="btn-rate" data-order-id="{{ $order->id }}">Rate Order</button>
                                 @endif

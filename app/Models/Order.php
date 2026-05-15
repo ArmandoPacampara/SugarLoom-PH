@@ -35,6 +35,8 @@ class Order extends Model
         'lalamove_tracking_number',
         'subtotal',
         'discount',
+        'points_redeemed',
+        'points_discount',
         'delivery_fee',
         'tax',
         'total',
@@ -43,16 +45,26 @@ class Order extends Model
         'rating',
         'review_comment',
         'reviewed_at',
+        'review_reward_points_awarded',
+        'review_reward_points',
+        'address_validation_status',
+        'address_validation_message',
+        'address_validation_overridden',
     ];
 
     protected $casts = [
         'subtotal' => 'decimal:2',
         'discount' => 'decimal:2',
+        'points_redeemed' => 'integer',
+        'points_discount' => 'decimal:2',
         'delivery_fee' => 'decimal:2',
         'tax' => 'decimal:2',
         'total' => 'decimal:2',
         'placed_at' => 'datetime',
         'reviewed_at' => 'datetime',
+        'review_reward_points_awarded' => 'boolean',
+        'review_reward_points' => 'integer',
+        'address_validation_overridden' => 'boolean',
     ];
 
     public static function statuses(): array

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Order;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class OrderController extends Controller
 {
@@ -12,8 +13,7 @@ class OrderController extends Controller
      */
     public function submitRating(Request $request, Order $order)
     {
-        // Verify the order belongs to the authenticated user or is a guest order
-        if ($order->user_id && $order->user_id !== auth()->id()) {
+        if (! auth()->check() || $order->user_id !== auth()->id()) {
             return redirect()->back()->with('error', 'Unauthorized access.');
         }
 
@@ -23,18 +23,36 @@ class OrderController extends Controller
             'review_comment' => 'nullable|string|max:500',
         ]);
 
-        // Check if order is delivered
         if ($order->status !== Order::STATUS_DELIVERED) {
             return redirect()->back()->with('error', 'Only delivered orders can be rated.');
         }
 
-        // Update the order with rating and timestamp
-        $order->update([
-            'rating' => $validated['rating'],
-            'review_comment' => $validated['review_comment'] ?? null,
-            'reviewed_at' => now(),
-        ]);
+        if ($order->rating || $order->reviewed_at) {
+            return redirect()->back()->with('error', 'This order has already been reviewed.');
+        }
 
-        return redirect()->back()->with('success', 'Thank you for your rating!');
+        $rewardPoints = (int) config('sugarloom.rewards.review_points', 25);
+
+        DB::transaction(function () use ($order, $validated, $rewardPoints) {
+            $lockedOrder = Order::whereKey($order->id)->lockForUpdate()->firstOrFail();
+
+            if ($lockedOrder->rating || $lockedOrder->reviewed_at) {
+                return;
+            }
+
+            $lockedOrder->update([
+                'rating' => $validated['rating'],
+                'review_comment' => $validated['review_comment'] ?? null,
+                'reviewed_at' => now(),
+                'review_reward_points_awarded' => true,
+                'review_reward_points' => $rewardPoints,
+            ]);
+
+            if ($rewardPoints > 0 && $lockedOrder->user) {
+                $lockedOrder->user->increment('reward_points', $rewardPoints);
+            }
+        });
+
+        return redirect()->back()->with('success', "Thank you for your rating! {$rewardPoints} reward points were added to your account.");
     }
 }

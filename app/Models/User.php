@@ -31,6 +31,7 @@ class User extends Authenticatable
         'postal_code',
         'password',
         'role',
+        'reward_points',
     ];
 
     public function isAdmin(): bool
@@ -73,6 +74,7 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'reward_points' => 'integer',
         ];
     }
 }

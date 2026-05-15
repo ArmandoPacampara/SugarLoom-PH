@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Mail\OrderStatusNotification;
 use App\Models\Order;
 use App\Models\Product;
+use App\Services\AddressValidationService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -184,6 +185,8 @@ class CartController extends Controller
             'postal_code' => ['required', 'string', 'max:20'],
             'payment_method' => ['required', 'in:card,gcash'],
             'promo_code' => ['nullable', 'string', 'max:40'],
+            'redeem_points' => ['nullable', 'integer', 'min:0'],
+            'address_validation_override' => ['nullable', 'boolean'],
         ]);
 
         $promoCode = $this->normalizePromoCode($validated['promo_code'] ?? session('promo_code'));
@@ -193,7 +196,39 @@ class CartController extends Controller
         }
 
         $validated['promo_code'] = $promoCode ?: null;
-        $totals = $this->calculateTotals($cart, $promoCode);
+        $redeemPoints = (int) ($validated['redeem_points'] ?? 0);
+
+        if ($redeemPoints > 0 && ! Auth::check()) {
+            return redirect()->route('cart.index')->withErrors(['redeem_points' => 'Log in to redeem reward points.'])->withInput();
+        }
+
+        if ($redeemPoints > (int) Auth::user()?->reward_points) {
+            return redirect()->route('cart.index')->withErrors(['redeem_points' => 'You do not have enough reward points.'])->withInput();
+        }
+
+        if ($redeemPoints > $this->maxRedeemablePoints($cart, $promoCode)) {
+            return redirect()->route('cart.index')->withErrors(['redeem_points' => 'That order cannot redeem that many points.'])->withInput();
+        }
+
+        $addressValidation = app(AddressValidationService::class)->validate(
+            $validated['shipping_address'],
+            $validated['city'],
+            $validated['postal_code']
+        );
+
+        if (! $addressValidation['valid'] && ! $request->boolean('address_validation_override')) {
+            return redirect()
+                ->route('cart.index')
+                ->withErrors(['shipping_address' => $addressValidation['message']])
+                ->with('address_validation_can_override', true)
+                ->withInput();
+        }
+
+        $validated['address_validation_status'] = $addressValidation['status'];
+        $validated['address_validation_message'] = $addressValidation['message'];
+        $validated['address_validation_overridden'] = ! $addressValidation['valid'] && $request->boolean('address_validation_override');
+
+        $totals = $this->calculateTotals($cart, $promoCode, $redeemPoints);
         $order = $this->createOrder($cart, $validated, $totals);
         $this->sendOrderNotification($order, 'placed');
 
@@ -213,10 +248,22 @@ class CartController extends Controller
         session()->forget(['cart', 'promo_code']);
 
         if ($orderId = session('latest_order_id')) {
-            Order::whereKey($orderId)->update([
-                'payment_status' => Order::PAYMENT_PAID,
-                'status' => Order::STATUS_PREPARING,
-            ]);
+            DB::transaction(function () use ($orderId) {
+                $order = Order::with('user')->lockForUpdate()->find($orderId);
+
+                if (! $order) {
+                    return;
+                }
+
+                if ($order->payment_status !== Order::PAYMENT_PAID && $order->points_redeemed > 0 && $order->user) {
+                    $order->user->decrement('reward_points', min($order->user->reward_points, $order->points_redeemed));
+                }
+
+                $order->update([
+                    'payment_status' => Order::PAYMENT_PAID,
+                    'status' => Order::STATUS_PREPARING,
+                ]);
+            });
         }
 
         return redirect()
@@ -254,24 +301,31 @@ class CartController extends Controller
         $totals = $this->calculateTotals($cartItems, $promoCode);
         $voucher = $this->voucherFor($promoCode);
         $metroManilaCities = $this->metroManilaCities();
+        $rewardPointBalance = (int) auth()->user()?->reward_points;
+        $maxRedeemablePoints = min($rewardPointBalance, $this->maxRedeemablePoints($cartItems, $promoCode));
 
-        return compact('cartItems', 'totals', 'promoCode', 'voucher', 'metroManilaCities');
+        return compact('cartItems', 'totals', 'promoCode', 'voucher', 'metroManilaCities', 'rewardPointBalance', 'maxRedeemablePoints');
     }
 
-    private function calculateTotals($cartItems, ?string $promoCode = null): array
+    private function calculateTotals($cartItems, ?string $promoCode = null, int $redeemPoints = 0): array
     {
         $subtotal = collect($cartItems)->sum(fn ($item) => $item['price'] * $item['quantity']);
         $voucher = $this->voucherFor($promoCode);
         $discount = $voucher && $subtotal > 0
             ? round($subtotal * ($voucher['value'] / 100))
             : 0;
-        $taxableAmount = max(0, $subtotal - $discount);
+        $pointValue = (float) config('sugarloom.rewards.point_value', 1);
+        $pointsDiscount = min($redeemPoints * $pointValue, max(0, $subtotal - $discount - 1));
+        $pointsRedeemed = $pointValue > 0 ? (int) floor($pointsDiscount / $pointValue) : 0;
+        $taxableAmount = max(0, $subtotal - $discount - $pointsDiscount);
         $tax = $taxableAmount > 0 ? round($taxableAmount * self::TAX_RATE) : 0;
         $total = $taxableAmount + $tax;
 
         return [
             'subtotal' => $subtotal,
             'discount' => $discount,
+            'points_redeemed' => $pointsRedeemed,
+            'points_discount' => $pointsDiscount,
             'delivery_fee' => 0,
             'tax' => $tax,
             'total' => $total,
@@ -300,12 +354,13 @@ class CartController extends Controller
 
         $order->loadMissing('items');
         $subtotal = max(1, $order->items->sum(fn ($item) => $item->unit_price * $item->quantity));
-        $discountMultiplier = max(0, ($subtotal - (float) $order->discount) / $subtotal);
+        $totalDiscount = (float) $order->discount + (float) $order->points_discount;
+        $discountMultiplier = max(0, ($subtotal - $totalDiscount) / $subtotal);
 
         $lineItems = $order->items->map(fn ($item) => [
             'currency' => 'PHP',
             'amount' => (int) round($item->unit_price * $discountMultiplier * 100),
-            'name' => $order->discount > 0 ? "{$item->product_name} ({$order->promo_code} applied)" : $item->product_name,
+            'name' => $totalDiscount > 0 ? "{$item->product_name} (discount applied)" : $item->product_name,
             'quantity' => $item->quantity,
         ])->values()->all();
 
@@ -387,10 +442,15 @@ class CartController extends Controller
                 'status' => Order::STATUS_PENDING,
                 'subtotal' => $totals['subtotal'],
                 'discount' => $totals['discount'],
+                'points_redeemed' => $totals['points_redeemed'],
+                'points_discount' => $totals['points_discount'],
                 'delivery_fee' => $totals['delivery_fee'],
                 'tax' => $totals['tax'],
                 'total' => $totals['total'],
                 'promo_code' => $totals['promo_code'],
+                'address_validation_status' => $customer['address_validation_status'],
+                'address_validation_message' => $customer['address_validation_message'],
+                'address_validation_overridden' => $customer['address_validation_overridden'],
                 'placed_at' => now(),
             ]);
 
@@ -428,6 +488,22 @@ class CartController extends Controller
     private function sendOrderNotification(Order $order, string $notificationType): void
     {
         Mail::to($order->customer_email)->send(new OrderStatusNotification($order, $notificationType));
+    }
+
+    private function maxRedeemablePoints($cartItems, ?string $promoCode = null): int
+    {
+        $subtotal = collect($cartItems)->sum(fn ($item) => $item['price'] * $item['quantity']);
+        $voucher = $this->voucherFor($promoCode);
+        $discount = $voucher && $subtotal > 0
+            ? round($subtotal * ($voucher['value'] / 100))
+            : 0;
+        $pointValue = (float) config('sugarloom.rewards.point_value', 1);
+
+        if ($pointValue <= 0) {
+            return 0;
+        }
+
+        return (int) floor(max(0, $subtotal - $discount - 1) / $pointValue);
     }
 
     private function metroManilaCities(): array
