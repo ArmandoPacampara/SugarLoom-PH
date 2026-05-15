@@ -21,9 +21,34 @@ return [
         'Pateros',
     ],
 
+    'delivery_fees' => [
+        'shop_origin' => 'Pinagbuhatan, Pasig City',
+        'default_fee' => 160,
+        'metro_manila' => [
+            'Pasig' => 90,
+            'Pateros' => 100,
+            'Mandaluyong' => 120,
+            'Marikina' => 130,
+            'Taguig' => 130,
+            'Makati' => 140,
+            'San Juan' => 140,
+            'Quezon City' => 160,
+            'Manila' => 170,
+            'Pasay' => 180,
+            'Paranaque' => 190,
+            'Caloocan' => 200,
+            'Las Pinas' => 210,
+            'Muntinlupa' => 220,
+            'Malabon' => 220,
+            'Valenzuela' => 230,
+            'Navotas' => 240,
+        ],
+    ],
+
     'rewards' => [
         'review_points' => (int) env('SUGARLOOM_REVIEW_REWARD_POINTS', 25),
         'point_value' => (float) env('SUGARLOOM_POINT_VALUE', 1),
+        'product_reward_points' => (int) env('SUGARLOOM_PRODUCT_REWARD_POINTS', 100),
     ],
 
     'address_validation' => [

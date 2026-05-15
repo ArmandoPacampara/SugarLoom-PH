@@ -40,4 +40,16 @@ return [
         'public_key' => env('PAYMONGO_PUBLIC_KEY'),
     ],
 
+    'lalamove' => [
+        'api_key' => env('LALAMOVE_API_KEY'),
+        'api_secret' => env('LALAMOVE_API_SECRET'),
+        'base_url' => env('LALAMOVE_BASE_URL', 'https://rest.sandbox.lalamove.com'),
+        'market' => env('LALAMOVE_MARKET', 'PH'),
+        'service_type' => env('LALAMOVE_SERVICE_TYPE', 'MOTORCYCLE'),
+        'language' => env('LALAMOVE_LANGUAGE', 'en_PH'),
+        'pickup_address' => env('LALAMOVE_PICKUP_ADDRESS', 'SugarLoom PH'),
+        'pickup_lat' => env('LALAMOVE_PICKUP_LAT'),
+        'pickup_lng' => env('LALAMOVE_PICKUP_LNG'),
+    ],
+
 ];
