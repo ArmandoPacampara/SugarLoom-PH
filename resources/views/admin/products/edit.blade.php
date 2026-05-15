@@ -280,13 +280,11 @@
                 <div class="form-group full">
                     <label>Product Image</label>
                     <div class="image-section">
-                        @if ($product->image)
-                            <div class="image-preview">
-                                <img src="{{ asset($product->image) }}" alt="{{ $product->name }}" onerror="this.src='{{ asset('images/placeholder.png') }}'">
-                            </div>
-                        @endif
+                        <div class="image-preview" id="imagePreview" style="display: {{ $product->image ? 'block' : 'none' }};">
+                            <img id="imagePreviewImg" src="{{ $product->image ? asset($product->image) : asset('images/placeholder.png') }}" alt="{{ $product->name }}" onerror="this.src='{{ asset('images/placeholder.png') }}'">
+                        </div>
                         <div style="flex-grow: 1;">
-                            <input type="file" name="image" accept="image/*">
+                            <input id="productImage" type="file" name="image" accept="image/*">
                             <p class="muted" style="margin-top: 8px;">Recommended size: 800x800px. PNG or JPG.</p>
                         </div>
                     </div>
@@ -315,4 +313,27 @@
         </form>
     </div>
 </div>
+@endsection
+
+@section('scripts')
+    <script>
+        const editProductImageInput = document.getElementById('productImage');
+        const editImagePreview = document.getElementById('imagePreview');
+        const editImagePreviewImg = document.getElementById('imagePreviewImg');
+
+        if (editProductImageInput) {
+            editProductImageInput.addEventListener('change', function () {
+                const file = this.files?.[0];
+
+                if (!file) {
+                    editImagePreview.style.display = 'none';
+                    editImagePreviewImg.src = '';
+                    return;
+                }
+
+                editImagePreviewImg.src = URL.createObjectURL(file);
+                editImagePreview.style.display = 'block';
+            });
+        }
+    </script>
 @endsection

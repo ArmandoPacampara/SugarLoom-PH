@@ -8,6 +8,7 @@ use App\Models\Product;
 use App\Services\AddressValidationService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
@@ -28,6 +29,11 @@ class CartController extends Controller
     public function index(): View
     {
         return view('checkout', $this->cartViewData());
+    }
+
+    public function rewards(): View
+    {
+        return view('rewards', $this->cartViewData());
     }
 
     public function add(Request $request)
@@ -201,11 +207,14 @@ class CartController extends Controller
         $rewardProductPoints = $rewardProduct ? $this->productRewardPointCost() : 0;
         $totalPointsRedeemed = $redeemPoints + $rewardProductPoints;
 
-        if ($redeemPoints > 0 && ! Auth::check()) {
+        /** @var \App\Models\User|null $authenticatedUser */
+        $authenticatedUser = Auth::user();
+
+        if ($redeemPoints > 0 && ! $authenticatedUser) {
             return redirect()->route('cart.index')->withErrors(['redeem_points' => 'Log in to redeem reward points.'])->withInput();
         }
 
-        if ($rewardProduct && ! Auth::check()) {
+        if ($rewardProduct && ! $authenticatedUser) {
             return redirect()->route('cart.index')->withErrors(['reward_product_id' => 'Log in to choose a reward product.'])->withInput();
         }
 
@@ -213,13 +222,13 @@ class CartController extends Controller
             return redirect()->route('cart.index')->withErrors(['reward_product_id' => 'That reward product is not available right now.'])->withInput();
         }
 
-        if ($totalPointsRedeemed > (int) Auth::user()?->reward_points) {
+        if ($totalPointsRedeemed > (int) $authenticatedUser?->reward_points) {
             return redirect()->route('cart.index')->withErrors(['redeem_points' => 'You do not have enough reward points.'])->withInput();
         }
 
         $maxDiscountPoints = min(
             $this->maxRedeemablePoints($cart, $promoCode),
-            max(0, (int) Auth::user()?->reward_points - $rewardProductPoints)
+            max(0, (int) $authenticatedUser?->reward_points - $rewardProductPoints)
         );
 
         if ($redeemPoints > $maxDiscountPoints) {
@@ -319,12 +328,16 @@ class CartController extends Controller
     {
         $cartItems = collect(session('cart', []))->values();
         $promoCode = session('promo_code');
-        $selectedCity = old('city', auth()->user()?->city);
+
+        /** @var \App\Models\User|null $checkoutUser */
+        $checkoutUser = Auth::user();
+
+        $selectedCity = old('city', $checkoutUser?->city);
         $deliveryFee = $selectedCity ? $this->estimatedDeliveryFee($selectedCity) : 0;
         $totals = $this->calculateTotals($cartItems, $promoCode, 0, $deliveryFee);
         $voucher = $this->voucherFor($promoCode);
         $metroManilaCities = $this->metroManilaCities();
-        $rewardPointBalance = (int) auth()->user()?->reward_points;
+        $rewardPointBalance = (int) $checkoutUser?->reward_points;
         $maxRedeemablePoints = min($rewardPointBalance, $this->maxRedeemablePoints($cartItems, $promoCode));
         $rewardProducts = $this->rewardProducts();
         $productRewardPointCost = $this->productRewardPointCost();
@@ -332,9 +345,12 @@ class CartController extends Controller
         return compact('cartItems', 'totals', 'promoCode', 'voucher', 'metroManilaCities', 'rewardPointBalance', 'maxRedeemablePoints', 'rewardProducts', 'productRewardPointCost');
     }
 
-    private function calculateTotals($cartItems, ?string $promoCode = null, int $redeemPoints = 0, float $deliveryFee = 0, int $rewardProductPoints = 0): array
+    /**
+     * @param Collection|array<int, array{price: float|int, quantity: int}> $cartItems
+     */
+    private function calculateTotals(Collection|array $cartItems, ?string $promoCode = null, int $redeemPoints = 0, float $deliveryFee = 0, int $rewardProductPoints = 0): array
     {
-        $subtotal = collect($cartItems)->sum(fn ($item) => $item['price'] * $item['quantity']);
+        $subtotal = collect($cartItems)->sum(fn (array $item): float => $item['price'] * $item['quantity']);
         $voucher = $this->voucherFor($promoCode);
         $discount = $voucher && $subtotal > 0
             ? round($subtotal * ($voucher['value'] / 100))
@@ -439,7 +455,7 @@ class CartController extends Controller
         return $response->json('data.attributes.checkout_url');
     }
 
-    private function createOrder($cart, array $customer, array $totals, ?Product $rewardProduct = null): Order
+    private function createOrder(\Illuminate\Support\Collection|array $cart, array $customer, array $totals, ?Product $rewardProduct = null): Order
     {
         return DB::transaction(function () use ($cart, $customer, $totals, $rewardProduct) {
             $productIds = $cart->keys();
@@ -553,9 +569,12 @@ class CartController extends Controller
         Mail::to($order->customer_email)->send(new OrderStatusNotification($order, $notificationType));
     }
 
-    private function maxRedeemablePoints($cartItems, ?string $promoCode = null): int
+    /**
+     * @param Collection|array<int, array{price: float|int, quantity: int}> $cartItems
+     */
+    private function maxRedeemablePoints(Collection|array $cartItems, ?string $promoCode = null): int
     {
-        $subtotal = collect($cartItems)->sum(fn ($item) => $item['price'] * $item['quantity']);
+        $subtotal = collect($cartItems)->sum(fn (array $item): float => $item['price'] * $item['quantity']);
         $voucher = $this->voucherFor($promoCode);
         $discount = $voucher && $subtotal > 0
             ? round($subtotal * ($voucher['value'] / 100))
@@ -574,7 +593,7 @@ class CartController extends Controller
         return max(1, (int) config('sugarloom.rewards.product_reward_points', 100));
     }
 
-    private function rewardProducts()
+    private function rewardProducts(): \Illuminate\Support\Collection
     {
         return Product::active()
             ->where('stock_quantity', '>', 0)
@@ -582,7 +601,7 @@ class CartController extends Controller
             ->get();
     }
 
-    private function selectedRewardProduct($productId): ?Product
+    private function selectedRewardProduct(?int $productId): ?Product
     {
         if (blank($productId)) {
             return null;

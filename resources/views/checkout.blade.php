@@ -443,7 +443,7 @@
         .reward-card {
             min-height: 76px;
             border: 2px solid #f0d8dd;
-            background: #fff;
+            background: #db1313;
             border-radius: 8px;
             padding: 12px;
             cursor: pointer;
@@ -584,6 +584,42 @@
             margin-bottom: 10px;
         }
 
+        .summary-rewards {
+            margin-bottom: 1.5rem;
+            display: grid;
+            gap: 1rem;
+        }
+
+        .reward-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            padding: 14px 18px;
+            border-radius: 16px;
+            background: rgb(252, 130, 130);
+            color: rgb(255, 255, 255);
+            text-decoration: none;
+            font-weight: 700;
+            border: none;
+            transition: transform 0.2s ease;
+        }
+
+        .reward-button:hover {
+            transform: translateY(-1px);
+            background: #e11d48;
+        }
+
+        .reward-summary {
+            padding: 16px 18px;
+            border-radius: 16px;
+            background: #fff4f9;
+            border: 1px solid #f8d5e3;
+            color: #602540;
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
         .footer-links {
             display: flex;
             gap: 32px;
@@ -633,8 +669,8 @@
 <main class="page">
     <div class="steps" aria-label="Checkout progress" data-aos="fade-down">
         <div class="step active"><div class="step-bubble">1</div>Cart</div>
-        <div class="step-line active"></div>
-        <div class="step active"><div class="step-bubble">2</div>Shipping</div>
+        <div class="step-line"></div>
+        <div class="step"><div class="step-bubble">2</div>Shipping</div>
         <div class="step-line"></div>
         <div class="step"><div class="step-bubble">3</div>Payment</div>
     </div>
@@ -688,7 +724,7 @@
                     </div>
                     <div class="field">
                         <label for="city">City</label>
-                        <select id="city" name="city" required>
+                        <select id="city" name="city" size="5" required>
                             <option value="">Select a Metro Manila city</option>
                             @foreach($metroManilaCities as $metroCity)
                                 <option value="{{ $metroCity }}" @selected(old('city', $checkoutUser?->city) === $metroCity)>{{ $metroCity }}</option>
@@ -752,55 +788,21 @@
             </section>
 
             <aside class="summary" data-aos="fade-left">
-                @auth
-                    <button class="reward-toggle" type="button" id="rewardToggle" aria-expanded="false" aria-controls="rewardPanel">View Rewards</button>
-                    <div class="reward-panel" id="rewardPanel">
-                        <div class="reward-panel-title">Product Rewards</div>
-                        <p class="points-balance">
-                            Balance: {{ number_format($rewardPointBalance) }} points. Redeem {{ number_format($productRewardPointCost) }} points for one free SugarLoom product.
-                            @if($rewardPointBalance < $productRewardPointCost)
-                                You need {{ number_format($productRewardPointCost - $rewardPointBalance) }} more points to unlock this reward.
+                <div class="summary-rewards">
+                    <a href="{{ route('cart.rewards') }}" class="reward-button">View Rewards</a>
+                    <div class="reward-summary">
+                        @auth
+                            <p>Reward points balance: <strong>{{ number_format($rewardPointBalance) }}</strong> points.</p>
+                            @if($rewardPointBalance >= $productRewardPointCost)
+                                <p>You can redeem {{ number_format($productRewardPointCost) }} points for a reward product on checkout.</p>
+                            @else
+                                <p>You need <strong>{{ number_format($productRewardPointCost - $rewardPointBalance) }}</strong> more points to unlock the next reward.</p>
                             @endif
-                        </p>
-                        @if($rewardProducts->isEmpty())
-                            <p class="reward-empty">No reward products are available right now.</p>
                         @else
-                            <div class="reward-grid">
-                                <label class="reward-option">
-                                    <input form="checkout-form" type="radio" name="reward_product_id" value="" @checked(old('reward_product_id') === null || old('reward_product_id') === '')>
-                                    <span class="reward-card">
-                                        <img class="reward-image" src="{{ asset('images/cookies1.jpeg') }}" alt="">
-                                        <span class="reward-details">
-                                            <span class="reward-name">No product reward</span>
-                                            <span class="reward-meta">Keep my points for later.</span>
-                                        </span>
-                                    </span>
-                                </label>
-                                @foreach($rewardProducts as $rewardProduct)
-                                    <label class="reward-option">
-                                        <input
-                                            form="checkout-form"
-                                            type="radio"
-                                            name="reward_product_id"
-                                            value="{{ $rewardProduct->id }}"
-                                            @checked((string) old('reward_product_id') === (string) $rewardProduct->id)
-                                            @disabled($rewardPointBalance < $productRewardPointCost)
-                                        >
-                                        <span class="reward-card">
-                                            <img class="reward-image" src="{{ $imageFor($rewardProduct->toArray()) }}" alt="{{ $rewardProduct->name }}">
-                                            <span class="reward-details">
-                                                <span class="reward-name">{{ $rewardProduct->name }}</span>
-                                                <span class="reward-meta">
-                                                    {{ number_format($productRewardPointCost) }} points - {{ $rewardProduct->stock_quantity }} available
-                                                </span>
-                                            </span>
-                                        </span>
-                                    </label>
-                                @endforeach
-                            </div>
-                        @endif
+                            <p>Log in to start earning points and redeem rewards on your SugarLoom order.</p>
+                        @endauth
                     </div>
-                @endauth
+                </div>
                 <div class="summary-title">
                     <svg viewBox="0 0 24 24"><path d="M6 8h12l-1 12H7L6 8Z"></path><path d="M9 8a3 3 0 0 1 6 0"></path></svg>
                     Order Summary
@@ -885,8 +887,6 @@ const statusBox = document.getElementById('delivery-status');
 const deliveryFeeDisplay = document.getElementById('delivery-fee-display');
 const grandTotalDisplay = document.getElementById('grand-total-display');
 const citySelect = document.getElementById('city');
-const rewardToggle = document.getElementById('rewardToggle');
-const rewardPanel = document.getElementById('rewardPanel');
 const deliveryFees = @json(config('sugarloom.delivery_fees.metro_manila', []));
 const defaultDeliveryFee = {{ (float) config('sugarloom.delivery_fees.default_fee', 160) }};
 const baseTotal = {{ (float) ($totals['total'] - $totals['delivery_fee']) }};
@@ -916,11 +916,5 @@ function updateEstimatedDelivery() {
 
 citySelect?.addEventListener('change', updateEstimatedDelivery);
 updateEstimatedDelivery();
-
-rewardToggle?.addEventListener('click', () => {
-    const isOpen = rewardPanel.classList.toggle('is-open');
-    rewardToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
-    rewardToggle.textContent = isOpen ? 'Hide Rewards' : 'View Rewards';
-});
 </script>
 @endsection

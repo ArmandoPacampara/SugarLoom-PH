@@ -401,7 +401,7 @@
 
                 <div class="form-group">
                     <label for="city">City</label>
-                    <select id="city" name="city" required>
+                    <select id="city" name="city" size="5" required>
                         <option value="">Select a Metro Manila city</option>
                         @foreach(config('sugarloom.metro_manila_cities', []) as $metroCity)
                             <option value="{{ $metroCity }}" @selected(old('city') === $metroCity)>{{ $metroCity }}</option>
