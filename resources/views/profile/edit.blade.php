@@ -24,8 +24,8 @@
         
         .form-group { margin-bottom: 16px; }
         label { display: block; font-size: 14px; font-weight: bold; color: var(--text-body); margin-bottom: 6px; }
-        input[type="text"], input[type="email"] { width: 100%; padding: 12px; border: 1px solid #e5e7eb; border-radius: 10px; box-sizing: border-box; }
-        input:focus { outline: none; border-color: var(--pink-nav); box-shadow: 0 0 0 3px var(--pink-pale); }
+        input[type="text"], input[type="email"], select { width: 100%; padding: 12px; border: 1px solid #e5e7eb; border-radius: 10px; box-sizing: border-box; background: white; }
+        input:focus, select:focus { outline: none; border-color: var(--pink-nav); box-shadow: 0 0 0 3px var(--pink-pale); }
         
         .btn-primary { background: #fb7185; color: white; border: none; padding: 10px 20px; border-radius: 999px; font-weight: bold; cursor: pointer; transition: opacity 0.2s; }
         .btn-primary:hover { opacity: 0.9; }
@@ -238,7 +238,12 @@
 
                 <div class="form-group">
                     <label for="city">City</label>
-                    <input id="city" type="text" name="city" value="{{ old('city', $user->city) }}" required>
+                    <select id="city" name="city" required>
+                        <option value="">Select a Metro Manila city</option>
+                        @foreach($metroManilaCities as $metroCity)
+                            <option value="{{ $metroCity }}" @selected(old('city', $user->city) === $metroCity)>{{ $metroCity }}</option>
+                        @endforeach
+                    </select>
                 </div>
 
                 <div class="form-group">

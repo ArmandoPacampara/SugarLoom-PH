@@ -142,7 +142,8 @@
             letter-spacing: 0.8px;
         }
 
-        .form-group input {
+        .form-group input,
+        .form-group select {
             width: 100%;
             padding: 11px 15px;
             background: rgba(255, 255, 255, 0.6);
@@ -158,7 +159,8 @@
             color: #c0a0ad;
         }
 
-        .form-group input:focus {
+        .form-group input:focus,
+        .form-group select:focus {
             outline: none;
             background: #fff;
             border-color: var(--pink);
@@ -399,7 +401,12 @@
 
                 <div class="form-group">
                     <label for="city">City</label>
-                    <input id="city" type="text" name="city" value="{{ old('city') }}" required placeholder="Manila">
+                    <select id="city" name="city" required>
+                        <option value="">Select a Metro Manila city</option>
+                        @foreach(config('sugarloom.metro_manila_cities', []) as $metroCity)
+                            <option value="{{ $metroCity }}" @selected(old('city') === $metroCity)>{{ $metroCity }}</option>
+                        @endforeach
+                    </select>
                 </div>
 
                 <div class="form-group">

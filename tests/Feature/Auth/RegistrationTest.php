@@ -2,7 +2,9 @@
 
 namespace Tests\Feature\Auth;
 
+use App\Mail\RegistrationVerificationCode;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Mail;
 use Tests\TestCase;
 
 class RegistrationTest extends TestCase
@@ -18,14 +20,22 @@ class RegistrationTest extends TestCase
 
     public function test_new_users_can_register(): void
     {
+        Mail::fake();
+
         $response = $this->post('/register', [
             'name' => 'Test User',
             'email' => 'test@example.com',
-            'password' => 'password',
-            'password_confirmation' => 'password',
+            'phone' => '+63 917 111 2222',
+            'shipping_address' => '123 Test Street',
+            'city' => 'Manila',
+            'postal_code' => '1000',
+            'password' => 'password1',
+            'password_confirmation' => 'password1',
         ]);
 
-        $this->assertAuthenticated();
-        $response->assertRedirect(route('catalog', absolute: false));
+        $this->assertGuest();
+        $response->assertRedirect(route('register.verify', absolute: false));
+        $this->assertNotNull(session('pending_registration'));
+        Mail::assertSent(RegistrationVerificationCode::class);
     }
 }

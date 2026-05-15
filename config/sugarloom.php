@@ -1,6 +1,26 @@
 <?php
 
 return [
+    'metro_manila_cities' => [
+        'Quezon City',
+        'Manila',
+        'Makati',
+        'Pasig',
+        'Taguig',
+        'Pasay',
+        'Mandaluyong',
+        'Marikina',
+        'Paranaque',
+        'Las Pinas',
+        'Muntinlupa',
+        'San Juan',
+        'Caloocan',
+        'Malabon',
+        'Navotas',
+        'Valenzuela',
+        'Pateros',
+    ],
+
     'rewards' => [
         'review_points' => (int) env('SUGARLOOM_REVIEW_REWARD_POINTS', 25),
         'point_value' => (float) env('SUGARLOOM_POINT_VALUE', 1),

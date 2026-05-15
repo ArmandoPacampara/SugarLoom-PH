@@ -508,24 +508,6 @@ class CartController extends Controller
 
     private function metroManilaCities(): array
     {
-        return [
-            'Quezon City',
-            'Manila',
-            'Makati',
-            'Pasig',
-            'Taguig',
-            'Pasay',
-            'Mandaluyong',
-            'Marikina',
-            'Paranaque',
-            'Las Pinas',
-            'Muntinlupa',
-            'San Juan',
-            'Caloocan',
-            'Malabon',
-            'Navotas',
-            'Valenzuela',
-            'Pateros',
-        ];
+        return config('sugarloom.metro_manila_cities', []);
     }
 }

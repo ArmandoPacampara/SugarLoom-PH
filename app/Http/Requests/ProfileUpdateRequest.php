@@ -28,7 +28,7 @@ class ProfileUpdateRequest extends FormRequest
             ],
             'phone' => ['required', 'string', 'max:30'],
             'shipping_address' => ['required', 'string', 'max:255'],
-            'city' => ['required', 'string', 'max:80'],
+            'city' => ['required', 'string', 'max:80', Rule::in(config('sugarloom.metro_manila_cities', []))],
             'postal_code' => ['required', 'string', 'max:20'],
         ];
     }

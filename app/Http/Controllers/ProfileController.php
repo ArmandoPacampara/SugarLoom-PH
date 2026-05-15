@@ -27,6 +27,7 @@ class ProfileController extends Controller
                     ->latest('placed_at')
                     ->take(5)
                     ->get(),
+            'metroManilaCities' => config('sugarloom.metro_manila_cities', []),
         ]);
     }
 
