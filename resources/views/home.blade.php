@@ -783,7 +783,7 @@
             options: [
                 { label: 'Classic comfort', category: 'sweet' },
                 { label: 'Bold and indulgent', category: 'specialty' },
-                { label: 'Light with a drink on the side', category: 'beverage' }
+                { label: 'Soft and classic', category: 'sweet' }
             ]
         },
         {

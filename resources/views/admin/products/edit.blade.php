@@ -266,7 +266,6 @@
                         <option value="">-- Select Category --</option>
                         <option value="sweet" @selected(old('category', $product->category) === 'sweet')>Sweet</option>
                         <option value="savory" @selected(old('category', $product->category) === 'savory')>Savory</option>
-                        <option value="beverage" @selected(old('category', $product->category) === 'beverage')>Beverage</option>
                         <option value="specialty" @selected(old('category', $product->category) === 'specialty')>Specialty</option>
                     </select>
                     @error('category') <p class="error-message">{{ $message }}</p> @enderror

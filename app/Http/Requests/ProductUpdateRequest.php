@@ -20,7 +20,7 @@ class ProductUpdateRequest extends FormRequest
             'price' => 'required|numeric|min:0.01|max:999999.99',
             'stock_quantity' => 'required|integer|min:0|max:9999',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-            'category' => 'required|string|in:sweet,savory,beverage,specialty',
+            'category' => 'required|string|in:sweet,savory,specialty',
             'is_active' => 'boolean',
             'is_bakers_choice' => 'boolean',
             'rating' => 'nullable|numeric|min:0|max:5',

@@ -601,7 +601,6 @@
                 <a href="{{ route('catalog', ['category' => 'all']) }}" class="filter-tab {{ $category === 'all' ? 'active' : '' }}">All Flavors</a>
                 <a href="{{ route('catalog', ['category' => 'sweet']) }}" class="filter-tab {{ $category === 'sweet' ? 'active' : '' }}">Sweet</a>
                 <a href="{{ route('catalog', ['category' => 'savory']) }}" class="filter-tab {{ $category === 'savory' ? 'active' : '' }}">Savory</a>
-                <a href="{{ route('catalog', ['category' => 'beverage']) }}" class="filter-tab {{ $category === 'beverage' ? 'active' : '' }}">Beverage</a>
                 <a href="{{ route('catalog', ['category' => 'specialty']) }}" class="filter-tab {{ $category === 'specialty' ? 'active' : '' }}">Specialty</a>
             </div>
             <span class="sort-label">✎ Sorted by Rating</span>

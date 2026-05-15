@@ -239,7 +239,6 @@
             <option value="all">All Categories</option>
             <option value="sweet" @selected(request('category') === 'sweet')>Sweet</option>
             <option value="savory" @selected(request('category') === 'savory')>Savory</option>
-            <option value="beverage" @selected(request('category') === 'beverage')>Beverage</option>
             <option value="specialty" @selected(request('category') === 'specialty')>Specialty</option>
         </select>
 

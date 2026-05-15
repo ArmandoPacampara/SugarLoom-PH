@@ -74,13 +74,6 @@
 .skeleton-badge { width: 90px; height: 1.6rem; border-radius: 999px; margin-top: 0.8rem; margin-bottom: 1rem; }
 .skeleton-button { width: 100%; height: 3rem; border-radius: 999px; margin-top: auto; }
 
-/* Dark Mode Support */
-@media (prefers-color-scheme: dark) {
-    .skeleton-card { background: #1a1517 !important; border-color: #2d2427 !important; }
-    .skeleton-element { background: #2d2427 !important; }
-    .skeleton-element::after { background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.03), transparent); }
-}
-
 /* Catalog Card Specific Overrides if any */
 .catalog-card.skeleton-card .skeleton-img-wrap {
     border-radius: 16px;

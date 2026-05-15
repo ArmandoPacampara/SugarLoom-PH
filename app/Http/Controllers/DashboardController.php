@@ -151,7 +151,7 @@ class DashboardController extends Controller
 
     public function createProduct(): View
     {
-        $categories = ['sweet', 'savory', 'beverage', 'specialty'];
+        $categories = ['sweet', 'savory', 'specialty'];
         return view('admin.products.create', compact('categories'));
     }
 
@@ -263,7 +263,7 @@ class DashboardController extends Controller
 
     public function editProduct(Product $product): View
     {
-        $categories = ['sweet', 'savory', 'beverage', 'specialty'];
+        $categories = ['sweet', 'savory', 'specialty'];
 
         return view('admin.products.edit', [
             'product' => $product,
