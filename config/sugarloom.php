@@ -48,6 +48,7 @@ return [
     'rewards' => [
         'review_points' => (int) env('SUGARLOOM_REVIEW_REWARD_POINTS', 25),
         'point_value' => (float) env('SUGARLOOM_POINT_VALUE', 1),
+        'product_reward_points' => (int) env('SUGARLOOM_PRODUCT_REWARD_POINTS', 100),
     ],
 
     'address_validation' => [

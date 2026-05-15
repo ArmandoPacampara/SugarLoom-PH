@@ -383,7 +383,8 @@
             margin-top: 22px;
         }
 
-        .points-box label {
+        .points-box label,
+        .reward-card label {
             margin-bottom: 8px;
         }
 
@@ -392,6 +393,106 @@
             font-size: 13px;
             line-height: 1.5;
             margin-bottom: 10px;
+        }
+
+        .reward-toggle {
+            width: 100%;
+            border: 0;
+            min-height: 48px;
+            border-radius: 999px;
+            background: var(--rose);
+            color: #fff;
+            font: inherit;
+            font-weight: 800;
+            cursor: pointer;
+            margin-bottom: 14px;
+            box-shadow: 0 10px 20px rgba(157, 79, 93, 0.16);
+        }
+
+        .reward-panel {
+            display: none;
+            border: 1px solid #f0d8dd;
+            background: #fff8fa;
+            border-radius: 16px;
+            padding: 14px;
+            margin-bottom: 18px;
+        }
+
+        .reward-panel.is-open {
+            display: block;
+        }
+
+        .reward-panel-title {
+            font-size: 17px;
+            font-weight: 800;
+            color: var(--ink);
+            margin-bottom: 6px;
+        }
+
+        .reward-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+            margin-top: 14px;
+        }
+
+        .reward-option input {
+            display: none;
+        }
+
+        .reward-card {
+            min-height: 76px;
+            border: 2px solid #f0d8dd;
+            background: #fff;
+            border-radius: 8px;
+            padding: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: border-color 0.2s, transform 0.2s;
+        }
+
+        .reward-card:hover {
+            transform: translateY(-2px);
+            border-color: #f3a5b4;
+        }
+
+        .reward-option input:checked + .reward-card {
+            border-color: var(--rose);
+            background: #fff7fa;
+        }
+
+        .reward-name {
+            color: var(--ink);
+            font-weight: 800;
+            line-height: 1.25;
+        }
+
+        .reward-image {
+            width: 52px;
+            height: 52px;
+            border-radius: 6px;
+            object-fit: cover;
+            flex: 0 0 52px;
+            background: #f7e5e8;
+        }
+
+        .reward-details {
+            min-width: 0;
+        }
+
+        .reward-meta {
+            color: var(--muted);
+            font-size: 12px;
+            line-height: 1.4;
+        }
+
+        .reward-empty {
+            color: var(--muted);
+            font-size: 13px;
+            line-height: 1.5;
+            margin-top: 10px;
         }
 
         .override-box {
@@ -651,6 +752,55 @@
             </section>
 
             <aside class="summary" data-aos="fade-left">
+                @auth
+                    <button class="reward-toggle" type="button" id="rewardToggle" aria-expanded="false" aria-controls="rewardPanel">View Rewards</button>
+                    <div class="reward-panel" id="rewardPanel">
+                        <div class="reward-panel-title">Product Rewards</div>
+                        <p class="points-balance">
+                            Balance: {{ number_format($rewardPointBalance) }} points. Redeem {{ number_format($productRewardPointCost) }} points for one free SugarLoom product.
+                            @if($rewardPointBalance < $productRewardPointCost)
+                                You need {{ number_format($productRewardPointCost - $rewardPointBalance) }} more points to unlock this reward.
+                            @endif
+                        </p>
+                        @if($rewardProducts->isEmpty())
+                            <p class="reward-empty">No reward products are available right now.</p>
+                        @else
+                            <div class="reward-grid">
+                                <label class="reward-option">
+                                    <input form="checkout-form" type="radio" name="reward_product_id" value="" @checked(old('reward_product_id') === null || old('reward_product_id') === '')>
+                                    <span class="reward-card">
+                                        <img class="reward-image" src="{{ asset('images/cookies1.jpeg') }}" alt="">
+                                        <span class="reward-details">
+                                            <span class="reward-name">No product reward</span>
+                                            <span class="reward-meta">Keep my points for later.</span>
+                                        </span>
+                                    </span>
+                                </label>
+                                @foreach($rewardProducts as $rewardProduct)
+                                    <label class="reward-option">
+                                        <input
+                                            form="checkout-form"
+                                            type="radio"
+                                            name="reward_product_id"
+                                            value="{{ $rewardProduct->id }}"
+                                            @checked((string) old('reward_product_id') === (string) $rewardProduct->id)
+                                            @disabled($rewardPointBalance < $productRewardPointCost)
+                                        >
+                                        <span class="reward-card">
+                                            <img class="reward-image" src="{{ $imageFor($rewardProduct->toArray()) }}" alt="{{ $rewardProduct->name }}">
+                                            <span class="reward-details">
+                                                <span class="reward-name">{{ $rewardProduct->name }}</span>
+                                                <span class="reward-meta">
+                                                    {{ number_format($productRewardPointCost) }} points - {{ $rewardProduct->stock_quantity }} available
+                                                </span>
+                                            </span>
+                                        </span>
+                                    </label>
+                                @endforeach
+                            </div>
+                        @endif
+                    </div>
+                @endauth
                 <div class="summary-title">
                     <svg viewBox="0 0 24 24"><path d="M6 8h12l-1 12H7L6 8Z"></path><path d="M9 8a3 3 0 0 1 6 0"></path></svg>
                     Order Summary
@@ -735,6 +885,8 @@ const statusBox = document.getElementById('delivery-status');
 const deliveryFeeDisplay = document.getElementById('delivery-fee-display');
 const grandTotalDisplay = document.getElementById('grand-total-display');
 const citySelect = document.getElementById('city');
+const rewardToggle = document.getElementById('rewardToggle');
+const rewardPanel = document.getElementById('rewardPanel');
 const deliveryFees = @json(config('sugarloom.delivery_fees.metro_manila', []));
 const defaultDeliveryFee = {{ (float) config('sugarloom.delivery_fees.default_fee', 160) }};
 const baseTotal = {{ (float) ($totals['total'] - $totals['delivery_fee']) }};
@@ -764,5 +916,11 @@ function updateEstimatedDelivery() {
 
 citySelect?.addEventListener('change', updateEstimatedDelivery);
 updateEstimatedDelivery();
+
+rewardToggle?.addEventListener('click', () => {
+    const isOpen = rewardPanel.classList.toggle('is-open');
+    rewardToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+    rewardToggle.textContent = isOpen ? 'Hide Rewards' : 'View Rewards';
+});
 </script>
 @endsection

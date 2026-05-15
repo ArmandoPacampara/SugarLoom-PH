@@ -185,6 +185,7 @@ class CartController extends Controller
             'payment_method' => ['required', 'in:card,gcash'],
             'promo_code' => ['nullable', 'string', 'max:40'],
             'redeem_points' => ['nullable', 'integer', 'min:0'],
+            'reward_product_id' => ['nullable', 'integer', 'exists:products,id'],
             'address_validation_override' => ['nullable', 'boolean'],
         ]);
 
@@ -196,16 +197,32 @@ class CartController extends Controller
 
         $validated['promo_code'] = $promoCode ?: null;
         $redeemPoints = (int) ($validated['redeem_points'] ?? 0);
+        $rewardProduct = $this->selectedRewardProduct($validated['reward_product_id'] ?? null);
+        $rewardProductPoints = $rewardProduct ? $this->productRewardPointCost() : 0;
+        $totalPointsRedeemed = $redeemPoints + $rewardProductPoints;
 
         if ($redeemPoints > 0 && ! Auth::check()) {
             return redirect()->route('cart.index')->withErrors(['redeem_points' => 'Log in to redeem reward points.'])->withInput();
         }
 
-        if ($redeemPoints > (int) Auth::user()?->reward_points) {
+        if ($rewardProduct && ! Auth::check()) {
+            return redirect()->route('cart.index')->withErrors(['reward_product_id' => 'Log in to choose a reward product.'])->withInput();
+        }
+
+        if (! $rewardProduct && ! empty($validated['reward_product_id'])) {
+            return redirect()->route('cart.index')->withErrors(['reward_product_id' => 'That reward product is not available right now.'])->withInput();
+        }
+
+        if ($totalPointsRedeemed > (int) Auth::user()?->reward_points) {
             return redirect()->route('cart.index')->withErrors(['redeem_points' => 'You do not have enough reward points.'])->withInput();
         }
 
-        if ($redeemPoints > $this->maxRedeemablePoints($cart, $promoCode)) {
+        $maxDiscountPoints = min(
+            $this->maxRedeemablePoints($cart, $promoCode),
+            max(0, (int) Auth::user()?->reward_points - $rewardProductPoints)
+        );
+
+        if ($redeemPoints > $maxDiscountPoints) {
             return redirect()->route('cart.index')->withErrors(['redeem_points' => 'That order cannot redeem that many points.'])->withInput();
         }
 
@@ -229,9 +246,11 @@ class CartController extends Controller
 
         $deliveryFee = $this->estimatedDeliveryFee($validated['city']);
         $validated['delivery_fee'] = $deliveryFee;
+        $validated['reward_product_id'] = $rewardProduct?->id;
+        $validated['reward_product_points'] = $rewardProductPoints;
 
-        $totals = $this->calculateTotals($cart, $promoCode, $redeemPoints, $deliveryFee);
-        $order = $this->createOrder($cart, $validated, $totals);
+        $totals = $this->calculateTotals($cart, $promoCode, $redeemPoints, $deliveryFee, $rewardProductPoints);
+        $order = $this->createOrder($cart, $validated, $totals, $rewardProduct);
         $this->sendOrderNotification($order, 'placed');
 
         session([
@@ -307,11 +326,13 @@ class CartController extends Controller
         $metroManilaCities = $this->metroManilaCities();
         $rewardPointBalance = (int) auth()->user()?->reward_points;
         $maxRedeemablePoints = min($rewardPointBalance, $this->maxRedeemablePoints($cartItems, $promoCode));
+        $rewardProducts = $this->rewardProducts();
+        $productRewardPointCost = $this->productRewardPointCost();
 
-        return compact('cartItems', 'totals', 'promoCode', 'voucher', 'metroManilaCities', 'rewardPointBalance', 'maxRedeemablePoints');
+        return compact('cartItems', 'totals', 'promoCode', 'voucher', 'metroManilaCities', 'rewardPointBalance', 'maxRedeemablePoints', 'rewardProducts', 'productRewardPointCost');
     }
 
-    private function calculateTotals($cartItems, ?string $promoCode = null, int $redeemPoints = 0, float $deliveryFee = 0): array
+    private function calculateTotals($cartItems, ?string $promoCode = null, int $redeemPoints = 0, float $deliveryFee = 0, int $rewardProductPoints = 0): array
     {
         $subtotal = collect($cartItems)->sum(fn ($item) => $item['price'] * $item['quantity']);
         $voucher = $this->voucherFor($promoCode);
@@ -328,7 +349,7 @@ class CartController extends Controller
         return [
             'subtotal' => $subtotal,
             'discount' => $discount,
-            'points_redeemed' => $pointsRedeemed,
+            'points_redeemed' => $pointsRedeemed + $rewardProductPoints,
             'points_discount' => $pointsDiscount,
             'delivery_fee' => $deliveryFee,
             'tax' => 0,
@@ -366,7 +387,10 @@ class CartController extends Controller
             'amount' => (int) round($item->unit_price * $discountMultiplier * 100),
             'name' => $totalDiscount > 0 ? "{$item->product_name} (discount applied)" : $item->product_name,
             'quantity' => $item->quantity,
-        ])->values()->all();
+        ])
+            ->filter(fn ($item) => $item['amount'] > 0)
+            ->values()
+            ->all();
 
         if ($order->delivery_fee > 0) {
             $lineItems[] = [
@@ -415,10 +439,16 @@ class CartController extends Controller
         return $response->json('data.attributes.checkout_url');
     }
 
-    private function createOrder($cart, array $customer, array $totals): Order
+    private function createOrder($cart, array $customer, array $totals, ?Product $rewardProduct = null): Order
     {
-        return DB::transaction(function () use ($cart, $customer, $totals) {
-            $products = Product::whereIn('id', $cart->keys())->lockForUpdate()->get()->keyBy('id');
+        return DB::transaction(function () use ($cart, $customer, $totals, $rewardProduct) {
+            $productIds = $cart->keys();
+
+            if ($rewardProduct) {
+                $productIds = $productIds->push($rewardProduct->id);
+            }
+
+            $products = Product::whereIn('id', $productIds->unique())->lockForUpdate()->get()->keyBy('id');
 
             foreach ($cart as $item) {
                 $product = $products->get($item['id']);
@@ -429,6 +459,14 @@ class CartController extends Controller
 
                 if ($product->stock_quantity < $item['quantity']) {
                     abort(422, "Only {$product->stock_quantity} {$product->name} left in stock.");
+                }
+            }
+
+            if ($rewardProduct) {
+                $lockedRewardProduct = $products->get($rewardProduct->id);
+
+                if (! $lockedRewardProduct || ! $lockedRewardProduct->is_active || $lockedRewardProduct->isOutOfStock()) {
+                    abort(422, 'That reward product is no longer available.');
                 }
             }
 
@@ -476,6 +514,27 @@ class CartController extends Controller
                 $product->decrement('stock_quantity', $item['quantity']);
             }
 
+            if ($rewardProduct) {
+                $lockedRewardProduct = $products->get($rewardProduct->id);
+
+                $order->items()->create([
+                    'product_id' => $lockedRewardProduct->id,
+                    'product_name' => "{$lockedRewardProduct->name} (Reward)",
+                    'unit_price' => 0,
+                    'quantity' => 1,
+                    'line_total' => 0,
+                    'product_snapshot' => [
+                        'image' => $lockedRewardProduct->image,
+                        'category' => $lockedRewardProduct->category,
+                        'reward' => true,
+                        'reward_points' => $customer['reward_product_points'],
+                        'original_price' => $lockedRewardProduct->price,
+                    ],
+                ]);
+
+                $lockedRewardProduct->decrement('stock_quantity');
+            }
+
             return $order;
         });
     }
@@ -508,6 +567,30 @@ class CartController extends Controller
         }
 
         return (int) floor(max(0, $subtotal - $discount - 1) / $pointValue);
+    }
+
+    private function productRewardPointCost(): int
+    {
+        return max(1, (int) config('sugarloom.rewards.product_reward_points', 100));
+    }
+
+    private function rewardProducts()
+    {
+        return Product::active()
+            ->where('stock_quantity', '>', 0)
+            ->orderBy('name')
+            ->get();
+    }
+
+    private function selectedRewardProduct($productId): ?Product
+    {
+        if (blank($productId)) {
+            return null;
+        }
+
+        return Product::active()
+            ->where('stock_quantity', '>', 0)
+            ->find($productId);
     }
 
     private function metroManilaCities(): array
