@@ -360,12 +360,7 @@
                 box-shadow 0.35s ease,
                 border-color 0.35s ease;
     animation: fadeUp 0.6s ease both;
-}
-
-.catalog-card:hover {
-    transform: translateY(-8px) scale(1.015);
-    box-shadow: 0 20px 40px rgba(216,84,123,0.14);
-    border-color: var(--pink-pale);
+    cursor: pointer;
 }
 
 .catalog-img-wrap {
@@ -661,14 +656,15 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const attachCartListeners = () => {
-        document.querySelectorAll('.btn-add-catalog[data-id], .btn-quick-add[data-id], .btn-cart[data-id]').forEach(button => {
+        document.querySelectorAll('.btn-add[data-product-id]:not([data-product-modal]), .btn-add-catalog[data-product-id], .btn-quick-add[data-id], .btn-cart[data-id]').forEach(button => {
             if (!button.disabled) {
                 // Remove existing listeners to avoid duplicates if any
                 const newButton = button.cloneNode(true);
                 button.parentNode.replaceChild(newButton, button);
-                newButton.addEventListener('click', () => {
+                newButton.addEventListener('click', (event) => {
+                    event.stopPropagation();
                     if (typeof window.addToCart === 'function') {
-                        window.addToCart(newButton.dataset.id);
+                        window.addToCart(newButton.dataset.productId || newButton.dataset.id);
                     } else {
                         console.error('addToCart function not found');
                     }

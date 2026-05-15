@@ -427,6 +427,14 @@
         .product-modal__quantity input {
             min-width: 0;
             font-weight: 800;
+            -moz-appearance: textfield;
+            appearance: textfield;
+        }
+
+        .product-modal__quantity input::-webkit-outer-spin-button,
+        .product-modal__quantity input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
         }
 
         .product-modal__add {
