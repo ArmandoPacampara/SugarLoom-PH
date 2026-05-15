@@ -17,7 +17,6 @@ use Illuminate\View\View;
 
 class CartController extends Controller
 {
-    private const TAX_RATE = 0.12;
     private const VOUCHERS = [
         'SWEET10' => [
             'label' => 'SWEET10 voucher',
@@ -228,7 +227,10 @@ class CartController extends Controller
         $validated['address_validation_message'] = $addressValidation['message'];
         $validated['address_validation_overridden'] = ! $addressValidation['valid'] && $request->boolean('address_validation_override');
 
-        $totals = $this->calculateTotals($cart, $promoCode, $redeemPoints);
+        $deliveryFee = $this->estimatedDeliveryFee($validated['city']);
+        $validated['delivery_fee'] = $deliveryFee;
+
+        $totals = $this->calculateTotals($cart, $promoCode, $redeemPoints, $deliveryFee);
         $order = $this->createOrder($cart, $validated, $totals);
         $this->sendOrderNotification($order, 'placed');
 
@@ -298,7 +300,9 @@ class CartController extends Controller
     {
         $cartItems = collect(session('cart', []))->values();
         $promoCode = session('promo_code');
-        $totals = $this->calculateTotals($cartItems, $promoCode);
+        $selectedCity = old('city', auth()->user()?->city);
+        $deliveryFee = $selectedCity ? $this->estimatedDeliveryFee($selectedCity) : 0;
+        $totals = $this->calculateTotals($cartItems, $promoCode, 0, $deliveryFee);
         $voucher = $this->voucherFor($promoCode);
         $metroManilaCities = $this->metroManilaCities();
         $rewardPointBalance = (int) auth()->user()?->reward_points;
@@ -307,7 +311,7 @@ class CartController extends Controller
         return compact('cartItems', 'totals', 'promoCode', 'voucher', 'metroManilaCities', 'rewardPointBalance', 'maxRedeemablePoints');
     }
 
-    private function calculateTotals($cartItems, ?string $promoCode = null, int $redeemPoints = 0): array
+    private function calculateTotals($cartItems, ?string $promoCode = null, int $redeemPoints = 0, float $deliveryFee = 0): array
     {
         $subtotal = collect($cartItems)->sum(fn ($item) => $item['price'] * $item['quantity']);
         $voucher = $this->voucherFor($promoCode);
@@ -317,17 +321,17 @@ class CartController extends Controller
         $pointValue = (float) config('sugarloom.rewards.point_value', 1);
         $pointsDiscount = min($redeemPoints * $pointValue, max(0, $subtotal - $discount - 1));
         $pointsRedeemed = $pointValue > 0 ? (int) floor($pointsDiscount / $pointValue) : 0;
-        $taxableAmount = max(0, $subtotal - $discount - $pointsDiscount);
-        $tax = $taxableAmount > 0 ? round($taxableAmount * self::TAX_RATE) : 0;
-        $total = $taxableAmount + $tax;
+        $netAmount = max(0, $subtotal - $discount - $pointsDiscount);
+        $deliveryFee = max(0, $deliveryFee);
+        $total = $netAmount + $deliveryFee;
 
         return [
             'subtotal' => $subtotal,
             'discount' => $discount,
             'points_redeemed' => $pointsRedeemed,
             'points_discount' => $pointsDiscount,
-            'delivery_fee' => 0,
-            'tax' => $tax,
+            'delivery_fee' => $deliveryFee,
+            'tax' => 0,
             'total' => $total,
             'promo_code' => $voucher ? $promoCode : null,
             'promo_label' => $voucher['label'] ?? null,
@@ -364,11 +368,11 @@ class CartController extends Controller
             'quantity' => $item->quantity,
         ])->values()->all();
 
-        if ($order->tax > 0) {
+        if ($order->delivery_fee > 0) {
             $lineItems[] = [
                 'currency' => 'PHP',
-                'amount' => (int) round($order->tax * 100),
-                'name' => 'Tax',
+                'amount' => (int) round($order->delivery_fee * 100),
+                'name' => 'Estimated delivery fee',
                 'quantity' => 1,
             ];
         }
@@ -509,5 +513,14 @@ class CartController extends Controller
     private function metroManilaCities(): array
     {
         return config('sugarloom.metro_manila_cities', []);
+    }
+
+    private function estimatedDeliveryFee(string $city): float
+    {
+        return (float) data_get(
+            config('sugarloom.delivery_fees.metro_manila', []),
+            $city,
+            config('sugarloom.delivery_fees.default_fee', 160)
+        );
     }
 }

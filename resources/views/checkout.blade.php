@@ -404,6 +404,24 @@
             line-height: 1.5;
         }
 
+        .delivery-status {
+            min-height: 20px;
+            margin-top: 12px;
+            color: var(--muted);
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        .delivery-status.is-error {
+            color: #8b2637;
+            font-weight: 700;
+        }
+
+        .delivery-status.is-ready {
+            color: #1f7a4d;
+            font-weight: 800;
+        }
+
         .discount-row {
             color: #1f7a4d;
             font-weight: 800;
@@ -580,6 +598,11 @@
                         <label for="postal_code">Postal Code</label>
                         <input id="postal_code" name="postal_code" value="{{ old('postal_code', $checkoutUser?->postal_code) }}" placeholder="1000" required>
                     </div>
+                    <div class="field full">
+                        <div class="delivery-status" id="delivery-status">
+                            Delivery fee is estimated from Pinagbuhatan, Pasig City based on your selected city.
+                        </div>
+                    </div>
                 </div>
 
                 <h1 class="payment-title">Payment Method</h1>
@@ -677,12 +700,12 @@
                     </div>
                 @endif
                 <div class="total-row">
-                    <span>Tax</span>
-                    <strong>P{{ number_format($totals['tax'], 0) }}</strong>
+                    <span>Estimated Delivery</span>
+                    <strong id="delivery-fee-display">P{{ number_format($totals['delivery_fee'], 0) }}</strong>
                 </div>
                 <div class="total-row grand-total">
                     <span>Total</span>
-                    <span>P{{ number_format($totals['total'], 0) }}</span>
+                    <span id="grand-total-display">P{{ number_format($totals['total'], 0) }}</span>
                 </div>
                 <form method="POST" action="{{ route('cart.promo') }}">
                     @csrf
@@ -706,5 +729,40 @@ AOS.init({
     duration: 800,
     easing: 'ease-out-cubic'
 });
+
+const checkoutForm = document.getElementById('checkout-form');
+const statusBox = document.getElementById('delivery-status');
+const deliveryFeeDisplay = document.getElementById('delivery-fee-display');
+const grandTotalDisplay = document.getElementById('grand-total-display');
+const citySelect = document.getElementById('city');
+const deliveryFees = @json(config('sugarloom.delivery_fees.metro_manila', []));
+const defaultDeliveryFee = {{ (float) config('sugarloom.delivery_fees.default_fee', 160) }};
+const baseTotal = {{ (float) ($totals['total'] - $totals['delivery_fee']) }};
+
+function formatPeso(value) {
+    return `P${Math.round(value).toLocaleString()}`;
+}
+
+function setDeliveryStatus(message) {
+    statusBox.textContent = message;
+    statusBox.className = 'delivery-status';
+}
+
+function updateEstimatedDelivery() {
+    const city = citySelect?.value || '';
+    const fee = city ? Number(deliveryFees[city] ?? defaultDeliveryFee) : 0;
+
+    deliveryFeeDisplay.textContent = formatPeso(fee);
+    grandTotalDisplay.textContent = formatPeso(baseTotal + fee);
+
+    if (city) {
+        setDeliveryStatus(`Estimated delivery from Pinagbuhatan, Pasig City to ${city}: ${formatPeso(fee)}.`);
+    } else {
+        setDeliveryStatus('Select a Metro Manila city to see the estimated delivery fee.');
+    }
+}
+
+citySelect?.addEventListener('change', updateEstimatedDelivery);
+updateEstimatedDelivery();
 </script>
 @endsection
