@@ -188,7 +188,7 @@ class DashboardController extends Controller
         $orders = Order::with('items')
             ->latest('placed_at')
             ->latest()
-            ->paginate(12);
+            ->paginate(8);
 
         return view('admin.orders', [
             'orders' => $orders,

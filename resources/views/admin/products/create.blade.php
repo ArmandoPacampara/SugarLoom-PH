@@ -92,6 +92,23 @@
             gap: 8px;
         }
 
+        .image-preview {
+            margin-top: 16px;
+            width: 180px;
+            height: 180px;
+            border-radius: 18px;
+            overflow: hidden;
+            border: 1px solid #e5e7eb;
+            background: #fafafa;
+            display: none;
+        }
+
+        .image-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
         input[type="checkbox"] {
             width: 18px;
             height: 18px;
@@ -257,7 +274,10 @@
 
                 <div class="form-group full">
                     <label>Product Image</label>
-                    <input type="file" name="image" accept="image/*">
+                    <input id="productImage" type="file" name="image" accept="image/*">
+                    <div class="image-preview" id="imagePreview">
+                        <img id="imagePreviewImg" src="" alt="Product preview">
+                    </div>
                     <p class="muted" style="margin-top: 8px; font-size: 12px; color: #6b7280;">Recommended size: 800x800px. PNG or JPG.</p>
                     @error('image') <p class="error-message">{{ $message }}</p> @enderror
                 </div>
@@ -284,4 +304,28 @@
         </form>
     </div>
 </div>
+@endsection
+
+@section('scripts')
+    <script>
+        const productImageInput = document.getElementById('productImage');
+        const imagePreview = document.getElementById('imagePreview');
+        const imagePreviewImg = document.getElementById('imagePreviewImg');
+
+        if (productImageInput) {
+            productImageInput.addEventListener('change', function () {
+                const file = this.files?.[0];
+
+                if (!file) {
+                    imagePreview.style.display = 'none';
+                    imagePreviewImg.src = '';
+                    return;
+                }
+
+                const url = URL.createObjectURL(file);
+                imagePreviewImg.src = url;
+                imagePreview.style.display = 'block';
+            });
+        }
+    </script>
 @endsection

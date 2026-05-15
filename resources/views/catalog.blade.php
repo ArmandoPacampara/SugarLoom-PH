@@ -536,15 +536,9 @@
             @else
                 <button
                     class="btn-quick-add"
-                    data-product-modal
-                    data-product-id="{{ $bakersChoice->id }}"
-                    data-product-name="{{ $bakersChoice->name }}"
-                    data-product-description="{{ $bakersChoice->description }}"
-                    data-product-price="{{ $bakersChoice->price }}"
-                    data-product-image="{{ $bakersChoice->image ? asset($bakersChoice->image) : asset('images/placeholder-cookie.png') }}"
-                    data-product-stock="{{ $bakersChoice->stock_quantity }}"
-                    data-product-category="{{ $bakersChoice->category }}"
-                >View Details</button>
+                    data-id="{{ $bakersChoice->id }}"
+                    data-redirect-cart="true"
+                >Add to Cart</button>
             @endif
         </div>
         @endif
@@ -563,19 +557,23 @@
                 @else
                     <button
                         class="btn-cart"
-                        data-product-modal
-                        data-product-id="{{ $topPick->id }}"
-                        data-product-name="{{ $topPick->name }}"
-                        data-product-description="{{ $topPick->description }}"
-                        data-product-price="{{ $topPick->price }}"
-                        data-product-image="{{ $topPick->image ? asset($topPick->image) : asset('images/placeholder-cookie.png') }}"
-                        data-product-stock="{{ $topPick->stock_quantity }}"
-                        data-product-category="{{ $topPick->category }}"
-                    >View Details</button>
+                        data-id="{{ $topPick->id }}"
+                        data-redirect-cart="true"
+                    >Add to Cart</button>
                 @endif
             </div>
         </div>
-        <div class="top-pick-img-wrap">
+        <div
+            class="top-pick-img-wrap"
+            data-product-modal
+            data-product-id="{{ $topPick->id }}"
+            data-product-name="{{ $topPick->name }}"
+            data-product-description="{{ $topPick->description }}"
+            data-product-price="{{ $topPick->price }}"
+            data-product-image="{{ $topPick->image ? asset($topPick->image) : asset('images/placeholder-cookie.png') }}"
+            data-product-stock="{{ $topPick->stock_quantity }}"
+            data-product-category="{{ $topPick->category }}"
+        >
             <img class="top-pick-img" src="{{ $topPick->image ? asset($topPick->image) : asset('images/placeholder-cookie.png') }}" alt="{{ $topPick->name }}">
         </div>
     </section>
@@ -664,7 +662,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 newButton.addEventListener('click', (event) => {
                     event.stopPropagation();
                     if (typeof window.addToCart === 'function') {
-                        window.addToCart(newButton.dataset.productId || newButton.dataset.id);
+                        const redirectToCart = newButton.dataset.redirectCart === 'true';
+                        window.addToCart(newButton.dataset.productId || newButton.dataset.id, undefined, { redirectToCart });
                     } else {
                         console.error('addToCart function not found');
                     }

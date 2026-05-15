@@ -561,7 +561,7 @@
         });
     });
 
-    function addToCart(productId, quantity) {
+    function addToCart(productId, quantity, options = {}) {
         quantity = quantity || 1;
 
         return fetch('/cart/add', {
@@ -583,6 +583,10 @@
             if (data.success) {
                 updateCartCount(data.count || 0);
                 showToast(data.message || 'Added to cart.');
+
+                if (options.redirectToCart) {
+                    window.location.href = '/cart';
+                }
             } else {
                 showToast(data.message || 'Unable to add that item.');
             }

@@ -41,6 +41,7 @@ Route::middleware('auth')->group(function () {
 
 Route::prefix('cart')->name('cart.')->group(function () {
     Route::get('/', [CartController::class, 'index'])->name('index');
+    Route::get('/rewards', [CartController::class, 'rewards'])->name('rewards');
     Route::post('/add', [CartController::class, 'add'])->name('add');
     Route::post('/promo', [CartController::class, 'applyPromo'])->name('promo');
     Route::patch('/{id}', [CartController::class, 'update'])->name('update');
