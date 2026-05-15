@@ -131,7 +131,8 @@
             margin-bottom: 10px;
         }
 
-        input {
+        input,
+        select {
             width: 100%;
             border: 0;
             background: var(--panel-soft);
@@ -142,7 +143,13 @@
             outline: 2px solid transparent;
         }
 
-        input:focus { outline-color: #f3a5b4; }
+        input:focus,
+        select:focus { outline-color: #f3a5b4; }
+
+        select {
+            appearance: auto;
+            cursor: pointer;
+        }
 
         .payment-title {
             margin-top: 48px;
@@ -151,7 +158,7 @@
 
         .payment-options {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
+            grid-template-columns: repeat(2, 1fr);
             gap: 16px;
         }
 
@@ -527,7 +534,12 @@
                     </div>
                     <div class="field">
                         <label for="city">City</label>
-                        <input id="city" name="city" value="{{ old('city', $checkoutUser?->city) }}" placeholder="Manila" required>
+                        <select id="city" name="city" required>
+                            <option value="">Select a Metro Manila city</option>
+                            @foreach($metroManilaCities as $metroCity)
+                                <option value="{{ $metroCity }}" @selected(old('city', $checkoutUser?->city) === $metroCity)>{{ $metroCity }}</option>
+                            @endforeach
+                        </select>
                     </div>
                     <div class="field">
                         <label for="postal_code">Postal Code</label>
@@ -549,13 +561,6 @@
                         <span class="payment-card">
                             <svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"></rect><path d="M8 12h8M12 8v8"></path></svg>
                             GCash
-                        </span>
-                    </label>
-                    <label class="payment-option">
-                        <input type="radio" name="payment_method" value="cod" @checked(old('payment_method') === 'cod')>
-                        <span class="payment-card">
-                            <svg viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="10" rx="2"></rect><circle cx="12" cy="12" r="2"></circle><path d="M7 7V5h10v2"></path></svg>
-                            COD
                         </span>
                     </label>
                 </div>
@@ -614,10 +619,6 @@
                         <strong>-P{{ number_format($totals['discount'], 0) }}</strong>
                     </div>
                 @endif
-                <div class="total-row">
-                    <span>Delivery Fee</span>
-                    <strong>P{{ number_format($totals['delivery_fee'], 0) }}</strong>
-                </div>
                 <div class="total-row">
                     <span>Tax</span>
                     <strong>P{{ number_format($totals['tax'], 0) }}</strong>

@@ -11,11 +11,11 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class CartController extends Controller
 {
-    private const DELIVERY_FEE = 150;
     private const TAX_RATE = 0.12;
     private const VOUCHERS = [
         'SWEET10' => [
@@ -180,9 +180,9 @@ class CartController extends Controller
             'email' => ['required', 'email', 'max:120'],
             'phone' => ['required', 'string', 'max:30'],
             'shipping_address' => ['required', 'string', 'max:255'],
-            'city' => ['required', 'string', 'max:80'],
+            'city' => ['required', 'string', 'max:80', Rule::in($this->metroManilaCities())],
             'postal_code' => ['required', 'string', 'max:20'],
-            'payment_method' => ['required', 'in:card,gcash,cod'],
+            'payment_method' => ['required', 'in:card,gcash'],
             'promo_code' => ['nullable', 'string', 'max:40'],
         ]);
 
@@ -201,14 +201,6 @@ class CartController extends Controller
             'latest_order_id' => $order->id,
             'latest_order_number' => $order->order_number,
         ]);
-
-        if ($validated['payment_method'] === 'cod') {
-            session()->forget(['cart', 'promo_code']);
-
-            return redirect()
-                ->route('track-order', ['tracking_number' => $order->order_number])
-                ->with('status', 'Order confirmed for cash on delivery.');
-        }
 
         $checkoutUrl = $this->createPayMongoCheckoutSession($order);
         session(['paymongo_checkout_url' => $checkoutUrl]);
@@ -261,8 +253,9 @@ class CartController extends Controller
         $promoCode = session('promo_code');
         $totals = $this->calculateTotals($cartItems, $promoCode);
         $voucher = $this->voucherFor($promoCode);
+        $metroManilaCities = $this->metroManilaCities();
 
-        return compact('cartItems', 'totals', 'promoCode', 'voucher');
+        return compact('cartItems', 'totals', 'promoCode', 'voucher', 'metroManilaCities');
     }
 
     private function calculateTotals($cartItems, ?string $promoCode = null): array
@@ -272,15 +265,14 @@ class CartController extends Controller
         $discount = $voucher && $subtotal > 0
             ? round($subtotal * ($voucher['value'] / 100))
             : 0;
-        $deliveryFee = $subtotal > 0 ? self::DELIVERY_FEE : 0;
         $taxableAmount = max(0, $subtotal - $discount);
         $tax = $taxableAmount > 0 ? round($taxableAmount * self::TAX_RATE) : 0;
-        $total = $taxableAmount + $deliveryFee + $tax;
+        $total = $taxableAmount + $tax;
 
         return [
             'subtotal' => $subtotal,
             'discount' => $discount,
-            'delivery_fee' => $deliveryFee,
+            'delivery_fee' => 0,
             'tax' => $tax,
             'total' => $total,
             'promo_code' => $voucher ? $promoCode : null,
@@ -316,15 +308,6 @@ class CartController extends Controller
             'name' => $order->discount > 0 ? "{$item->product_name} ({$order->promo_code} applied)" : $item->product_name,
             'quantity' => $item->quantity,
         ])->values()->all();
-
-        if ($order->delivery_fee > 0) {
-            $lineItems[] = [
-                'currency' => 'PHP',
-                'amount' => (int) round($order->delivery_fee * 100),
-                'name' => 'Delivery Fee',
-                'quantity' => 1,
-            ];
-        }
 
         if ($order->tax > 0) {
             $lineItems[] = [
@@ -445,5 +428,28 @@ class CartController extends Controller
     private function sendOrderNotification(Order $order, string $notificationType): void
     {
         Mail::to($order->customer_email)->send(new OrderStatusNotification($order, $notificationType));
+    }
+
+    private function metroManilaCities(): array
+    {
+        return [
+            'Quezon City',
+            'Manila',
+            'Makati',
+            'Pasig',
+            'Taguig',
+            'Pasay',
+            'Mandaluyong',
+            'Marikina',
+            'Paranaque',
+            'Las Pinas',
+            'Muntinlupa',
+            'San Juan',
+            'Caloocan',
+            'Malabon',
+            'Navotas',
+            'Valenzuela',
+            'Pateros',
+        ];
     }
 }
