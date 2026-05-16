@@ -170,7 +170,6 @@ class CartController extends Controller
             return redirect()->route('cart.index')->withErrors(['cart' => 'Add at least one item before checking out.']);
         }
 
-        // Validate stock before processing checkout
         foreach ($cart as $item) {
             $product = Product::find($item['id']);
             if (!$product || $product->isOutOfStock()) {
@@ -259,18 +258,25 @@ class CartController extends Controller
         $validated['reward_product_points'] = $rewardProductPoints;
 
         $totals = $this->calculateTotals($cart, $promoCode, $redeemPoints, $deliveryFee, $rewardProductPoints);
-        $order = $this->createOrder($cart, $validated, $totals, $rewardProduct);
-        $this->sendOrderNotification($order, 'placed');
+        
+        try {
+            $order = $this->createOrder($cart, $validated, $totals, $rewardProduct);
+            
+            $this->sendOrderNotification($order, 'placed');
 
-        session([
-            'latest_order_id' => $order->id,
-            'latest_order_number' => $order->order_number,
-        ]);
+            session([
+                'latest_order_id' => $order->id,
+                'latest_order_number' => $order->order_number,
+            ]);
 
-        $checkoutUrl = $this->createPayMongoCheckoutSession($order);
-        session(['paymongo_checkout_url' => $checkoutUrl]);
+            $checkoutUrl = $this->createPayMongoCheckoutSession($order);
+            session(['paymongo_checkout_url' => $checkoutUrl]);
 
-        return redirect()->away($checkoutUrl);
+            return redirect()->away($checkoutUrl);
+            
+        } catch (\Exception $e) {
+            return redirect()->route('cart.index')->with('error', $e->getMessage());
+        }
     }
 
     public function paymongoSuccess(): RedirectResponse
@@ -391,7 +397,9 @@ class CartController extends Controller
     {
         $secretKey = config('services.paymongo.secret_key');
 
-        abort_if(blank($secretKey), 500, 'PayMongo secret key is not configured.');
+        if (blank($secretKey)) {
+             throw new \Exception('Payment gateway configuration is missing.');
+        }
 
         $order->loadMissing('items');
         $subtotal = max(1, $order->items->sum(fn ($item) => $item->unit_price * $item->quantity));
@@ -449,7 +457,7 @@ class CartController extends Controller
 
         if ($response->failed()) {
             report('PayMongo checkout failed: ' . $response->body());
-            abort(502, 'Unable to start PayMongo checkout. Please try again.');
+            throw new \Exception('Unable to start payment checkout right now. Please try again later.');
         }
 
         return $response->json('data.attributes.checkout_url');
@@ -470,11 +478,11 @@ class CartController extends Controller
                 $product = $products->get($item['id']);
 
                 if (! $product || ! $product->is_active) {
-                    abort(422, "{$item['name']} is no longer available.");
+                    throw new \Exception("{$item['name']} is no longer available.");
                 }
 
                 if ($product->stock_quantity < $item['quantity']) {
-                    abort(422, "Only {$product->stock_quantity} {$product->name} left in stock.");
+                    throw new \Exception("Only {$product->stock_quantity} {$product->name} left in stock.");
                 }
             }
 
@@ -482,7 +490,7 @@ class CartController extends Controller
                 $lockedRewardProduct = $products->get($rewardProduct->id);
 
                 if (! $lockedRewardProduct || ! $lockedRewardProduct->is_active || $lockedRewardProduct->isOutOfStock()) {
-                    abort(422, 'That reward product is no longer available.');
+                    throw new \Exception('That reward product is no longer available.');
                 }
             }
 
@@ -566,7 +574,11 @@ class CartController extends Controller
 
     private function sendOrderNotification(Order $order, string $notificationType): void
     {
-        Mail::to($order->customer_email)->send(new OrderStatusNotification($order, $notificationType));
+        try {
+            Mail::to($order->customer_email)->send(new OrderStatusNotification($order, $notificationType));
+        } catch (\Throwable $e) {
+            report($e); // Logs the email failure but prevents the checkout from crashing
+        }
     }
 
     /**
