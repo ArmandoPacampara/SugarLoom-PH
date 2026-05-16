@@ -685,7 +685,7 @@
         </div>
     @endif
 
-    @if($cartItems->isEmpty())
+    @if($cartItems->isEmpty() && !$selectedRewardId)
         <section class="empty-state" data-aos="zoom-in">
             <h1>Your cart is waiting for something sweet.</h1>
             <p>Add your favorite SugarLoom treats from the catalog, then come back here to check out.</p>
@@ -763,6 +763,36 @@
                             value="{{ old('redeem_points', 0) }}"
                             placeholder="0"
                         >
+
+                        @if($rewardPointBalance >= $productRewardPointCost)
+                            <div style="margin-top: 24px;">
+                                <label>Redeem a Free Product</label>
+                                <p class="points-balance">Choose one free item to add to your order for {{ number_format($productRewardPointCost) }} points.</p>
+                                <div class="reward-grid">
+                                    @foreach($rewardProducts as $rewardProduct)
+                                        <label class="reward-option">
+                                            <input type="radio" name="reward_product_id" value="{{ $rewardProduct->id }}" @checked(old('reward_product_id', $selectedRewardId) == $rewardProduct->id)>
+                                            <span class="reward-card" style="background: white;">
+                                                <img src="{{ $imageFor(['name' => $rewardProduct->name, 'image' => $rewardProduct->image]) }}" class="reward-image" alt="{{ $rewardProduct->name }}">
+                                                <div class="reward-details">
+                                                    <div class="reward-name">{{ $rewardProduct->name }}</div>
+                                                    <div class="reward-meta">{{ number_format($productRewardPointCost) }} pts</div>
+                                                </div>
+                                            </span>
+                                        </label>
+                                    @endforeach
+                                    <label class="reward-option">
+                                        <input type="radio" name="reward_product_id" value="" @checked(!old('reward_product_id', $selectedRewardId))>
+                                        <span class="reward-card" style="background: white;">
+                                            <div class="reward-details">
+                                                <div class="reward-name">No reward product</div>
+                                                <div class="reward-meta">Don't redeem points for a product</div>
+                                            </div>
+                                        </span>
+                                    </label>
+                                </div>
+                            </div>
+                        @endif
                     </div>
                 @endauth
                 <div class="payment-options">
@@ -867,6 +897,17 @@
                         <div class="item-price">P{{ number_format($item['price'] * $item['quantity'], 0) }}</div>
                     </div>
                 @endforeach
+
+                @if($selectedRewardId && $rewardProduct = $rewardProducts->firstWhere('id', $selectedRewardId))
+                    <div class="cart-item" style="border: 1px dashed var(--rose); padding: 10px; border-radius: 12px; margin-top: 10px;">
+                        <img src="{{ $imageFor(['name' => $rewardProduct->name, 'image' => $rewardProduct->image]) }}" alt="{{ $rewardProduct->name }}">
+                        <div>
+                            <div class="item-name">{{ $rewardProduct->name }} (Reward)</div>
+                            <div class="item-desc">Redeemed with {{ number_format($productRewardPointCost) }} points</div>
+                        </div>
+                        <div class="item-price" style="color: #1f7a4d;">FREE</div>
+                    </div>
+                @endif
 
                 <hr class="summary-divider">
 

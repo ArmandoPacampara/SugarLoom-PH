@@ -267,7 +267,10 @@
                 <div class="reward-actions">
                     @auth
                         @if($rewardPointBalance >= $productRewardPointCost)
-                            <a href="{{ route('cart.index') }}" class="btn-primary">Choose at Checkout</a>
+                            <form action="{{ route('cart.redeem', $rewardProduct) }}" method="POST">
+                                @csrf
+                                <button type="submit" class="btn-primary" style="width: 100%; border: none; cursor: pointer;">Redeem Now</button>
+                            </form>
                         @else
                             <span class="btn-disabled">Need {{ number_format($productRewardPointCost - $rewardPointBalance) }} more points</span>
                         @endif

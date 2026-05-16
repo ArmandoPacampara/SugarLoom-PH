@@ -132,9 +132,31 @@ class CartController extends Controller
 
     public function clear(): RedirectResponse
     {
-        session()->forget(['cart', 'promo_code']);
+        session()->forget(['cart', 'promo_code', 'reward_product_id']);
 
         return redirect()->route('cart.index')->with('status', 'Your cart is now empty.');
+    }
+
+    public function redeem(Product $product): RedirectResponse
+    {
+        if (! auth()->check()) {
+            return redirect()->route('login');
+        }
+
+        $user = auth()->user();
+        $cost = $this->productRewardPointCost();
+
+        if ($user->reward_points < $cost) {
+            return redirect()->back()->with('error', 'You do not have enough points to redeem this reward.');
+        }
+
+        if ($product->isOutOfStock()) {
+            return redirect()->back()->with('error', 'This reward product is currently out of stock.');
+        }
+
+        session(['reward_product_id' => $product->id]);
+
+        return redirect()->route('cart.index')->with('status', "{$product->name} has been selected as your reward! Complete your checkout to claim it.");
     }
 
     public function applyPromo(Request $request): RedirectResponse
@@ -165,9 +187,10 @@ class CartController extends Controller
     public function checkout(Request $request): RedirectResponse
     {
         $cart = collect(session('cart', []));
+        $rewardProductId = $request->input('reward_product_id');
 
-        if ($cart->isEmpty()) {
-            return redirect()->route('cart.index')->withErrors(['cart' => 'Add at least one item before checking out.']);
+        if ($cart->isEmpty() && !$rewardProductId) {
+            return redirect()->route('cart.index')->withErrors(['cart' => 'Add at least one item or select a reward before checking out.']);
         }
 
         foreach ($cart as $item) {
@@ -281,7 +304,7 @@ class CartController extends Controller
 
     public function paymongoSuccess(): RedirectResponse
     {
-        session()->forget(['cart', 'promo_code']);
+        session()->forget(['cart', 'promo_code', 'reward_product_id']);
 
         if ($orderId = session('latest_order_id')) {
             DB::transaction(function () use ($orderId) {
@@ -348,6 +371,7 @@ class CartController extends Controller
         $maxRedeemablePoints = min($rewardPointBalance, $this->maxRedeemablePoints($cartItems, $promoCode));
         $rewardProducts = $this->rewardProducts();
         $productRewardPointCost = $this->productRewardPointCost();
+        $selectedRewardId = session('reward_product_id');
 
         $activeOrders = collect();
         if ($checkoutUser) {
@@ -357,7 +381,7 @@ class CartController extends Controller
                 ->get();
         }
 
-        return compact('cartItems', 'totals', 'promoCode', 'voucher', 'metroManilaCities', 'rewardPointBalance', 'maxRedeemablePoints', 'rewardProducts', 'productRewardPointCost', 'activeOrders');
+        return compact('cartItems', 'totals', 'promoCode', 'voucher', 'metroManilaCities', 'rewardPointBalance', 'maxRedeemablePoints', 'rewardProducts', 'productRewardPointCost', 'activeOrders', 'selectedRewardId');
     }
 
     private function refreshCartImages(Collection $cartItems): Collection

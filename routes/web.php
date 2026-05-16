@@ -52,6 +52,7 @@ Route::prefix('cart')->name('cart.')->group(function () {
     Route::patch('/{id}', [CartController::class, 'update'])->name('update');
     Route::delete('/{id}', [CartController::class, 'remove'])->name('remove');
     Route::delete('/', [CartController::class, 'clear'])->name('clear');
+    Route::post('/redeem/{product}', [CartController::class, 'redeem'])->name('redeem');
 });
 
 Route::post('/checkout', [CartController::class, 'checkout'])->name('checkout.process');

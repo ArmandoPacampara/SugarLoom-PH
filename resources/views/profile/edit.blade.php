@@ -219,7 +219,10 @@
             
             @if($user->isCustomer())
                 <div class="points-card">
-                    Reward Points Balance
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span>Reward Points Balance</span>
+                        <a href="{{ route('cart.rewards') }}" style="font-size: 13px; color: #7c2d12; font-weight: bold;">View Rewards →</a>
+                    </div>
                     <strong>{{ number_format($user->reward_points) }}</strong>
                 </div>
             @endif
