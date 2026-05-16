@@ -187,7 +187,7 @@ class CartController extends Controller
     public function checkout(Request $request): RedirectResponse
     {
         $cart = collect(session('cart', []));
-        $rewardProductId = $request->input('reward_product_id');
+        $rewardProductId = session('reward_product_id');
 
         if ($cart->isEmpty() && !$rewardProductId) {
             return redirect()->route('cart.index')->withErrors(['cart' => 'Add at least one item or select a reward before checking out.']);
@@ -213,7 +213,6 @@ class CartController extends Controller
             'payment_method' => ['required', 'in:card,gcash'],
             'promo_code' => ['nullable', 'string', 'max:40'],
             'redeem_points' => ['nullable', 'integer', 'min:0'],
-            'reward_product_id' => ['nullable', 'integer', 'exists:products,id'],
             'address_validation_override' => ['nullable', 'boolean'],
         ]);
 
@@ -225,7 +224,7 @@ class CartController extends Controller
 
         $validated['promo_code'] = $promoCode ?: null;
         $redeemPoints = (int) ($validated['redeem_points'] ?? 0);
-        $rewardProduct = $this->selectedRewardProduct($validated['reward_product_id'] ?? null);
+        $rewardProduct = $this->selectedRewardProduct($rewardProductId);
         $rewardProductPoints = $rewardProduct ? $this->productRewardPointCost() : 0;
         $totalPointsRedeemed = $redeemPoints + $rewardProductPoints;
 

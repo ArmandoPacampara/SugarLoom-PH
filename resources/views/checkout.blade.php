@@ -763,36 +763,6 @@
                             value="{{ old('redeem_points', 0) }}"
                             placeholder="0"
                         >
-
-                        @if($rewardPointBalance >= $productRewardPointCost)
-                            <div style="margin-top: 24px;">
-                                <label>Redeem a Free Product</label>
-                                <p class="points-balance">Choose one free item to add to your order for {{ number_format($productRewardPointCost) }} points.</p>
-                                <div class="reward-grid">
-                                    @foreach($rewardProducts as $rewardProduct)
-                                        <label class="reward-option">
-                                            <input type="radio" name="reward_product_id" value="{{ $rewardProduct->id }}" @checked(old('reward_product_id', $selectedRewardId) == $rewardProduct->id)>
-                                            <span class="reward-card" style="background: white;">
-                                                <img src="{{ $imageFor(['name' => $rewardProduct->name, 'image' => $rewardProduct->image]) }}" class="reward-image" alt="{{ $rewardProduct->name }}">
-                                                <div class="reward-details">
-                                                    <div class="reward-name">{{ $rewardProduct->name }}</div>
-                                                    <div class="reward-meta">{{ number_format($productRewardPointCost) }} pts</div>
-                                                </div>
-                                            </span>
-                                        </label>
-                                    @endforeach
-                                    <label class="reward-option">
-                                        <input type="radio" name="reward_product_id" value="" @checked(!old('reward_product_id', $selectedRewardId))>
-                                        <span class="reward-card" style="background: white;">
-                                            <div class="reward-details">
-                                                <div class="reward-name">No reward product</div>
-                                                <div class="reward-meta">Don't redeem points for a product</div>
-                                            </div>
-                                        </span>
-                                    </label>
-                                </div>
-                            </div>
-                        @endif
                     </div>
                 @endauth
                 <div class="payment-options">
