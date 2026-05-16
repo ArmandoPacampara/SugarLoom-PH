@@ -216,12 +216,14 @@
     <div @class(['grid-2' => $user->isCustomer()])>
         <div class="card">
             <h3>Profile Details</h3>
+            
             @if($user->isCustomer())
                 <div class="points-card">
                     Reward Points Balance
                     <strong>{{ number_format($user->reward_points) }}</strong>
                 </div>
             @endif
+            
             <form method="POST" action="{{ route('profile.update') }}">
                 @csrf
                 @method('patch')
@@ -236,30 +238,32 @@
                     <input id="email" type="email" name="email" value="{{ old('email', $user->email) }}" required>
                 </div>
 
-                <div class="form-group">
-                    <label for="phone">Mobile Number</label>
-                    <input id="phone" type="text" name="phone" value="{{ old('phone', $user->phone) }}" required>
-                </div>
+                @if($user->isCustomer())
+                    <div class="form-group">
+                        <label for="phone">Mobile Number</label>
+                        <input id="phone" type="text" name="phone" value="{{ old('phone', $user->phone) }}" required>
+                    </div>
 
-                <div class="form-group">
-                    <label for="shipping_address">Shipping Address</label>
-                    <input id="shipping_address" type="text" name="shipping_address" value="{{ old('shipping_address', $user->shipping_address) }}" required>
-                </div>
+                    <div class="form-group">
+                        <label for="shipping_address">Shipping Address</label>
+                        <input id="shipping_address" type="text" name="shipping_address" value="{{ old('shipping_address', $user->shipping_address) }}" required>
+                    </div>
 
-                <div class="form-group">
-                    <label for="city">City</label>
-                    <select id="city" name="city" required>
-                        <option value="">Select a Metro Manila city</option>
-                        @foreach($metroManilaCities as $metroCity)
-                            <option value="{{ $metroCity }}" @selected(old('city', $user->city) === $metroCity)>{{ $metroCity }}</option>
-                        @endforeach
-                    </select>
-                </div>
+                    <div class="form-group">
+                        <label for="city">City</label>
+                        <select id="city" name="city" required>
+                            <option value="">Select a Metro Manila city</option>
+                            @foreach($metroManilaCities as $metroCity)
+                                <option value="{{ $metroCity }}" @selected(old('city', $user->city) === $metroCity)>{{ $metroCity }}</option>
+                            @endforeach
+                        </select>
+                    </div>
 
-                <div class="form-group">
-                    <label for="postal_code">Postal Code</label>
-                    <input id="postal_code" type="text" name="postal_code" value="{{ old('postal_code', $user->postal_code) }}" required>
-                </div>
+                    <div class="form-group">
+                        <label for="postal_code">Postal Code</label>
+                        <input id="postal_code" type="text" name="postal_code" value="{{ old('postal_code', $user->postal_code) }}" required>
+                    </div>
+                @endif
 
                 <button type="submit" class="btn-primary" style="margin-top: 10px;">Save Changes</button>
             </form>
