@@ -374,6 +374,7 @@ class DashboardController extends Controller
             $order->update($updates);
 
             if ($previousStatus !== $newStatus && in_array($newStatus, [
+                Order::STATUS_PREPARING,
                 Order::STATUS_OUT_FOR_DELIVERY,
                 Order::STATUS_CANCELLED,
                 Order::STATUS_DELIVERED,

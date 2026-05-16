@@ -349,7 +349,15 @@ class CartController extends Controller
         $rewardProducts = $this->rewardProducts();
         $productRewardPointCost = $this->productRewardPointCost();
 
-        return compact('cartItems', 'totals', 'promoCode', 'voucher', 'metroManilaCities', 'rewardPointBalance', 'maxRedeemablePoints', 'rewardProducts', 'productRewardPointCost');
+        $activeOrders = collect();
+        if ($checkoutUser) {
+            $activeOrders = Order::where('user_id', $checkoutUser->id)
+                ->whereIn('status', [Order::STATUS_PENDING, Order::STATUS_PREPARING, Order::STATUS_OUT_FOR_DELIVERY])
+                ->latest()
+                ->get();
+        }
+
+        return compact('cartItems', 'totals', 'promoCode', 'voucher', 'metroManilaCities', 'rewardPointBalance', 'maxRedeemablePoints', 'rewardProducts', 'productRewardPointCost', 'activeOrders');
     }
 
     private function refreshCartImages(Collection $cartItems): Collection

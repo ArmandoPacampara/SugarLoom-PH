@@ -276,46 +276,84 @@
 
         @if($user->isCustomer())
             <div class="card">
-                <h3>Recent Purchases</h3>
+                <h3>Order History</h3>
 
-                @forelse($orders as $order)
-                    <div class="order-item">
-                        <div class="order-header">
-                            <span class="order-id">{{ $order->order_number }}</span>
-                            <span @class([
-                                'badge',
-                                'green' => $order->status === \App\Models\Order::STATUS_DELIVERED,
-                                'blue' => $order->status === \App\Models\Order::STATUS_PREPARING || $order->status === \App\Models\Order::STATUS_OUT_FOR_DELIVERY,
-                                'yellow' => $order->status === \App\Models\Order::STATUS_PENDING,
-                                'red' => $order->status === \App\Models\Order::STATUS_CANCELLED,
-                            ])>{{ $order->status_label }}</span>
-                        </div>
-                        <div class="order-header">
-                            <p class="order-desc">{{ $order->items_summary }}</p>
-                            <span class="order-price">PHP {{ number_format($order->total, 2) }}</span>
-                        </div>
-                        <p class="order-desc" style="font-size: 12px; margin-top: 8px;">Placed on {{ $order->placed_at?->format('F j, Y') }}</p>
-                        
-                        <div style="display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap; align-items: center;">
-                            <a href="{{ route('track-order', ['tracking_number' => $order->order_number]) }}" style="font-size: 12px; color: #fb7185; text-decoration: none;">Track this order</a>
-                            
-                            @if($order->status === \App\Models\Order::STATUS_DELIVERED)
-                                @if($order->rating)
-                                    <span class="rating-badge">
-                                        ★ {{ $order->rating }}/5 - Rated
-                                    </span>
-                                    @if($order->review_reward_points_awarded)
-                                        <span class="rating-badge">+{{ $order->review_reward_points }} pts</span>
+                @php
+                    $activeOrders = $orders->filter(fn($o) => in_array($o->status, [\App\Models\Order::STATUS_PENDING, \App\Models\Order::STATUS_PREPARING, \App\Models\Order::STATUS_OUT_FOR_DELIVERY]));
+                    $pastOrders = $orders->filter(fn($o) => in_array($o->status, [\App\Models\Order::STATUS_DELIVERED, \App\Models\Order::STATUS_CANCELLED]));
+                @endphp
+
+                @if($activeOrders->isNotEmpty())
+                    <h4 style="font-size: 14px; text-transform: uppercase; color: #9ca3af; margin: 20px 0 10px; letter-spacing: 0.05em;">In Progress</h4>
+                    @foreach($activeOrders as $order)
+                        <div class="order-item" style="border-left: 4px solid var(--pink-nav);">
+                            <div class="order-header">
+                                <span class="order-id">{{ $order->order_number }}</span>
+                                <span @class([
+                                    'badge',
+                                    'blue' => $order->status === \App\Models\Order::STATUS_PREPARING || $order->status === \App\Models\Order::STATUS_OUT_FOR_DELIVERY,
+                                    'yellow' => $order->status === \App\Models\Order::STATUS_PENDING,
+                                ])>{{ $order->status_label }}</span>
+                            </div>
+                            <div class="order-header">
+                                <p class="order-desc">{{ $order->items_summary }}</p>
+                                <span class="order-price">PHP {{ number_format($order->total, 2) }}</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 12px;">
+                                <div style="display: flex; gap: 15px;">
+                                    <a href="{{ route('track-order', ['tracking_number' => $order->order_number]) }}" style="font-size: 13px; color: #fb7185; text-decoration: none; font-weight: 600;">Track Order</a>
+                                    @if($order->status === \App\Models\Order::STATUS_PENDING)
+                                        <form action="{{ route('order.cancel', $order) }}" method="POST" onsubmit="return confirm('Are you sure you want to cancel this order?')">
+                                            @csrf
+                                            <button type="submit" style="background: none; border: none; padding: 0; font-size: 13px; color: #9ca3af; cursor: pointer; text-decoration: underline;">Cancel Order</button>
+                                        </form>
                                     @endif
-                                @else
-                                    <button type="button" class="btn-rate" data-order-id="{{ $order->id }}">Rate Order</button>
-                                @endif
-                            @endif
+                                </div>
+                                <span style="font-size: 11px; color: #9ca3af;">{{ $order->placed_at?->diffForHumans() }}</span>
+                            </div>
                         </div>
+                    @endforeach
+                @endif
+
+                @if($pastOrders->isNotEmpty())
+                    <h4 style="font-size: 14px; text-transform: uppercase; color: #9ca3af; margin: 30px 0 10px; letter-spacing: 0.05em;">Past Orders</h4>
+                    @foreach($pastOrders as $order)
+                        <div class="order-item" style="opacity: 0.8;">
+                            <div class="order-header">
+                                <span class="order-id">{{ $order->order_number }}</span>
+                                <span @class([
+                                    'badge',
+                                    'green' => $order->status === \App\Models\Order::STATUS_DELIVERED,
+                                    'red' => $order->status === \App\Models\Order::STATUS_CANCELLED,
+                                ])>{{ $order->status_label }}</span>
+                            </div>
+                            <div class="order-header">
+                                <p class="order-desc">{{ $order->items_summary }}</p>
+                                <span class="order-price">PHP {{ number_format($order->total, 2) }}</span>
+                            </div>
+                            
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
+                                <div style="display: flex; gap: 10px; align-items: center;">
+                                    @if($order->status === \App\Models\Order::STATUS_DELIVERED)
+                                        @if($order->rating)
+                                            <span class="rating-badge">★ {{ $order->rating }}/5 Rated</span>
+                                        @else
+                                            <button type="button" class="btn-rate" data-order-id="{{ $order->id }}">Rate Order</button>
+                                        @endif
+                                    @endif
+                                </div>
+                                <span style="font-size: 11px; color: #9ca3af;">{{ $order->placed_at?->format('M j, Y') }}</span>
+                            </div>
+                        </div>
+                    @endforeach
+                @endif
+
+                @if($orders->isEmpty())
+                    <div style="text-align: center; padding: 40px 0;">
+                        <p style="color: #9ca3af;">No orders found.</p>
+                        <a href="{{ route('catalog') }}" style="color: #fb7185; text-decoration: none; font-weight: 600;">Browse Catalog</a>
                     </div>
-                @empty
-                    <p class="order-desc">No orders yet.</p>
-                @endforelse
+                @endif
             </div>
         @endif
     </div>

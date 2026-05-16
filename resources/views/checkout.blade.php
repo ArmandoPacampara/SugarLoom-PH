@@ -785,6 +785,35 @@
                 <button class="confirm-button" type="submit">Confirm Order</button>
                 <p class="terms">By clicking "Confirm Order", you agree to our Terms of Service.</p>
                 </form>
+
+                @if($activeOrders->isNotEmpty())
+                    <div style="margin-top: 60px; padding: 30px; background: white; border-radius: 28px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
+                        <h2 style="font-size: 20px; margin-bottom: 20px; color: var(--rose);">Orders In Progress</h2>
+                        <div style="display: grid; gap: 16px;">
+                            @foreach($activeOrders as $order)
+                                <div style="display: flex; justify-content: space-between; align-items: center; padding: 16px; border: 1px solid #fceef0; border-radius: 18px;">
+                                    <div>
+                                        <div style="font-weight: 800; font-size: 15px; margin-bottom: 4px;">{{ $order->order_number }}</div>
+                                        <div style="font-size: 13px; color: var(--muted);">{{ $order->items_summary }}</div>
+                                        <div style="display: flex; gap: 12px; margin-top: 8px;">
+                                            <a href="{{ route('track-order', ['tracking_number' => $order->order_number]) }}" style="font-size: 12px; color: var(--rose); text-decoration: none; font-weight: 700;">Track Order</a>
+                                            @if($order->status === \App\Models\Order::STATUS_PENDING)
+                                                <form action="{{ route('order.cancel', $order) }}" method="POST" onsubmit="return confirm('Are you sure you want to cancel this order?')">
+                                                    @csrf
+                                                    <button type="submit" style="background: none; border: none; padding: 0; font-size: 12px; color: #9ca3af; cursor: pointer; text-decoration: underline;">Cancel</button>
+                                                </form>
+                                            @endif
+                                        </div>
+                                    </div>
+                                    <div style="text-align: right;">
+                                        <span style="display: inline-block; padding: 4px 10px; border-radius: 99px; font-size: 11px; font-weight: 800; background: #fff1f2; color: var(--rose);">{{ $order->status_label }}</span>
+                                        <div style="font-size: 11px; color: #9ca3af; margin-top: 6px;">{{ $order->placed_at?->diffForHumans() }}</div>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                @endif
             </section>
 
             <aside class="summary" data-aos="fade-left">

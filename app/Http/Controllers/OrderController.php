@@ -62,4 +62,38 @@ class OrderController extends Controller
 
         return redirect()->back()->with('success', "Thank you for your rating! {$rewardPoints} reward points were added to your account.");
     }
+
+    /**
+     * Cancel a pending order
+     */
+    public function cancel(Order $order)
+    {
+        if (! auth()->check() || $order->user_id !== auth()->id()) {
+            return redirect()->back()->with('error', 'Unauthorized access.');
+        }
+
+        if ($order->status !== Order::STATUS_PENDING) {
+            return redirect()->back()->with('error', 'Only pending orders can be cancelled.');
+        }
+
+        DB::transaction(function () use ($order) {
+            $lockedOrder = Order::whereKey($order->id)->lockForUpdate()->firstOrFail();
+
+            if ($lockedOrder->status !== Order::STATUS_PENDING) {
+                return;
+            }
+
+            // Restore stock
+            $lockedOrder->loadMissing('items.product');
+            foreach ($lockedOrder->items as $item) {
+                $item->product?->increment('stock_quantity', $item->quantity);
+            }
+
+            $lockedOrder->update([
+                'status' => Order::STATUS_CANCELLED,
+            ]);
+        });
+
+        return redirect()->back()->with('success', 'Your order has been cancelled.');
+    }
 }
