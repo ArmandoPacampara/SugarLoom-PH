@@ -4,7 +4,6 @@ namespace App\Services;
 
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
-use RuntimeException;
 
 class LalamoveService
 {
@@ -16,11 +15,17 @@ class LalamoveService
         $pickupLng = config('services.lalamove.pickup_lng');
 
         if (blank($apiKey) || blank($apiSecret)) {
-            throw new RuntimeException('Lalamove API credentials are not configured.');
+            return [
+                'success' => false,
+                'message' => 'Lalamove API credentials are not configured.',
+            ];
         }
 
         if (blank($pickupLat) || blank($pickupLng)) {
-            throw new RuntimeException('Store pickup coordinates are not configured.');
+            return [
+                'success' => false,
+                'message' => 'Store pickup coordinates are not configured.',
+            ];
         }
 
         $path = '/v3/quotations';
@@ -57,19 +62,30 @@ class LalamoveService
         $timestamp = (string) (int) floor(microtime(true) * 1000);
         $signature = hash_hmac('sha256', "{$timestamp}\r\nPOST\r\n{$path}\r\n\r\n{$body}", $apiSecret);
 
-        $response = Http::withHeaders([
-            'Authorization' => "hmac {$apiKey}:{$timestamp}:{$signature}",
-            'Content-Type' => 'application/json',
-            'Market' => config('services.lalamove.market', 'PH'),
-            'Request-ID' => (string) Str::uuid(),
-        ])
-            ->acceptJson()
-            ->withBody($body, 'application/json')
-            ->post(rtrim(config('services.lalamove.base_url'), '/') . $path);
+        try {
+            $response = Http::withHeaders([
+                'Authorization' => "hmac {$apiKey}:{$timestamp}:{$signature}",
+                'Content-Type' => 'application/json',
+                'Market' => config('services.lalamove.market', 'PH'),
+                'Request-ID' => (string) Str::uuid(),
+            ])
+                ->acceptJson()
+                ->withBody($body, 'application/json')
+                ->post(rtrim(config('services.lalamove.base_url'), '/') . $path);
+        } catch (\Throwable $e) {
+             report($e);
+             return [
+                 'success' => false,
+                 'message' => 'Unable to connect to the delivery service right now.',
+             ];
+        }
 
         if ($response->failed()) {
             report('Lalamove quotation failed: ' . $response->body());
-            throw new RuntimeException($response->json('message') ?: 'Unable to compute delivery fee right now.');
+            return [
+                'success' => false,
+                'message' => $response->json('message') ?: 'Unable to compute delivery fee right now.',
+            ];
         }
 
         $data = $response->json('data', []);
@@ -77,10 +93,14 @@ class LalamoveService
 
         if ($fee <= 0 || blank(data_get($data, 'quotationId'))) {
             report('Lalamove quotation returned an unexpected response: ' . $response->body());
-            throw new RuntimeException('Lalamove did not return a valid delivery quote.');
+            return [
+                'success' => false,
+                'message' => 'Lalamove did not return a valid delivery quote.',
+            ];
         }
 
         return [
+            'success' => true,
             'quotation_id' => data_get($data, 'quotationId'),
             'delivery_fee' => round($fee, 2),
             'currency' => data_get($data, 'priceBreakdown.currency', 'PHP'),

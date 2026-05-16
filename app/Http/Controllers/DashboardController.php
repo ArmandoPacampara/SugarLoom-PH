@@ -213,50 +213,54 @@ class DashboardController extends Controller
             'items.*.quantity' => 'required|integer|min:1',
         ]);
 
-        DB::transaction(function () use ($validated) {
-            $subtotal = 0;
-            $orderItems = [];
+        try {
+            DB::transaction(function () use ($validated) {
+                $subtotal = 0;
+                $orderItems = [];
 
-            foreach ($validated['items'] as $itemData) {
-                $product = Product::findOrFail($itemData['product_id']);
-                $quantity = $itemData['quantity'];
-                
-                if ($product->stock_quantity < $quantity) {
-                    throw new \Exception("Insufficient stock for {$product->name}.");
+                foreach ($validated['items'] as $itemData) {
+                    $product = Product::findOrFail($itemData['product_id']);
+                    $quantity = $itemData['quantity'];
+                    
+                    if ($product->stock_quantity < $quantity) {
+                        throw new \Exception("Insufficient stock for {$product->name}. Only {$product->stock_quantity} left.");
+                    }
+
+                    $lineTotal = $product->price * $quantity;
+                    $subtotal += $lineTotal;
+
+                    $orderItems[] = new OrderItem([
+                        'product_id' => $product->id,
+                        'product_name' => $product->name,
+                        'unit_price' => $product->price,
+                        'quantity' => $quantity,
+                        'line_total' => $lineTotal,
+                    ]);
+
+                    $product->decrement('stock_quantity', $quantity);
                 }
 
-                $lineTotal = $product->price * $quantity;
-                $subtotal += $lineTotal;
-
-                $orderItems[] = new OrderItem([
-                    'product_id' => $product->id,
-                    'product_name' => $product->name,
-                    'unit_price' => $product->price,
-                    'quantity' => $quantity,
-                    'line_total' => $lineTotal,
+                $order = Order::create([
+                    'order_number' => 'WALK-' . strtoupper(uniqid()),
+                    'customer_name' => $validated['customer_name'],
+                    'customer_email' => $validated['customer_email'] ?? 'walkin@sugarloom.ph',
+                    'customer_phone' => $validated['customer_phone'] ?? 'N/A',
+                    'shipping_address' => 'Walk-in Store',
+                    'city' => 'Manila',
+                    'postal_code' => '1000',
+                    'payment_method' => 'cash',
+                    'payment_status' => Order::PAYMENT_PAID,
+                    'status' => Order::STATUS_DELIVERED,
+                    'subtotal' => $subtotal,
+                    'total' => $subtotal,
+                    'placed_at' => now(),
                 ]);
 
-                $product->decrement('stock_quantity', $quantity);
-            }
-
-            $order = Order::create([
-                'order_number' => 'WALK-' . strtoupper(uniqid()),
-                'customer_name' => $validated['customer_name'],
-                'customer_email' => $validated['customer_email'] ?? 'walkin@sugarloom.ph',
-                'customer_phone' => $validated['customer_phone'] ?? 'N/A',
-                'shipping_address' => 'Walk-in Store',
-                'city' => 'Manila',
-                'postal_code' => '1000',
-                'payment_method' => 'cash',
-                'payment_status' => Order::PAYMENT_PAID,
-                'status' => Order::STATUS_DELIVERED,
-                'subtotal' => $subtotal,
-                'total' => $subtotal,
-                'placed_at' => now(),
-            ]);
-
-            $order->items()->saveMany($orderItems);
-        });
+                $order->items()->saveMany($orderItems);
+            });
+        } catch (\Exception $e) {
+            return redirect()->back()->withInput()->with('error', $e->getMessage());
+        }
 
         return redirect()->route('admin.orders')->with('status', 'Walk-in order recorded successfully.');
     }
@@ -350,7 +354,11 @@ class DashboardController extends Controller
         }
 
         if ($shouldNotify && $notificationStatus) {
-            Mail::to($order->customer_email)->send(new OrderStatusNotification($order->fresh('items'), $notificationStatus));
+            try {
+                Mail::to($order->customer_email)->send(new OrderStatusNotification($order->fresh('items'), $notificationStatus));
+            } catch (\Throwable $e) {
+                report($e);
+            }
         }
 
         return back()->with('status', "{$order->order_number} status updated.");

@@ -134,14 +134,15 @@
         .star-btn {
             background: none;
             border: none;
-            font-size: 32px;
+            font-size: 36px;
             cursor: pointer;
-            transition: transform 0.2s;
+            color: #e5e7eb; /* Default empty star color */
+            transition: transform 0.2s, color 0.2s;
         }
         
         .star-btn:hover { transform: scale(1.2); }
         
-        .star-btn.active { color: #fbbf24; }
+        .star-btn.active { color: #fbbf24; /* Filled yellow star color */ }
         
         .modal-form {
             display: flex;
@@ -155,8 +156,8 @@
             border: 1px solid #e5e7eb;
             border-radius: 10px;
             font-family: inherit;
-            resize: vertical;
-            min-height: 100px;
+            resize: none; /* This makes the textbox fixed */
+            height: 120px; /* Fixed height so it doesn't shrink */
             box-sizing: border-box;
         }
         
@@ -204,7 +205,6 @@
 <div class="container">
     <h1>My Account</h1>
 
-    <!-- Success Message if Profile is Updated -->
     @if (session('status') === 'profile-updated')
         <div class="alert-success">Your profile has been updated successfully!</div>
     @endif
@@ -214,7 +214,6 @@
     @endif
 
     <div @class(['grid-2' => $user->isCustomer()])>
-        <!-- Account Details Form -->
         <div class="card">
             <h3>Profile Details</h3>
             @if($user->isCustomer())
@@ -272,7 +271,6 @@
         </div>
 
         @if($user->isCustomer())
-            <!-- Order History (Visual Layout) -->
             <div class="card">
                 <h3>Recent Purchases</h3>
 
@@ -319,7 +317,6 @@
     </div>
 </div>
 
-<!-- Rating Modal -->
 <div id="ratingModal" class="modal">
     <div class="modal-content">
         <div class="modal-header">
@@ -327,12 +324,12 @@
             <button type="button" class="close-modal" onclick="closeRatingModal()">×</button>
         </div>
         
-        <form id="ratingForm" method="POST">
+        <form id="ratingForm" class="modal-form" method="POST">
             @csrf
             <input type="hidden" id="orderIdInput" name="order_id">
             
             <div>
-                <label style="display: block; margin-bottom: 10px; font-weight: bold; color: #1a1018;">How would you rate your order?</label>
+                <label style="display: block; margin-bottom: 10px; font-weight: bold; color: #1a1018; text-align: center;">How would you rate your order?</label>
                 <div class="rating-input">
                     <button type="button" class="star-btn" data-rating="1" onclick="setRating(1)">★</button>
                     <button type="button" class="star-btn" data-rating="2" onclick="setRating(2)">★</button>
