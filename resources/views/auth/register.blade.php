@@ -155,6 +155,16 @@
             transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
         }
 
+        .form-group select {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23D8547B'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 15px center;
+            background-size: 18px;
+            padding-right: 45px;
+            cursor: pointer;
+        }
+
         .form-group input::placeholder {
             color: #c0a0ad;
         }
@@ -401,7 +411,7 @@
 
                 <div class="form-group">
                     <label for="city">City</label>
-                    <select id="city" name="city" size="5" required>
+                    <select id="city" name="city" required>
                         <option value="">Select a Metro Manila city</option>
                         @foreach(config('sugarloom.metro_manila_cities', []) as $metroCity)
                             <option value="{{ $metroCity }}" @selected(old('city') === $metroCity)>{{ $metroCity }}</option>
