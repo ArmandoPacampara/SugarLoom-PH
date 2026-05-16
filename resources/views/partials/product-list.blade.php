@@ -16,7 +16,7 @@
     <div class="catalog-card-body">
         <div class="catalog-name-row">
             <span class="catalog-name">{{ $product->name }}</span>
-            @if($product->rating)
+            @if($product->rating > 0)
             <span class="catalog-rating">★ {{ number_format($product->rating, 1) }}</span>
             @endif
         </div>

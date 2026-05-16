@@ -159,9 +159,24 @@ class DashboardController extends Controller
     {
         $validated = $request->validated();
 
+        // Handle checkboxes (since they won't be in the request if unchecked)
+        $validated['is_active'] = $request->boolean('is_active', true);
+        $validated['is_bakers_choice'] = $request->boolean('is_bakers_choice', false);
+        $validated['is_top_pick'] = $request->boolean('is_top_pick', false);
+
         if ($request->hasFile('image')) {
             $imagePath = $request->file('image')->store('products', 'public');
             $validated['image'] = 'storage/' . $imagePath;
+        }
+
+        // If this product is set as Baker's Choice, unset it from all others
+        if ($validated['is_bakers_choice']) {
+            Product::where('is_bakers_choice', true)->update(['is_bakers_choice' => false]);
+        }
+
+        // If this product is set as Top Pick, unset it from all others
+        if ($validated['is_top_pick']) {
+            Product::where('is_top_pick', true)->update(['is_top_pick' => false]);
         }
 
         $product = Product::create($validated);
@@ -279,16 +294,35 @@ class DashboardController extends Controller
     {
         $validated = $request->validated();
 
+        // Handle checkboxes
+        $validated['is_active'] = $request->boolean('is_active');
+        $validated['is_bakers_choice'] = $request->boolean('is_bakers_choice');
+        $validated['is_top_pick'] = $request->boolean('is_top_pick');
+
         // Handle image upload
         if ($request->hasFile('image')) {
             // Delete old image if it exists
-            if ($product->image && Storage::disk('public')->exists($product->image)) {
-                Storage::disk('public')->delete($product->image);
+            if ($product->image && Storage::disk('public')->exists(str_replace('storage/', '', $product->image))) {
+                Storage::disk('public')->delete(str_replace('storage/', '', $product->image));
             }
 
             // Store new image
             $imagePath = $request->file('image')->store('products', 'public');
             $validated['image'] = 'storage/' . $imagePath;
+        }
+
+        // If this product is being set as Baker's Choice, unset it from all others
+        if ($validated['is_bakers_choice']) {
+            Product::where('id', '!=', $product->id)
+                ->where('is_bakers_choice', true)
+                ->update(['is_bakers_choice' => false]);
+        }
+
+        // If this product is being set as Top Pick, unset it from all others
+        if ($validated['is_top_pick']) {
+            Product::where('id', '!=', $product->id)
+                ->where('is_top_pick', true)
+                ->update(['is_top_pick' => false]);
         }
 
         $product->update($validated);

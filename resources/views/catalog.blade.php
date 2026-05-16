@@ -80,9 +80,9 @@
 .bakers-choice {
     background: var(--pink);
     border-radius: 24px;
-    padding: 1.8rem 2rem;
+    padding: 2rem 3rem;
     color: white;
-    min-width: 340px;
+    max-width: 650px;
     animation: float 4s ease-in-out infinite;
     box-shadow: var(--shadow-pink);
 }
@@ -98,7 +98,7 @@
     font-size: 1rem;
     font-weight: 700;
     color: white;
-    max-width: 180px;
+    max-width: 300px;
     line-height: 1.3;
 }
 

@@ -266,12 +266,6 @@
                     @error('category') <p class="error-message">{{ $message }}</p> @enderror
                 </div>
 
-                <div class="form-group">
-                    <label>Customer Rating (0-5)</label>
-                    <input type="number" name="rating" step="0.1" min="0" max="5" value="{{ old('rating', 0) }}">
-                    @error('rating') <p class="error-message">{{ $message }}</p> @enderror
-                </div>
-
                 <div class="form-group full">
                     <label>Product Image</label>
                     <input id="productImage" type="file" name="image" accept="image/*">
@@ -292,6 +286,10 @@
                         <div class="checkbox-item">
                             <input type="checkbox" id="is_bakers_choice" name="is_bakers_choice" value="1" @checked(old('is_bakers_choice'))>
                             <label for="is_bakers_choice">Baker's Choice ✨</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="is_top_pick" name="is_top_pick" value="1" @checked(old('is_top_pick'))>
+                            <label for="is_top_pick">Top Pick 🏆</label>
                         </div>
                     </div>
                 </div>

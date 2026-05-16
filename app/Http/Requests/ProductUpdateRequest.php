@@ -23,7 +23,7 @@ class ProductUpdateRequest extends FormRequest
             'category' => 'required|string|in:sweet,savory,specialty',
             'is_active' => 'boolean',
             'is_bakers_choice' => 'boolean',
-            'rating' => 'nullable|numeric|min:0|max:5',
+            'is_top_pick' => 'boolean',
             'sort_order' => 'nullable|integer|min:0',
         ];
     }

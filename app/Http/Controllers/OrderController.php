@@ -51,6 +51,13 @@ class OrderController extends Controller
             if ($rewardPoints > 0 && $lockedOrder->user) {
                 $lockedOrder->user->increment('reward_points', $rewardPoints);
             }
+
+            // Recalculate ratings for all products in this order
+            $lockedOrder->items->each(function ($item) {
+                if ($item->product) {
+                    $item->product->updateAverageRating();
+                }
+            });
         });
 
         return redirect()->back()->with('success', "Thank you for your rating! {$rewardPoints} reward points were added to your account.");

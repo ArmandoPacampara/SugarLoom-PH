@@ -538,6 +538,7 @@
 @include('partials.navbar')
 @include('partials.login-modal')
 @include('partials.cookie-consent')
+@include('partials.confirmation-modal')
 
 <main>
     @yield('content')

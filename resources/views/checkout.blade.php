@@ -828,10 +828,10 @@
                                     <input type="hidden" name="quantity" value="{{ $item['quantity'] + 1 }}">
                                     <button class="qty-button" type="submit">+</button>
                                 </form>
-                                <form method="POST" action="{{ route('cart.remove', $item['id']) }}">
+                                <form id="remove-item-form-{{ $item['id'] }}" method="POST" action="{{ route('cart.remove', $item['id']) }}">
                                     @csrf
                                     @method('DELETE')
-                                    <button class="remove-button" type="submit" aria-label="Remove {{ $item['name'] }}">x</button>
+                                    <button class="remove-button" type="button" aria-label="Remove {{ $item['name'] }}" onclick="confirmRemoveCartItem('{{ $item['id'] }}', '{{ addslashes($item['name']) }}')">x</button>
                                 </form>
                             </div>
                         </div>
@@ -916,5 +916,15 @@ function updateEstimatedDelivery() {
 
 citySelect?.addEventListener('change', updateEstimatedDelivery);
 updateEstimatedDelivery();
+
+function confirmRemoveCartItem(id, name) {
+    openConfirmationModal(
+        'Remove Item',
+        `Are you sure you want to remove "${name}" from your cart?`,
+        function() {
+            document.getElementById('remove-item-form-' + id).submit();
+        }
+    );
+}
 </script>
 @endsection

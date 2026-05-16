@@ -55,8 +55,7 @@ class Product extends Model
     public function scopeTopPick($query)
     {
         return $query->active()
-            ->orderByDesc('rating')
-            ->limit(1);
+            ->where('is_top_pick', true);
     }
 
     public function orderItems()
@@ -84,5 +83,21 @@ class Product extends Model
     public function isOutOfStock(): bool
     {
         return $this->stock_quantity <= 0;
+    }
+
+    /**
+     * Recalculate and update the product's average rating based on order ratings.
+     */
+    public function updateAverageRating(): void
+    {
+        $avgRating = OrderItem::where('product_id', $this->id)
+            ->whereHas('order', function ($query) {
+                $query->whereNotNull('rating');
+            })
+            ->with('order:id,rating')
+            ->get()
+            ->avg(fn($item) => $item->order->rating);
+
+        $this->update(['rating' => $avgRating ?: 0.0]);
     }
 }
