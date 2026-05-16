@@ -18,6 +18,10 @@ Route::get('/track-order', [TrackOrderController::class, 'index'])->name('track-
 
 Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/admin', [DashboardController::class, 'index'])->name('admin.dashboard');
+    
+    // --> NEW EXPORT ROUTE ADDED HERE <--
+    Route::get('/admin/export-report', [DashboardController::class, 'exportReport'])->name('admin.export');
+    
     Route::get('/admin/inventory', [DashboardController::class, 'inventory'])->name('admin.inventory');
     Route::get('/admin/products/create', [DashboardController::class, 'createProduct'])->name('admin.products.create');
     Route::post('/admin/products', [DashboardController::class, 'storeProduct'])->name('admin.products.store');

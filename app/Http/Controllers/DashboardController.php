@@ -363,4 +363,70 @@ class DashboardController extends Controller
 
         return back()->with('status', "{$order->order_number} status updated.");
     }
+
+    /**
+     * Stream a CSV export of all orders.
+     */
+    public function exportReport()
+    {
+        $fileName = 'sugarloom_sales_report_' . now()->format('Y_m_d_His') . '.csv';
+
+        $headers = [
+            "Content-type"        => "text/csv",
+            "Content-Disposition" => "attachment; filename=$fileName",
+            "Pragma"              => "no-cache",
+            "Cache-Control"       => "must-revalidate, post-check=0, pre-check=0",
+            "Expires"             => "0"
+        ];
+
+        $callback = function() {
+            // Open a stream straight to the browser (no physical file saved on server)
+            $file = fopen('php://output', 'w');
+            
+            // Add BOM to fix UTF-8 in Excel
+            fputs($file, $bom =(chr(0xEF) . chr(0xBB) . chr(0xBF)));
+
+            // Write the Header Row
+            fputcsv($file, [
+                'Order Number', 
+                'Date Placed',
+                'Customer Name', 
+                'Email', 
+                'Order Status', 
+                'Payment Method', 
+                'Payment Status', 
+                'Items Summary',
+                'Subtotal (PHP)', 
+                'Discount (PHP)', 
+                'Points Discount (PHP)',
+                'Delivery Fee (PHP)', 
+                'Total (PHP)'
+            ]);
+
+            // Use cursor() to fetch one row at a time to prevent memory crashes
+            $orders = \App\Models\Order::with('items')->latest('placed_at')->cursor();
+
+            foreach ($orders as $order) {
+                fputcsv($file, [
+                    $order->order_number,
+                    $order->placed_at ? $order->placed_at->format('M d, Y h:i A') : 'N/A',
+                    $order->customer_name,
+                    $order->customer_email,
+                    $order->status_label, // Uses your model's accessor
+                    strtoupper($order->payment_method),
+                    ucfirst($order->payment_status),
+                    $order->items_summary, // Uses your model's accessor
+                    $order->subtotal,
+                    $order->discount,
+                    $order->points_discount,
+                    $order->delivery_fee,
+                    $order->total
+                ]);
+            }
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
 }
