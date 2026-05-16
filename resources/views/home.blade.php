@@ -773,25 +773,61 @@
         {
             text: 'What kind of treat are you craving right now?',
             options: [
-                { label: 'Chocolatey and rich', category: 'sweet' },
-                { label: 'Salty-sweet and cozy', category: 'savory' },
-                { label: 'Something special for sharing', category: 'specialty' }
+                {
+                    label: "Chocolatey and rich",
+                    category: 'sweet',
+                    matches: ['Chocolate Chip', 'Brownies', "Gourmet S'mores", "S'mores"]
+                },
+                {
+                    label: "Salty-sweet and cozy",
+                    category: 'savory',
+                    matches: ['Baked Sushi']
+                },
+                {
+                    label: "Something special for sharing",
+                    category: 'specialty',
+                    matches: ['Matcha', 'Macaroons']
+                }
             ]
         },
         {
             text: 'Pick your ideal flavor mood.',
             options: [
-                { label: 'Classic comfort', category: 'sweet' },
-                { label: 'Bold and indulgent', category: 'specialty' },
-                { label: 'Soft and classic', category: 'sweet' }
+                {
+                    label: 'Classic comfort',
+                    category: 'sweet',
+                    matches: ['Red Velvet', 'Chocolate Chip']
+                },
+                {
+                    label: 'Bold and indulgent',
+                    category: 'specialty',
+                    matches: ['Brownies', "Gourmet S'mores", "S'mores"]
+                },
+                {
+                    label: 'Soft and classic',
+                    category: 'sweet',
+                    matches: ['Strawberry', 'Macaroons']
+                }
             ]
         },
         {
             text: 'How adventurous is your sweet tooth today?',
             options: [
-                { label: 'Keep it familiar', category: 'sweet' },
-                { label: 'Surprise me a little', category: 'specialty' },
-                { label: 'I want a savory twist', category: 'savory' }
+                {
+                    label: 'Keep it familiar',
+                    category: 'sweet',
+                    matches: ['Red Velvet', 'Chocolate Chip']
+                },
+                {
+                    label: 'Surprise me a little',
+                    category: 'specialty',
+                    matches: ['Matcha', "Gourmet S'mores", 'Macaroons']
+                },
+                {
+                    label: 'I want a savory twist',
+                    category: 'savory',
+                    matches: ['Baked Sushi']
+                }
             ]
         }
     ];
@@ -809,10 +845,12 @@
     const quizResultDetails = document.getElementById('quizResultDetails');
     let quizIndex = 0;
     let quizScores = {};
+    let quizSelections = [];
 
     function openQuiz() {
         quizIndex = 0;
         quizScores = {};
+        quizSelections = [];
         quizResult.classList.remove('is-visible');
         quizQuestionWrap.style.display = 'block';
         quizModal.classList.add('is-open');
@@ -841,6 +879,7 @@
             button.textContent = option.label;
             button.addEventListener('click', function() {
                 quizScores[option.category] = (quizScores[option.category] || 0) + 1;
+                quizSelections.push(option);
                 quizIndex += 1;
 
                 if (quizIndex >= quizQuestions.length) {
@@ -857,11 +896,38 @@
         const winningCategory = Object.keys(quizScores).sort(function(a, b) {
             return quizScores[b] - quizScores[a];
         })[0] || 'sweet';
-        const recommendation = quizProducts.find(function(product) {
-            return product.category === winningCategory && product.stock > 0;
-        }) || quizProducts.find(function(product) {
+
+        const productMatchScores = quizSelections.reduce(function(scores, selection) {
+            if (Array.isArray(selection.matches)) {
+                selection.matches.forEach(function(name) {
+                    scores[name] = (scores[name] || 0) + 1;
+                });
+            }
+            return scores;
+        }, {});
+
+        const availableProducts = quizProducts.filter(function(product) {
             return product.stock > 0;
-        }) || quizProducts[0];
+        });
+
+        const scoredProducts = availableProducts.slice().sort(function(a, b) {
+            const scoreA = productMatchScores[a.name] || 0;
+            const scoreB = productMatchScores[b.name] || 0;
+
+            if (scoreA !== scoreB) {
+                return scoreB - scoreA;
+            }
+
+            return (b.rating || 0) - (a.rating || 0);
+        });
+
+        let recommendation = scoredProducts.find(function(product) {
+            return product.category === winningCategory;
+        });
+
+        if (!recommendation) {
+            recommendation = scoredProducts[0];
+        }
 
         quizProgress.style.width = '100%';
         quizQuestionWrap.style.display = 'none';

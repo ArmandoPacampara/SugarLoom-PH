@@ -327,6 +327,7 @@ class CartController extends Controller
     private function cartViewData(): array
     {
         $cartItems = collect(session('cart', []))->values();
+        $cartItems = $this->refreshCartImages($cartItems);
         $promoCode = session('promo_code');
 
         /** @var \App\Models\User|null $checkoutUser */
@@ -343,6 +344,23 @@ class CartController extends Controller
         $productRewardPointCost = $this->productRewardPointCost();
 
         return compact('cartItems', 'totals', 'promoCode', 'voucher', 'metroManilaCities', 'rewardPointBalance', 'maxRedeemablePoints', 'rewardProducts', 'productRewardPointCost');
+    }
+
+    private function refreshCartImages(Collection $cartItems): Collection
+    {
+        return $cartItems->map(function (array $item): array {
+            if (empty($item['id'])) {
+                return $item;
+            }
+
+            $product = Product::find($item['id']);
+            if (! $product) {
+                return $item;
+            }
+
+            $item['image'] = $product->image;
+            return $item;
+        });
     }
 
     /**

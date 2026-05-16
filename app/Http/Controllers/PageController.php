@@ -18,7 +18,7 @@ class PageController extends Controller
         $quizProducts = Product::active()
             ->orderByDesc('rating')
             ->orderBy('sort_order')
-            ->take(6)
+            ->take(10)
             ->get();
         $quizProductRecommendations = $quizProducts
             ->map(fn ($product) => [
@@ -26,6 +26,7 @@ class PageController extends Controller
                 'name' => $product->name,
                 'description' => $product->description,
                 'price' => (float) $product->price,
+                'rating' => (float) $product->rating,
                 'image' => $product->image ? asset($product->image) : asset('images/placeholder-cookie.png'),
                 'stock' => $product->stock_quantity,
                 'category' => $product->category,

@@ -278,8 +278,8 @@ class DashboardController extends Controller
         // Handle image upload
         if ($request->hasFile('image')) {
             // Delete old image if it exists
-            if ($product->image && Storage::disk('public')->exists($product->image)) {
-                Storage::disk('public')->delete($product->image);
+            if ($product->image && Storage::disk('public')->exists(str_replace('storage/', '', $product->image))) {
+                Storage::disk('public')->delete(str_replace('storage/', '', $product->image));
             }
 
             // Store new image
