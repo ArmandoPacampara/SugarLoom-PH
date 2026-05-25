@@ -240,7 +240,7 @@
     </div>
 
     <div style="margin-top: 24px;">
-        {{ $orders->links() }}
+        {{ $orders->links('partials.simple-pagination') }}
     </div>
 </div>
 @endsection

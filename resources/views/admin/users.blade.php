@@ -131,7 +131,7 @@
     </div>
 
     <div style="margin-top: 24px;">
-        {{ $users->links() }}
+        {{ $users->links('partials.simple-pagination') }}
     </div>
 </div>
 @endsection
