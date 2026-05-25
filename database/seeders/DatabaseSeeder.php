@@ -29,7 +29,58 @@ class DatabaseSeeder extends Seeder
 
             User::updateOrCreate(
                 ['email' => 'test@example.com'],
-                ['name' => 'Test Customer', 'password' => bcrypt('password'), 'role' => User::ROLE_CUSTOMER]
+                [
+                    'name' => 'Test Customer',
+                    'phone' => '+63 917 100 0001',
+                    'shipping_address' => '101 Aurora Blvd',
+                    'city' => 'Pasig',
+                    'postal_code' => '1602',
+                    'reward_points' => 75,
+                    'password' => bcrypt('password'),
+                    'role' => User::ROLE_CUSTOMER
+                ]
+            );
+
+            User::updateOrCreate(
+                ['email' => 'maria.santos@example.com'],
+                [
+                    'name' => 'Maria Santos',
+                    'phone' => '+63 917 100 0002',
+                    'shipping_address' => '23 Sampaguita Street',
+                    'city' => 'Makati',
+                    'postal_code' => '1200',
+                    'reward_points' => 120,
+                    'password' => bcrypt('password'),
+                    'role' => User::ROLE_CUSTOMER
+                ]
+            );
+
+            User::updateOrCreate(
+                ['email' => 'juan.delacruz@example.com'],
+                [
+                    'name' => 'Juan Dela Cruz',
+                    'phone' => '+63 917 100 0003',
+                    'shipping_address' => '88 Rizal Avenue',
+                    'city' => 'Manila',
+                    'postal_code' => '1003',
+                    'reward_points' => 30,
+                    'password' => bcrypt('password'),
+                    'role' => User::ROLE_CUSTOMER
+                ]
+            );
+
+            User::updateOrCreate(
+                ['email' => 'ana.reyes@example.com'],
+                [
+                    'name' => 'Ana Reyes',
+                    'phone' => '+63 917 100 0004',
+                    'shipping_address' => '45 Kalayaan Ave',
+                    'city' => 'Quezon City',
+                    'postal_code' => '1100',
+                    'reward_points' => 210,
+                    'password' => bcrypt('password'),
+                    'role' => User::ROLE_CUSTOMER
+                ]
             );
 
         // ── Products ──────────────────────────────────

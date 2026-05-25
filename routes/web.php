@@ -23,6 +23,12 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/admin/export-report', [DashboardController::class, 'exportReport'])->name('admin.export');
     
     Route::get('/admin/inventory', [DashboardController::class, 'inventory'])->name('admin.inventory');
+    Route::get('/admin/users', [DashboardController::class, 'users'])->name('admin.users');
+    Route::get('/admin/users/create', [DashboardController::class, 'createUser'])->name('admin.users.create');
+    Route::post('/admin/users', [DashboardController::class, 'storeUser'])->name('admin.users.store');
+    Route::get('/admin/users/{user}/edit', [DashboardController::class, 'editUser'])->name('admin.users.edit');
+    Route::patch('/admin/users/{user}', [DashboardController::class, 'updateUser'])->name('admin.users.update');
+    Route::delete('/admin/users/{user}', [DashboardController::class, 'destroyUser'])->name('admin.users.destroy');
     Route::get('/admin/products/create', [DashboardController::class, 'createProduct'])->name('admin.products.create');
     Route::post('/admin/products', [DashboardController::class, 'storeProduct'])->name('admin.products.store');
     Route::get('/admin/products/{product}/edit', [DashboardController::class, 'editProduct'])->name('admin.products.edit');

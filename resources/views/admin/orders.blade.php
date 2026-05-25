@@ -178,6 +178,7 @@
         <a href="{{ route('admin.dashboard') }}" class="tab">Dashboard</a>
         <a href="{{ route('admin.inventory') }}" class="tab">Inventory</a>
         <a href="{{ route('admin.orders') }}" class="tab active">Orders</a>
+        <a href="{{ route('admin.users') }}" class="tab">Users</a>
     </div>
 
     <div class="card">
