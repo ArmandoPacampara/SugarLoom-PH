@@ -201,7 +201,7 @@ class DashboardController extends Controller
             'password' => Hash::make($validated['password']),
         ]);
 
-        return redirect()->route('admin.users')->with('status', 'User account created successfully.');
+        return redirect()->route('admin.user_index')->with('status', 'User account created successfully.');
     }
 
     public function editUser(User $user): View
@@ -247,13 +247,13 @@ class DashboardController extends Controller
 
         $user->save();
 
-        return redirect()->route('admin.users')->with('status', 'User account updated successfully.');
+        return redirect()->route('admin.user_index')->with('status', 'User account updated successfully.');
     }
 
     public function destroyUser(User $user): RedirectResponse
     {
         if ($user->id === Auth::id()) {
-            return redirect()->route('admin.users')->withErrors([
+            return redirect()->route('admin.user_index')->withErrors([
                 'user' => 'You cannot remove your own admin account.',
             ]);
         }
@@ -261,7 +261,7 @@ class DashboardController extends Controller
         $userName = $user->name;
         $user->delete();
 
-        return redirect()->route('admin.users')->with('status', "{$userName} was removed successfully.");
+        return redirect()->route('admin.user_index')->with('status', "{$userName} was removed successfully.");
     }
 
     public function createProduct(): View

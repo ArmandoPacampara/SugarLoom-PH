@@ -227,7 +227,7 @@
         <a href="{{ route('admin.dashboard') }}" class="tab">Dashboard</a>
         <a href="{{ route('admin.inventory') }}" class="tab active">Inventory</a>
         <a href="{{ route('admin.orders') }}" class="tab">Orders</a>
-        <a href="{{ route('admin.users') }}" class="tab">Users</a>
+        <a href="{{ route('admin.user_index') }}" class="tab">Users</a>
     </div>
 
     <!-- SEARCH & FILTERS -->

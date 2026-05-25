@@ -23,7 +23,7 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/admin/export-report', [DashboardController::class, 'exportReport'])->name('admin.export');
     
     Route::get('/admin/inventory', [DashboardController::class, 'inventory'])->name('admin.inventory');
-    Route::get('/admin/users', [DashboardController::class, 'users'])->name('admin.users');
+    Route::get('/admin/users', [DashboardController::class, 'users'])->name('admin.user_index');
     Route::get('/admin/users/create', [DashboardController::class, 'createUser'])->name('admin.users.create');
     Route::post('/admin/users', [DashboardController::class, 'storeUser'])->name('admin.users.store');
     Route::get('/admin/users/{user}/edit', [DashboardController::class, 'editUser'])->name('admin.users.edit');

@@ -28,7 +28,7 @@
 <div class="container">
     <div class="header">
         <h1>Edit User</h1>
-        <a href="{{ route('admin.users') }}" class="btn btn-light">Back to Users</a>
+        <a href="{{ route('admin.user_index') }}" class="btn btn-light">Back to Users</a>
     </div>
 
     @if ($errors->any())
@@ -89,7 +89,7 @@
 
             <div class="actions">
                 <button type="submit" class="btn btn-primary">Save Changes</button>
-                <a href="{{ route('admin.users') }}" class="btn btn-light">Cancel</a>
+                <a href="{{ route('admin.user_index') }}" class="btn btn-light">Cancel</a>
             </div>
         </form>
     </div>
