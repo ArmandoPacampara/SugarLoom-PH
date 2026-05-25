@@ -724,7 +724,7 @@
                     </div>
                     <div class="field">
                         <label for="city">City</label>
-                        <select id="city" name="city" size="5" required>
+                        <select id="city" name="city" required>
                             <option value="">Select a Metro Manila city</option>
                             @foreach($metroManilaCities as $metroCity)
                                 <option value="{{ $metroCity }}" @selected(old('city', $checkoutUser?->city) === $metroCity)>{{ $metroCity }}</option>
