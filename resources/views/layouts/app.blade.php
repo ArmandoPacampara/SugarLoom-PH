@@ -544,7 +544,7 @@
     @yield('content')
 </main>
 
-@unless(request()->is('admin*'))
+@unless(request()->is('admin*') || request()->is('register'))
 <footer>
     <a href="/" class="footer-logo">SugarLoom PH</a>
     <button class="footer-cart" aria-label="Cart">🛒</button>
