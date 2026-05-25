@@ -1,5 +1,5 @@
 @guest
-<div class="login-overlay {{ $errors->any() || session('status') ? 'is-open' : '' }}" id="loginModal" aria-hidden="{{ $errors->any() || session('status') ? 'false' : 'true' }}">
+<div class="login-overlay {{ ($errors->any() || session('status')) && !request()->is('register') ? 'is-open' : '' }}" id="loginModal" aria-hidden="{{ ($errors->any() || session('status')) && !request()->is('register') ? 'false' : 'true' }}">
     <section class="login-popup" role="dialog" aria-modal="true" aria-labelledby="loginTitle">
         <button type="button" class="login-close" data-login-close aria-label="Close login">&times;</button>
 
