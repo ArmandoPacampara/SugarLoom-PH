@@ -188,29 +188,7 @@ class DatabaseSeeder extends Seeder
         }
 
         // ── Testimonials ──────────────────────────────
-        $testimonials = [
-            [
-                'name'    => 'Sofia M.',
-                'label'   => 'Verified Buyer',
-                'content' => 'The texture is simply out of this world. It\'s crispy on the edges and gooey in the middle, exactly how a perfect cookie should be.',
-                'stars'   => 5,
-                'sort_order' => 1,
-            ],
-            [
-                'name'    => 'Marcus K.',
-                'label'   => 'Gift Sender',
-                'content' => 'Sent a box of Mocha cookies to my best friend and she hasn\'t stopped talking about them. The packaging is as artisanal as the cookies!',
-                'stars'   => 5,
-                'sort_order' => 2,
-            ],
-            [
-                'name'    => 'Elena R.',
-                'label'   => 'Loyal Customer',
-                'content' => 'The Red Velvet is life-changing. It\'s not just a cookie; it\'s a gourmet experience delivered right to my doorstep.',
-                'stars'   => 5,
-                'sort_order' => 3,
-            ],
-        ];
+        $testimonials = [];
 
         foreach ($testimonials as $data) {
             Testimonial::create(array_merge(['is_active' => true], $data));
