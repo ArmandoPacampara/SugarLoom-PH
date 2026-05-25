@@ -6,10 +6,13 @@ use App\Mail\OrderStatusNotification;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
+use App\Models\User;
 use App\Http\Requests\ProductUpdateRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
@@ -147,6 +150,118 @@ class DashboardController extends Controller
             'products' => $products,
             'hasFilters' => $request->anyFilled(['search', 'category', 'status']),
         ]);
+    }
+
+    public function users(): View
+    {
+        $users = User::query()
+            ->latest()
+            ->paginate(12);
+
+        $userSummary = [
+            'total' => User::count(),
+            'admins' => User::where('role', User::ROLE_ADMIN)->count(),
+            'customers' => User::where('role', User::ROLE_CUSTOMER)->count(),
+        ];
+
+        return view('admin.users', [
+            'users' => $users,
+            'userSummary' => $userSummary,
+        ]);
+    }
+
+    public function createUser(): View
+    {
+        return view('admin.users.create');
+    }
+
+    public function storeUser(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
+            'phone' => ['nullable', 'string', 'max:30'],
+            'shipping_address' => ['nullable', 'string', 'max:255'],
+            'city' => ['nullable', 'string', 'max:80', Rule::in(config('sugarloom.metro_manila_cities', []))],
+            'postal_code' => ['nullable', 'string', 'max:20'],
+            'role' => ['required', Rule::in([User::ROLE_ADMIN, User::ROLE_CUSTOMER])],
+            'reward_points' => ['nullable', 'integer', 'min:0'],
+            'password' => ['required', 'string', 'min:8'],
+        ]);
+
+        User::create([
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'phone' => $validated['phone'] ?: null,
+            'shipping_address' => $validated['shipping_address'] ?: null,
+            'city' => $validated['city'] ?: null,
+            'postal_code' => $validated['postal_code'] ?: null,
+            'role' => $validated['role'],
+            'reward_points' => (int) ($validated['reward_points'] ?? 0),
+            'password' => Hash::make($validated['password']),
+        ]);
+
+        return redirect()->route('admin.users')->with('status', 'User account created successfully.');
+    }
+
+    public function editUser(User $user): View
+    {
+        return view('admin.users.edit', [
+            'user' => $user,
+        ]);
+    }
+
+    public function updateUser(Request $request, User $user): RedirectResponse
+    {
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user->id)],
+            'phone' => ['nullable', 'string', 'max:30'],
+            'shipping_address' => ['nullable', 'string', 'max:255'],
+            'city' => ['nullable', 'string', 'max:80', Rule::in(config('sugarloom.metro_manila_cities', []))],
+            'postal_code' => ['nullable', 'string', 'max:20'],
+            'role' => ['required', Rule::in([User::ROLE_ADMIN, User::ROLE_CUSTOMER])],
+            'reward_points' => ['nullable', 'integer', 'min:0'],
+            'password' => ['nullable', 'string', 'min:8'],
+        ]);
+
+        $user->fill([
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'phone' => $validated['phone'] ?: null,
+            'shipping_address' => $validated['shipping_address'] ?: null,
+            'city' => $validated['city'] ?: null,
+            'postal_code' => $validated['postal_code'] ?: null,
+            'reward_points' => (int) ($validated['reward_points'] ?? 0),
+        ]);
+
+        if ($user->id === Auth::id()) {
+            $user->role = User::ROLE_ADMIN;
+        } else {
+            $user->role = $validated['role'];
+        }
+
+        if (! empty($validated['password'])) {
+            $user->password = Hash::make($validated['password']);
+        }
+
+        $user->save();
+
+        return redirect()->route('admin.users')->with('status', 'User account updated successfully.');
+    }
+
+    public function destroyUser(User $user): RedirectResponse
+    {
+        if ($user->id === Auth::id()) {
+            return redirect()->route('admin.users')->withErrors([
+                'user' => 'You cannot remove your own admin account.',
+            ]);
+        }
+
+        $userName = $user->name;
+        $user->delete();
+
+        return redirect()->route('admin.users')->with('status', "{$userName} was removed successfully.");
     }
 
     public function createProduct(): View
