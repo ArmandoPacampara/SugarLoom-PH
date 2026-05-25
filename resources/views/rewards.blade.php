@@ -36,32 +36,38 @@
 
         .back-link-wrapper {
             position: absolute;
-            left: -120px;
-            top: 0;
+            left: -20px;
+            top: 50px;
             display: flex;
             align-items: center;
         }
 
         .back-link {
-            margin-top: 45px;
-            margin-left: 80px;
             display: inline-flex;
             align-items: center;
-            gap: 0.5rem;
-            padding: 14px 18px;
-            border-radius: 14px;
-            background: #fdf2f8;
-            color: #000000;
+            justify-content: center;
+            width: 46px;
+            height: 46px;
+            border-radius: 50%;
+            background: #ffffff;
+            color: #fb7185;
             text-decoration: none;
-            font-weight: 700;
-            border: 1px solid #f3e8ff;
-            white-space: nowrap;
+            border: 2px solid #fb7185;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 4px 12px rgba(251, 113, 133, 0.1);
+        }
+
+        .back-link:hover {
+            background: #fb7185;
+            color: #ffffff;
+            transform: translateX(-5px);
+            box-shadow: 0 6px 15px rgba(251, 113, 133, 0.2);
         }
 
         @media (max-width: 1280px) {
             .back-link-wrapper {
                 position: static;
-                margin-bottom: 1rem;
+                margin-bottom: 2rem;
             }
         }
 
@@ -229,7 +235,9 @@
 @section('content')
 <main class="page">
     <div class="back-link-wrapper">
-        <a href="{{ route('cart.index') }}" class="back-link">← Back </a>
+        <a href="{{ route('cart.index') }}" class="back-link" title="Back to Cart">
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+        </a>
     </div>
 
     <div class="rewards-hero">
