@@ -8,7 +8,21 @@
         :root { --pink-deep: #d8547b; --pink-nav: #e06b87; --pink-pale: #ffd7e1; --text-body: #4a3d45; }
         body { margin: 0; font-family: Arial, sans-serif; background: #fdf2f8; color: #111827; }
         .navbar { display: flex; align-items: center; justify-content: space-between; padding: 0 4rem; height: 70px; background: var(--pink-nav); }
-        .logo { font-size: 1.1rem; font-weight: 900; color: white; text-decoration: none; }
+        .logo {
+            font-size: 1.1rem;
+            font-weight: 900;
+            color: white;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .navbar-logo {
+            height: 40px;
+            width: auto;
+            object-fit: contain;
+        }
         .container { max-width: 520px; margin: 54px auto; padding: 0 24px; }
         .card { background: white; padding: 30px; border-radius: 20px; box-shadow: 0 8px 20px rgba(0,0,0,0.05); }
         h2 { font-size: 24px; margin-top: 0; text-align: center; color: var(--pink-deep); }
@@ -26,7 +40,10 @@
 </head>
 <body>
 <nav class="navbar">
-    <a href="{{ route('home') }}" class="logo">SugarLoom PH</a>
+    <a href="{{ route('home') }}" class="logo">
+        <img src="{{ asset('images/SugarLoom_Logo.png') }}" alt="SugarLoom Logo" class="navbar-logo">
+        SugarLoom PH
+    </a>
 </nav>
 
 <div class="container">

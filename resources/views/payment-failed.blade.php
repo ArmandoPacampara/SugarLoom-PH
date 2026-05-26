@@ -51,6 +51,15 @@
             color: white;
             letter-spacing: 0;
             text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .navbar-logo {
+            height: 40px;
+            width: auto;
+            object-fit: contain;
         }
 
         .nav-links {
@@ -209,7 +218,10 @@
 </head>
 <body>
     <nav class="navbar">
-        <a href="{{ route('home') }}" class="logo">SugarLoom PH</a>
+        <a href="{{ route('home') }}" class="logo">
+            <img src="{{ asset('images/SugarLoom_Logo.png') }}" alt="SugarLoom Logo" class="navbar-logo">
+            SugarLoom PH
+        </a>
         <div class="nav-links">
             @auth
                 @if(auth()->user()->isAdmin())
