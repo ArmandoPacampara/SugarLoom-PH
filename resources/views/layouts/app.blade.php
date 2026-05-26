@@ -103,6 +103,15 @@
             color: white;
             text-decoration: none;
             letter-spacing: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .navbar-logo {
+            height: 40px;
+            width: auto;
+            object-fit: contain;
         }
 
         .nav-links {

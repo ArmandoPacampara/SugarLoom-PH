@@ -1,5 +1,8 @@
 <nav class="navbar">
-    <a href="{{ route('home') }}" class="logo">SugarLoom PH</a>
+    <a href="{{ route('home') }}" class="logo">
+        <img src="{{ asset('images/SugarLoom_Logo.png') }}" alt="SugarLoom Logo" class="navbar-logo">
+        SugarLoom PH
+    </a>
     <div class="nav-links">
         @auth
             @if(auth()->user()->isAdmin())
