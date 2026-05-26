@@ -16,7 +16,8 @@ class ProfileUpdateRequest extends FormRequest
      */
     public function rules(): array
     {
-        return [
+        // Base rules for everyone (Name and Email)
+        $rules = [
             'name' => ['required', 'string', 'max:255'],
             'email' => [
                 'required',
@@ -26,10 +27,22 @@ class ProfileUpdateRequest extends FormRequest
                 'max:255',
                 Rule::unique(User::class)->ignore($this->user()->id),
             ],
-            'phone' => ['required', 'string', 'max:30'],
-            'shipping_address' => ['required', 'string', 'max:255'],
-            'city' => ['required', 'string', 'max:80', Rule::in(config('sugarloom.metro_manila_cities', []))],
-            'postal_code' => ['required', 'string', 'max:20'],
         ];
+
+        // If the user is a customer, require the shipping details
+        if ($this->user()->isCustomer()) {
+            $rules['phone'] = ['required', 'string', 'max:30'];
+            $rules['shipping_address'] = ['required', 'string', 'max:255'];
+            $rules['city'] = ['required', 'string', 'max:80', Rule::in(config('sugarloom.metro_manila_cities', []))];
+            $rules['postal_code'] = ['required', 'string', 'max:20'];
+        } else {
+            // If the user is an admin, these fields are optional/nullable
+            $rules['phone'] = ['nullable', 'string', 'max:30'];
+            $rules['shipping_address'] = ['nullable', 'string', 'max:255'];
+            $rules['city'] = ['nullable', 'string', 'max:80'];
+            $rules['postal_code'] = ['nullable', 'string', 'max:20'];
+        }
+
+        return $rules;
     }
 }

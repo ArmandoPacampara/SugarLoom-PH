@@ -227,7 +227,7 @@
         <a href="{{ route('admin.dashboard') }}" class="tab">Dashboard</a>
         <a href="{{ route('admin.inventory') }}" class="tab active">Inventory</a>
         <a href="{{ route('admin.orders') }}" class="tab">Orders</a>
-        <a href="{{ route('admin.users') }}" class="tab">Users</a>
+        <a href="{{ route('admin.user_index') }}" class="tab">Users</a>
     </div>
 
     <!-- SEARCH & FILTERS -->
@@ -314,11 +314,12 @@
                                 <td>
                                     <div style="display: flex;">
                                         <a href="{{ route('admin.products.edit', $product) }}" class="btn-action btn-edit">Edit</a>
-                                        <form action="{{ route('admin.products.destroy', $product) }}" method="POST" onsubmit="return confirm('Are you sure you want to remove this product from inventory?')">
+                                        <form id="delete-form-{{ $product->id }}" action="{{ route('admin.products.destroy', $product) }}" method="POST">
                                             @csrf
                                             @method('DELETE')
-                                            <button type="submit" class="btn-action btn-delete">Remove</button>
+                                            <button type="button" class="btn-action btn-delete" onclick="confirmDeleteProduct('{{ $product->id }}', '{{ addslashes($product->name) }}')">Remove</button>
                                         </form>
+
                                     </div>
                                 </td>
                             </tr>
@@ -338,4 +339,18 @@
         @endif
     </div>
 </div>
+@endsection
+
+@section('scripts')
+<script>
+    function confirmDeleteProduct(id, name) {
+        openConfirmationModal(
+            'Remove Product',
+            `Are you sure you want to remove "${name}" from your inventory? This action cannot be undone.`,
+            function() {
+                document.getElementById('delete-form-' + id).submit();
+            }
+        );
+    }
+</script>
 @endsection

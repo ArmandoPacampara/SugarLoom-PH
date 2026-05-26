@@ -49,7 +49,7 @@
         </div>
 
         @if ($errors->any())
-            <div style="background: #fee2e2; color: #dc2626; padding: 16px; border-radius: 12px; margin-bottom: 24px; font-size: 14px;">
+            <div style="background: #fee2e2; color: #dc2626; padding: 166px; border-radius: 12px; margin-bottom: 24px; font-size: 14px;">
                 <strong>Please fix the errors below:</strong>
                 <ul style="margin-top: 8px;">
                     @foreach ($errors->all() as $error)
@@ -136,6 +136,7 @@
         </td>
     </tr>
 </template>
+@endsection
 
 @section('scripts')
 <script>

@@ -50,6 +50,11 @@
         }
     });
 
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.has('login')) {
+        setTimeout(openLoginModal, 100);
+    }
+
     if (loginModal?.classList.contains('is-open')) {
         document.body.classList.add('modal-open');
     }

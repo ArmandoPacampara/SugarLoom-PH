@@ -767,7 +767,7 @@
         easing: 'ease-out-cubic'
     });
 
-    const quizProducts = @json($quizProductRecommendations);
+    const quizProducts = @json($quizProductRecommendations ?? []);
 
     const quizQuestions = [
         {
@@ -936,10 +936,10 @@
         if (!recommendation) {
             quizResultName.textContent = 'Catalog List';
             quizResultText.textContent = 'Your best match is waiting in the catalog.';
-            quizResultImage.src = '{{ asset('images/cookies.png') }}';
+            quizResultImage.src = '{{ asset("images/cookies.png") }}';
             quizResultDetails.textContent = 'View Catalog';
             quizResultDetails.onclick = function() {
-                window.location.href = '{{ route('catalog') }}';
+                window.location.href = '{{ route("catalog") }}';
             };
             return;
         }

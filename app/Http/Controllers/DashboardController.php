@@ -201,7 +201,7 @@ class DashboardController extends Controller
             'password' => Hash::make($validated['password']),
         ]);
 
-        return redirect()->route('admin.users')->with('status', 'User account created successfully.');
+        return redirect()->route('admin.user_index')->with('status', 'User account created successfully.');
     }
 
     public function editUser(User $user): View
@@ -247,13 +247,13 @@ class DashboardController extends Controller
 
         $user->save();
 
-        return redirect()->route('admin.users')->with('status', 'User account updated successfully.');
+        return redirect()->route('admin.user_index')->with('status', 'User account updated successfully.');
     }
 
     public function destroyUser(User $user): RedirectResponse
     {
         if ($user->id === Auth::id()) {
-            return redirect()->route('admin.users')->withErrors([
+            return redirect()->route('admin.user_index')->withErrors([
                 'user' => 'You cannot remove your own admin account.',
             ]);
         }
@@ -261,7 +261,7 @@ class DashboardController extends Controller
         $userName = $user->name;
         $user->delete();
 
-        return redirect()->route('admin.users')->with('status', "{$userName} was removed successfully.");
+        return redirect()->route('admin.user_index')->with('status', "{$userName} was removed successfully.");
     }
 
     public function createProduct(): View
@@ -274,9 +274,24 @@ class DashboardController extends Controller
     {
         $validated = $request->validated();
 
+        // Handle checkboxes (since they won't be in the request if unchecked)
+        $validated['is_active'] = $request->boolean('is_active', true);
+        $validated['is_bakers_choice'] = $request->boolean('is_bakers_choice', false);
+        $validated['is_top_pick'] = $request->boolean('is_top_pick', false);
+
         if ($request->hasFile('image')) {
             $imagePath = $request->file('image')->store('products', 'public');
             $validated['image'] = 'storage/' . $imagePath;
+        }
+
+        // If this product is set as Baker's Choice, unset it from all others
+        if ($validated['is_bakers_choice']) {
+            Product::where('is_bakers_choice', true)->update(['is_bakers_choice' => false]);
+        }
+
+        // If this product is set as Top Pick, unset it from all others
+        if ($validated['is_top_pick']) {
+            Product::where('is_top_pick', true)->update(['is_top_pick' => false]);
         }
 
         $product = Product::create($validated);
@@ -328,50 +343,54 @@ class DashboardController extends Controller
             'items.*.quantity' => 'required|integer|min:1',
         ]);
 
-        DB::transaction(function () use ($validated) {
-            $subtotal = 0;
-            $orderItems = [];
+        try {
+            DB::transaction(function () use ($validated) {
+                $subtotal = 0;
+                $orderItems = [];
 
-            foreach ($validated['items'] as $itemData) {
-                $product = Product::findOrFail($itemData['product_id']);
-                $quantity = $itemData['quantity'];
-                
-                if ($product->stock_quantity < $quantity) {
-                    throw new \Exception("Insufficient stock for {$product->name}.");
+                foreach ($validated['items'] as $itemData) {
+                    $product = Product::findOrFail($itemData['product_id']);
+                    $quantity = $itemData['quantity'];
+                    
+                    if ($product->stock_quantity < $quantity) {
+                        throw new \Exception("Insufficient stock for {$product->name}. Only {$product->stock_quantity} left.");
+                    }
+
+                    $lineTotal = $product->price * $quantity;
+                    $subtotal += $lineTotal;
+
+                    $orderItems[] = new OrderItem([
+                        'product_id' => $product->id,
+                        'product_name' => $product->name,
+                        'unit_price' => $product->price,
+                        'quantity' => $quantity,
+                        'line_total' => $lineTotal,
+                    ]);
+
+                    $product->decrement('stock_quantity', $quantity);
                 }
 
-                $lineTotal = $product->price * $quantity;
-                $subtotal += $lineTotal;
-
-                $orderItems[] = new OrderItem([
-                    'product_id' => $product->id,
-                    'product_name' => $product->name,
-                    'unit_price' => $product->price,
-                    'quantity' => $quantity,
-                    'line_total' => $lineTotal,
+                $order = Order::create([
+                    'order_number' => 'WALK-' . strtoupper(uniqid()),
+                    'customer_name' => $validated['customer_name'],
+                    'customer_email' => $validated['customer_email'] ?? 'walkin@sugarloom.ph',
+                    'customer_phone' => $validated['customer_phone'] ?? 'N/A',
+                    'shipping_address' => 'Walk-in Store',
+                    'city' => 'Manila',
+                    'postal_code' => '1000',
+                    'payment_method' => 'cash',
+                    'payment_status' => Order::PAYMENT_PAID,
+                    'status' => Order::STATUS_DELIVERED,
+                    'subtotal' => $subtotal,
+                    'total' => $subtotal,
+                    'placed_at' => now(),
                 ]);
 
-                $product->decrement('stock_quantity', $quantity);
-            }
-
-            $order = Order::create([
-                'order_number' => 'WALK-' . strtoupper(uniqid()),
-                'customer_name' => $validated['customer_name'],
-                'customer_email' => $validated['customer_email'] ?? 'walkin@sugarloom.ph',
-                'customer_phone' => $validated['customer_phone'] ?? 'N/A',
-                'shipping_address' => 'Walk-in Store',
-                'city' => 'Manila',
-                'postal_code' => '1000',
-                'payment_method' => 'cash',
-                'payment_status' => Order::PAYMENT_PAID,
-                'status' => Order::STATUS_DELIVERED,
-                'subtotal' => $subtotal,
-                'total' => $subtotal,
-                'placed_at' => now(),
-            ]);
-
-            $order->items()->saveMany($orderItems);
-        });
+                $order->items()->saveMany($orderItems);
+            });
+        } catch (\Exception $e) {
+            return redirect()->back()->withInput()->with('error', $e->getMessage());
+        }
 
         return redirect()->route('admin.orders')->with('status', 'Walk-in order recorded successfully.');
     }
@@ -390,6 +409,11 @@ class DashboardController extends Controller
     {
         $validated = $request->validated();
 
+        // Handle checkboxes
+        $validated['is_active'] = $request->boolean('is_active');
+        $validated['is_bakers_choice'] = $request->boolean('is_bakers_choice');
+        $validated['is_top_pick'] = $request->boolean('is_top_pick');
+
         // Handle image upload
         if ($request->hasFile('image')) {
             // Delete old image if it exists
@@ -400,6 +424,20 @@ class DashboardController extends Controller
             // Store new image
             $imagePath = $request->file('image')->store('products', 'public');
             $validated['image'] = 'storage/' . $imagePath;
+        }
+
+        // If this product is being set as Baker's Choice, unset it from all others
+        if ($validated['is_bakers_choice']) {
+            Product::where('id', '!=', $product->id)
+                ->where('is_bakers_choice', true)
+                ->update(['is_bakers_choice' => false]);
+        }
+
+        // If this product is being set as Top Pick, unset it from all others
+        if ($validated['is_top_pick']) {
+            Product::where('id', '!=', $product->id)
+                ->where('is_top_pick', true)
+                ->update(['is_top_pick' => false]);
         }
 
         $product->update($validated);
@@ -451,6 +489,7 @@ class DashboardController extends Controller
             $order->update($updates);
 
             if ($previousStatus !== $newStatus && in_array($newStatus, [
+                Order::STATUS_PREPARING,
                 Order::STATUS_OUT_FOR_DELIVERY,
                 Order::STATUS_CANCELLED,
                 Order::STATUS_DELIVERED,
@@ -465,9 +504,79 @@ class DashboardController extends Controller
         }
 
         if ($shouldNotify && $notificationStatus) {
-            Mail::to($order->customer_email)->send(new OrderStatusNotification($order->fresh('items'), $notificationStatus));
+            try {
+                Mail::to($order->customer_email)->send(new OrderStatusNotification($order->fresh('items'), $notificationStatus));
+            } catch (\Throwable $e) {
+                report($e);
+            }
         }
 
         return back()->with('status', "{$order->order_number} status updated.");
+    }
+
+    /**
+     * Stream a CSV export of all orders.
+     */
+    public function exportReport()
+    {
+        $fileName = 'sugarloom_sales_report_' . now()->format('Y_m_d_His') . '.csv';
+
+        $headers = [
+            "Content-type"        => "text/csv",
+            "Content-Disposition" => "attachment; filename=$fileName",
+            "Pragma"              => "no-cache",
+            "Cache-Control"       => "must-revalidate, post-check=0, pre-check=0",
+            "Expires"             => "0"
+        ];
+
+        $callback = function() {
+            // Open a stream straight to the browser (no physical file saved on server)
+            $file = fopen('php://output', 'w');
+            
+            // Add BOM to fix UTF-8 in Excel
+            fputs($file, $bom =(chr(0xEF) . chr(0xBB) . chr(0xBF)));
+
+            // Write the Header Row
+            fputcsv($file, [
+                'Order Number', 
+                'Date Placed',
+                'Customer Name', 
+                'Email', 
+                'Order Status', 
+                'Payment Method', 
+                'Payment Status', 
+                'Items Summary',
+                'Subtotal (PHP)', 
+                'Discount (PHP)', 
+                'Points Discount (PHP)',
+                'Delivery Fee (PHP)', 
+                'Total (PHP)'
+            ]);
+
+            // Use cursor() to fetch one row at a time to prevent memory crashes
+            $orders = \App\Models\Order::with('items')->latest('placed_at')->cursor();
+
+            foreach ($orders as $order) {
+                fputcsv($file, [
+                    $order->order_number,
+                    $order->placed_at ? $order->placed_at->format('M d, Y h:i A') : 'N/A',
+                    $order->customer_name,
+                    $order->customer_email,
+                    $order->status_label, // Uses your model's accessor
+                    strtoupper($order->payment_method),
+                    ucfirst($order->payment_status),
+                    $order->items_summary, // Uses your model's accessor
+                    $order->subtotal,
+                    $order->discount,
+                    $order->points_discount,
+                    $order->delivery_fee,
+                    $order->total
+                ]);
+            }
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
     }
 }

@@ -55,17 +55,31 @@
             border: none;
             cursor: pointer;
             font-weight: bold;
+            text-decoration: none;
+            font-size: 14px;
         }
 
         .btn-light {
             background: white;
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            color: var(--dark);
         }
 
         .btn-primary {
             background: #fb7185;
             color: white;
         }
+        
+        .btn-export {
+            background: var(--dark);
+            color: white;
+            display: inline-flex;
+            align-items: center;
+            transition: opacity 0.2s;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        .btn-export:hover { opacity: 0.85; color: white; }
+        .btn-export svg { width: 18px; height: 18px; margin-right: 8px; }
 
         .progress {
             width: 100%;
@@ -149,6 +163,24 @@
         .stat-label { color: #6b7280; font-size: 12px; text-transform: uppercase; font-weight: 700; }
         .stat-value { color: #be123c; font-size: 28px; font-weight: 800; margin-top: 8px; }
 
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            display: inline-block;
+        }
+        .status-pending { background: #fef3c7; color: #92400e; }
+        .status-preparing { background: #dcfce7; color: #166534; }
+        .status-out_for_delivery { background: #e0f2fe; color: #075985; }
+        .status-delivered { background: #dcfce7; color: #166534; }
+        .status-cancelled { background: #fee2e2; color: #b91c1c; }
+
+        .text-right { text-align: right; }
+        .text-center { text-align: center; }
+
         @media (max-width: 800px) {
             .grid-3, .grid-2-1 { grid-template-columns: 1fr; }
         }
@@ -158,11 +190,15 @@
 @section('content')
 <div class="container">
 
-    <!-- HEADER -->
     <div class="flex between mb-10">
         <h1>Admin Dashboard</h1>
         <div class="flex gap">
-            <button class="btn btn-light">Export Report</button>
+            <a href="{{ route('admin.export') }}" class="btn btn-export">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                </svg>
+                Export CSV Report
+            </a>
         </div>
     </div>
 
@@ -172,15 +208,13 @@
         </div>
     @endif
 
-    <!-- TABS -->
     <div class="tabs" style="display: flex; background: white; border-radius: 12px; padding: 4px; margin-bottom: 24px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
         <a href="{{ route('admin.dashboard') }}" class="tab active" style="flex: 1; padding: 12px 24px; border-radius: 8px; text-align: center; text-decoration: none; color: white; font-weight: 500; background: #fb7185; box-shadow: 0 2px 8px rgba(251, 113, 133, 0.3);">Dashboard</a>
         <a href="{{ route('admin.inventory') }}" class="tab" style="flex: 1; padding: 12px 24px; border-radius: 8px; text-align: center; text-decoration: none; color: #6b7280; font-weight: 500; transition: all 0.2s;">Inventory</a>
         <a href="{{ route('admin.orders') }}" class="tab" style="flex: 1; padding: 12px 24px; border-radius: 8px; text-align: center; text-decoration: none; color: #6b7280; font-weight: 500; transition: all 0.2s;">Orders</a>
-        <a href="{{ route('admin.users') }}" class="tab" style="flex: 1; padding: 12px 24px; border-radius: 8px; text-align: center; text-decoration: none; color: #6b7280; font-weight: 500; transition: all 0.2s;">Users</a>
+        <a href="{{ route('admin.user_index') }}" class="tab" style="flex: 1; padding: 12px 24px; border-radius: 8px; text-align: center; text-decoration: none; color: #6b7280; font-weight: 500; transition: all 0.2s;">Users</a>
     </div>
 
-    <!-- MAIN STATS -->
     <div class="grid grid-3">
         <div class="card" data-aos="fade-up" data-aos-delay="100">
             <div class="stat-label">REVENUE THIS MONTH</div>
@@ -203,7 +237,6 @@
         </div>
     </div>
 
-    <!-- CHARTS ROW 1 -->
     <div class="grid grid-2-1 mt-24">
         <div class="card" data-aos="fade-right">
             <h3>Revenue Trend (Last 14 Days)</h3>
@@ -216,7 +249,6 @@
         </div>
     </div>
 
-    <!-- CHARTS ROW 2 & TRENDING -->
     <div class="grid grid-2-1 mt-24">
         <div class="card" data-aos="fade-up">
             <h3>Top Products Sold</h3>
@@ -239,42 +271,34 @@
         </div>
     </div>
 
-    <!-- RECENT ORDERS -->
     <div class="card mt-24" data-aos="fade-up">
         <div class="flex between mb-16">
-            <h3>Recent Orders</h3>
+            <h3 class="m-0">Recent Orders</h3>
             <a href="{{ route('admin.orders') }}" class="btn btn-light" style="font-size: 12px; padding: 6px 12px;">View All</a>
         </div>
         <div style="overflow-x: auto;">
             <table>
                 <thead>
                     <tr>
-                        <th>Order ID</th>
+                        <th>Order</th>
+                        <th>Date</th>
                         <th>Customer</th>
-                        <th>Item</th>
-                        <th>Status</th>
-                        <th>Amount</th>
+                        <th class="text-center">Status</th>
+                        <th class="text-right">Total</th>
                     </tr>
                 </thead>
                 <tbody>
                     @forelse($orders ?? [] as $order)
                     <tr>
-                        <td class="text-bold">{{ $order->order_number }}</td>
+                        <td class="text-bold">#{{ substr($order->order_number, -6) }}</td>
+                        <td class="text-gray fs-14">{{ $order->placed_at ? $order->placed_at->format('M d, h:i A') : 'N/A' }}</td>
                         <td>{{ $order->customer_name }}</td>
-                        <td class="text-gray">{{ $order->items_summary }}</td>
-                        <td>
-                            <form method="POST" action="{{ route('admin.orders.status', $order) }}" class="status-form">
-                                @csrf
-                                @method('PATCH')
-                                <select class="status-select" name="status" aria-label="Status for {{ $order->order_number }}">
-                                    @foreach($statuses as $value => $label)
-                                        <option value="{{ $value }}" @selected($order->status === $value)>{{ $label }}</option>
-                                    @endforeach
-                                </select>
-                                <button class="mini-btn" type="submit">Save</button>
-                            </form>
+                        <td class="text-center">
+                            <span class="status-badge status-{{ $order->status }}">
+                                {{ str_replace('_', ' ', $order->status) }}
+                            </span>
                         </td>
-                        <td class="text-bold">PHP {{ number_format($order->total, 2) }}</td>
+                        <td class="text-bold text-right">PHP {{ number_format($order->total, 2) }}</td>
                     </tr>
                     @empty
                     <tr>

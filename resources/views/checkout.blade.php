@@ -685,7 +685,7 @@
         </div>
     @endif
 
-    @if($cartItems->isEmpty())
+    @if($cartItems->isEmpty() && !$selectedRewardId)
         <section class="empty-state" data-aos="zoom-in">
             <h1>Your cart is waiting for something sweet.</h1>
             <p>Add your favorite SugarLoom treats from the catalog, then come back here to check out.</p>
@@ -724,7 +724,7 @@
                     </div>
                     <div class="field">
                         <label for="city">City</label>
-                        <select id="city" name="city" size="5" required>
+                        <select id="city" name="city" required>
                             <option value="">Select a Metro Manila city</option>
                             @foreach($metroManilaCities as $metroCity)
                                 <option value="{{ $metroCity }}" @selected(old('city', $checkoutUser?->city) === $metroCity)>{{ $metroCity }}</option>
@@ -785,6 +785,35 @@
                 <button class="confirm-button" type="submit">Confirm Order</button>
                 <p class="terms">By clicking "Confirm Order", you agree to our Terms of Service.</p>
                 </form>
+
+                @if($activeOrders->isNotEmpty())
+                    <div style="margin-top: 60px; padding: 30px; background: white; border-radius: 28px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
+                        <h2 style="font-size: 20px; margin-bottom: 20px; color: var(--rose);">Orders In Progress</h2>
+                        <div style="display: grid; gap: 16px;">
+                            @foreach($activeOrders as $order)
+                                <div style="display: flex; justify-content: space-between; align-items: center; padding: 16px; border: 1px solid #fceef0; border-radius: 18px;">
+                                    <div>
+                                        <div style="font-weight: 800; font-size: 15px; margin-bottom: 4px;">{{ $order->order_number }}</div>
+                                        <div style="font-size: 13px; color: var(--muted);">{{ $order->items_summary }}</div>
+                                        <div style="display: flex; gap: 12px; margin-top: 8px;">
+                                            <a href="{{ route('track-order', ['tracking_number' => $order->order_number]) }}" style="font-size: 12px; color: var(--rose); text-decoration: none; font-weight: 700;">Track Order</a>
+                                            @if($order->status === \App\Models\Order::STATUS_PENDING)
+                                                <form action="{{ route('order.cancel', $order) }}" method="POST" onsubmit="return confirm('Are you sure you want to cancel this order?')">
+                                                    @csrf
+                                                    <button type="submit" style="background: none; border: none; padding: 0; font-size: 12px; color: #9ca3af; cursor: pointer; text-decoration: underline;">Cancel</button>
+                                                </form>
+                                            @endif
+                                        </div>
+                                    </div>
+                                    <div style="text-align: right;">
+                                        <span style="display: inline-block; padding: 4px 10px; border-radius: 99px; font-size: 11px; font-weight: 800; background: #fff1f2; color: var(--rose);">{{ $order->status_label }}</span>
+                                        <div style="font-size: 11px; color: #9ca3af; margin-top: 6px;">{{ $order->placed_at?->diffForHumans() }}</div>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                @endif
             </section>
 
             <aside class="summary" data-aos="fade-left">
@@ -828,16 +857,27 @@
                                     <input type="hidden" name="quantity" value="{{ $item['quantity'] + 1 }}">
                                     <button class="qty-button" type="submit">+</button>
                                 </form>
-                                <form method="POST" action="{{ route('cart.remove', $item['id']) }}">
+                                <form id="remove-item-form-{{ $item['id'] }}" method="POST" action="{{ route('cart.remove', $item['id']) }}">
                                     @csrf
                                     @method('DELETE')
-                                    <button class="remove-button" type="submit" aria-label="Remove {{ $item['name'] }}">x</button>
+                                    <button class="remove-button" type="button" aria-label="Remove {{ $item['name'] }}" onclick="confirmRemoveCartItem('{{ $item['id'] }}', '{{ addslashes($item['name']) }}')">x</button>
                                 </form>
                             </div>
                         </div>
                         <div class="item-price">P{{ number_format($item['price'] * $item['quantity'], 0) }}</div>
                     </div>
                 @endforeach
+
+                @if($selectedRewardId && $rewardProduct = $rewardProducts->firstWhere('id', $selectedRewardId))
+                    <div class="cart-item" style="border: 1px dashed var(--rose); padding: 10px; border-radius: 12px; margin-top: 10px;">
+                        <img src="{{ $imageFor(['name' => $rewardProduct->name, 'image' => $rewardProduct->image]) }}" alt="{{ $rewardProduct->name }}">
+                        <div>
+                            <div class="item-name">{{ $rewardProduct->name }} (Reward)</div>
+                            <div class="item-desc">Redeemed with {{ number_format($productRewardPointCost) }} points</div>
+                        </div>
+                        <div class="item-price" style="color: #1f7a4d;">FREE</div>
+                    </div>
+                @endif
 
                 <hr class="summary-divider">
 
@@ -916,5 +956,15 @@ function updateEstimatedDelivery() {
 
 citySelect?.addEventListener('change', updateEstimatedDelivery);
 updateEstimatedDelivery();
+
+function confirmRemoveCartItem(id, name) {
+    openConfirmationModal(
+        'Remove Item',
+        `Are you sure you want to remove "${name}" from your cart?`,
+        function() {
+            document.getElementById('remove-item-form-' + id).submit();
+        }
+    );
+}
 </script>
 @endsection

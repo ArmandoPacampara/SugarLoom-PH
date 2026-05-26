@@ -18,8 +18,12 @@ Route::get('/track-order', [TrackOrderController::class, 'index'])->name('track-
 
 Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/admin', [DashboardController::class, 'index'])->name('admin.dashboard');
+    
+    // --> NEW EXPORT ROUTE ADDED HERE <--
+    Route::get('/admin/export-report', [DashboardController::class, 'exportReport'])->name('admin.export');
+    
     Route::get('/admin/inventory', [DashboardController::class, 'inventory'])->name('admin.inventory');
-    Route::get('/admin/users', [DashboardController::class, 'users'])->name('admin.users');
+    Route::get('/admin/users', [DashboardController::class, 'users'])->name('admin.user_index');
     Route::get('/admin/users/create', [DashboardController::class, 'createUser'])->name('admin.users.create');
     Route::post('/admin/users', [DashboardController::class, 'storeUser'])->name('admin.users.store');
     Route::get('/admin/users/{user}/edit', [DashboardController::class, 'editUser'])->name('admin.users.edit');
@@ -43,6 +47,7 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     Route::post('/orders/{order}/rating', [OrderController::class, 'submitRating'])->name('order.rating');
+    Route::post('/orders/{order}/cancel', [OrderController::class, 'cancel'])->name('order.cancel');
 });
 
 Route::prefix('cart')->name('cart.')->group(function () {
@@ -53,6 +58,7 @@ Route::prefix('cart')->name('cart.')->group(function () {
     Route::patch('/{id}', [CartController::class, 'update'])->name('update');
     Route::delete('/{id}', [CartController::class, 'remove'])->name('remove');
     Route::delete('/', [CartController::class, 'clear'])->name('clear');
+    Route::post('/redeem/{product}', [CartController::class, 'redeem'])->name('redeem');
 });
 
 Route::post('/checkout', [CartController::class, 'checkout'])->name('checkout.process');

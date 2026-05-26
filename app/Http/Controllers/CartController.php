@@ -132,9 +132,31 @@ class CartController extends Controller
 
     public function clear(): RedirectResponse
     {
-        session()->forget(['cart', 'promo_code']);
+        session()->forget(['cart', 'promo_code', 'reward_product_id']);
 
         return redirect()->route('cart.index')->with('status', 'Your cart is now empty.');
+    }
+
+    public function redeem(Product $product): RedirectResponse
+    {
+        if (! auth()->check()) {
+            return redirect()->route('login');
+        }
+
+        $user = auth()->user();
+        $cost = $this->productRewardPointCost();
+
+        if ($user->reward_points < $cost) {
+            return redirect()->back()->with('error', 'You do not have enough points to redeem this reward.');
+        }
+
+        if ($product->isOutOfStock()) {
+            return redirect()->back()->with('error', 'This reward product is currently out of stock.');
+        }
+
+        session(['reward_product_id' => $product->id]);
+
+        return redirect()->route('cart.index')->with('status', "{$product->name} has been selected as your reward! Complete your checkout to claim it.");
     }
 
     public function applyPromo(Request $request): RedirectResponse
@@ -165,12 +187,12 @@ class CartController extends Controller
     public function checkout(Request $request): RedirectResponse
     {
         $cart = collect(session('cart', []));
+        $rewardProductId = session('reward_product_id');
 
-        if ($cart->isEmpty()) {
-            return redirect()->route('cart.index')->withErrors(['cart' => 'Add at least one item before checking out.']);
+        if ($cart->isEmpty() && !$rewardProductId) {
+            return redirect()->route('cart.index')->withErrors(['cart' => 'Add at least one item or select a reward before checking out.']);
         }
 
-        // Validate stock before processing checkout
         foreach ($cart as $item) {
             $product = Product::find($item['id']);
             if (!$product || $product->isOutOfStock()) {
@@ -191,7 +213,6 @@ class CartController extends Controller
             'payment_method' => ['required', 'in:card,gcash'],
             'promo_code' => ['nullable', 'string', 'max:40'],
             'redeem_points' => ['nullable', 'integer', 'min:0'],
-            'reward_product_id' => ['nullable', 'integer', 'exists:products,id'],
             'address_validation_override' => ['nullable', 'boolean'],
         ]);
 
@@ -203,7 +224,7 @@ class CartController extends Controller
 
         $validated['promo_code'] = $promoCode ?: null;
         $redeemPoints = (int) ($validated['redeem_points'] ?? 0);
-        $rewardProduct = $this->selectedRewardProduct($validated['reward_product_id'] ?? null);
+        $rewardProduct = $this->selectedRewardProduct($rewardProductId);
         $rewardProductPoints = $rewardProduct ? $this->productRewardPointCost() : 0;
         $totalPointsRedeemed = $redeemPoints + $rewardProductPoints;
 
@@ -259,23 +280,30 @@ class CartController extends Controller
         $validated['reward_product_points'] = $rewardProductPoints;
 
         $totals = $this->calculateTotals($cart, $promoCode, $redeemPoints, $deliveryFee, $rewardProductPoints);
-        $order = $this->createOrder($cart, $validated, $totals, $rewardProduct);
-        $this->sendOrderNotification($order, 'placed');
+        
+        try {
+            $order = $this->createOrder($cart, $validated, $totals, $rewardProduct);
+            
+            $this->sendOrderNotification($order, 'placed');
 
-        session([
-            'latest_order_id' => $order->id,
-            'latest_order_number' => $order->order_number,
-        ]);
+            session([
+                'latest_order_id' => $order->id,
+                'latest_order_number' => $order->order_number,
+            ]);
 
-        $checkoutUrl = $this->createPayMongoCheckoutSession($order);
-        session(['paymongo_checkout_url' => $checkoutUrl]);
+            $checkoutUrl = $this->createPayMongoCheckoutSession($order);
+            session(['paymongo_checkout_url' => $checkoutUrl]);
 
-        return redirect()->away($checkoutUrl);
+            return redirect()->away($checkoutUrl);
+            
+        } catch (\Exception $e) {
+            return redirect()->route('cart.index')->with('error', $e->getMessage());
+        }
     }
 
     public function paymongoSuccess(): RedirectResponse
     {
-        session()->forget(['cart', 'promo_code']);
+        session()->forget(['cart', 'promo_code', 'reward_product_id']);
 
         if ($orderId = session('latest_order_id')) {
             DB::transaction(function () use ($orderId) {
@@ -342,8 +370,17 @@ class CartController extends Controller
         $maxRedeemablePoints = min($rewardPointBalance, $this->maxRedeemablePoints($cartItems, $promoCode));
         $rewardProducts = $this->rewardProducts();
         $productRewardPointCost = $this->productRewardPointCost();
+        $selectedRewardId = session('reward_product_id');
 
-        return compact('cartItems', 'totals', 'promoCode', 'voucher', 'metroManilaCities', 'rewardPointBalance', 'maxRedeemablePoints', 'rewardProducts', 'productRewardPointCost');
+        $activeOrders = collect();
+        if ($checkoutUser) {
+            $activeOrders = Order::where('user_id', $checkoutUser->id)
+                ->whereIn('status', [Order::STATUS_PENDING, Order::STATUS_PREPARING, Order::STATUS_OUT_FOR_DELIVERY])
+                ->latest()
+                ->get();
+        }
+
+        return compact('cartItems', 'totals', 'promoCode', 'voucher', 'metroManilaCities', 'rewardPointBalance', 'maxRedeemablePoints', 'rewardProducts', 'productRewardPointCost', 'activeOrders', 'selectedRewardId');
     }
 
     private function refreshCartImages(Collection $cartItems): Collection
@@ -409,7 +446,9 @@ class CartController extends Controller
     {
         $secretKey = config('services.paymongo.secret_key');
 
-        abort_if(blank($secretKey), 500, 'PayMongo secret key is not configured.');
+        if (blank($secretKey)) {
+             throw new \Exception('Payment gateway configuration is missing.');
+        }
 
         $order->loadMissing('items');
         $subtotal = max(1, $order->items->sum(fn ($item) => $item->unit_price * $item->quantity));
@@ -467,7 +506,7 @@ class CartController extends Controller
 
         if ($response->failed()) {
             report('PayMongo checkout failed: ' . $response->body());
-            abort(502, 'Unable to start PayMongo checkout. Please try again.');
+            throw new \Exception('Unable to start payment checkout right now. Please try again later.');
         }
 
         return $response->json('data.attributes.checkout_url');
@@ -488,11 +527,11 @@ class CartController extends Controller
                 $product = $products->get($item['id']);
 
                 if (! $product || ! $product->is_active) {
-                    abort(422, "{$item['name']} is no longer available.");
+                    throw new \Exception("{$item['name']} is no longer available.");
                 }
 
                 if ($product->stock_quantity < $item['quantity']) {
-                    abort(422, "Only {$product->stock_quantity} {$product->name} left in stock.");
+                    throw new \Exception("Only {$product->stock_quantity} {$product->name} left in stock.");
                 }
             }
 
@@ -500,7 +539,7 @@ class CartController extends Controller
                 $lockedRewardProduct = $products->get($rewardProduct->id);
 
                 if (! $lockedRewardProduct || ! $lockedRewardProduct->is_active || $lockedRewardProduct->isOutOfStock()) {
-                    abort(422, 'That reward product is no longer available.');
+                    throw new \Exception('That reward product is no longer available.');
                 }
             }
 
@@ -584,7 +623,11 @@ class CartController extends Controller
 
     private function sendOrderNotification(Order $order, string $notificationType): void
     {
-        Mail::to($order->customer_email)->send(new OrderStatusNotification($order, $notificationType));
+        try {
+            Mail::to($order->customer_email)->send(new OrderStatusNotification($order, $notificationType));
+        } catch (\Throwable $e) {
+            report($e); // Logs the email failure but prevents the checkout from crashing
+        }
     }
 
     /**

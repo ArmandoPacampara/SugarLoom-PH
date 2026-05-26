@@ -121,6 +121,9 @@ class RegisteredUserController extends Controller
 
         session()->forget('pending_registration');
 
+        // Clear guest cart items upon registration/login
+        session()->forget(['cart', 'promo_code']);
+
         event(new Registered($user));
 
         Auth::login($user);

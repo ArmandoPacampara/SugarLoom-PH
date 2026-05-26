@@ -25,6 +25,17 @@
         .form-group { margin-bottom: 16px; }
         label { display: block; font-size: 14px; font-weight: bold; color: var(--text-body); margin-bottom: 6px; }
         input[type="text"], input[type="email"], select { width: 100%; padding: 12px; border: 1px solid #e5e7eb; border-radius: 10px; box-sizing: border-box; background: white; }
+        
+        select {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23e06b87'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            background-size: 16px;
+            padding-right: 40px !important;
+            cursor: pointer;
+        }
+        
         input:focus, select:focus { outline: none; border-color: var(--pink-nav); box-shadow: 0 0 0 3px var(--pink-pale); }
         
         .btn-primary { background: #fb7185; color: white; border: none; padding: 10px 20px; border-radius: 999px; font-weight: bold; cursor: pointer; transition: opacity 0.2s; }
@@ -123,14 +134,15 @@
         .star-btn {
             background: none;
             border: none;
-            font-size: 32px;
+            font-size: 36px;
             cursor: pointer;
-            transition: transform 0.2s;
+            color: #e5e7eb; /* Default empty star color */
+            transition: transform 0.2s, color 0.2s;
         }
         
         .star-btn:hover { transform: scale(1.2); }
         
-        .star-btn.active { color: #fbbf24; }
+        .star-btn.active { color: #fbbf24; /* Filled yellow star color */ }
         
         .modal-form {
             display: flex;
@@ -144,8 +156,8 @@
             border: 1px solid #e5e7eb;
             border-radius: 10px;
             font-family: inherit;
-            resize: vertical;
-            min-height: 100px;
+            resize: none; /* This makes the textbox fixed */
+            height: 120px; /* Fixed height so it doesn't shrink */
             box-sizing: border-box;
         }
         
@@ -193,7 +205,6 @@
 <div class="container">
     <h1>My Account</h1>
 
-    <!-- Success Message if Profile is Updated -->
     @if (session('status') === 'profile-updated')
         <div class="alert-success">Your profile has been updated successfully!</div>
     @endif
@@ -203,15 +214,19 @@
     @endif
 
     <div @class(['grid-2' => $user->isCustomer()])>
-        <!-- Account Details Form -->
         <div class="card">
             <h3>Profile Details</h3>
+            
             @if($user->isCustomer())
                 <div class="points-card">
-                    Reward Points Balance
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span>Reward Points Balance</span>
+                        <a href="{{ route('cart.rewards') }}" style="font-size: 13px; color: #7c2d12; font-weight: bold;">View Rewards →</a>
+                    </div>
                     <strong>{{ number_format($user->reward_points) }}</strong>
                 </div>
             @endif
+            
             <form method="POST" action="{{ route('profile.update') }}">
                 @csrf
                 @method('patch')
@@ -226,30 +241,32 @@
                     <input id="email" type="email" name="email" value="{{ old('email', $user->email) }}" required>
                 </div>
 
-                <div class="form-group">
-                    <label for="phone">Mobile Number</label>
-                    <input id="phone" type="text" name="phone" value="{{ old('phone', $user->phone) }}" required>
-                </div>
+                @if($user->isCustomer())
+                    <div class="form-group">
+                        <label for="phone">Mobile Number</label>
+                        <input id="phone" type="text" name="phone" value="{{ old('phone', $user->phone) }}" required>
+                    </div>
 
-                <div class="form-group">
-                    <label for="shipping_address">Shipping Address</label>
-                    <input id="shipping_address" type="text" name="shipping_address" value="{{ old('shipping_address', $user->shipping_address) }}" required>
-                </div>
+                    <div class="form-group">
+                        <label for="shipping_address">Shipping Address</label>
+                        <input id="shipping_address" type="text" name="shipping_address" value="{{ old('shipping_address', $user->shipping_address) }}" required>
+                    </div>
 
-                <div class="form-group">
-                    <label for="city">City</label>
-                    <select id="city" name="city" required>
-                        <option value="">Select a Metro Manila city</option>
-                        @foreach($metroManilaCities as $metroCity)
-                            <option value="{{ $metroCity }}" @selected(old('city', $user->city) === $metroCity)>{{ $metroCity }}</option>
-                        @endforeach
-                    </select>
-                </div>
+                    <div class="form-group">
+                        <label for="city">City</label>
+                        <select id="city" name="city" required>
+                            <option value="">Select a Metro Manila city</option>
+                            @foreach($metroManilaCities as $metroCity)
+                                <option value="{{ $metroCity }}" @selected(old('city', $user->city) === $metroCity)>{{ $metroCity }}</option>
+                            @endforeach
+                        </select>
+                    </div>
 
-                <div class="form-group">
-                    <label for="postal_code">Postal Code</label>
-                    <input id="postal_code" type="text" name="postal_code" value="{{ old('postal_code', $user->postal_code) }}" required>
-                </div>
+                    <div class="form-group">
+                        <label for="postal_code">Postal Code</label>
+                        <input id="postal_code" type="text" name="postal_code" value="{{ old('postal_code', $user->postal_code) }}" required>
+                    </div>
+                @endif
 
                 <button type="submit" class="btn-primary" style="margin-top: 10px;">Save Changes</button>
             </form>
@@ -261,54 +278,90 @@
         </div>
 
         @if($user->isCustomer())
-            <!-- Order History (Visual Layout) -->
             <div class="card">
-                <h3>Recent Purchases</h3>
+                <h3>Order History</h3>
 
-                @forelse($orders as $order)
-                    <div class="order-item">
-                        <div class="order-header">
-                            <span class="order-id">{{ $order->order_number }}</span>
-                            <span @class([
-                                'badge',
-                                'green' => $order->status === \App\Models\Order::STATUS_DELIVERED,
-                                'blue' => $order->status === \App\Models\Order::STATUS_PREPARING || $order->status === \App\Models\Order::STATUS_OUT_FOR_DELIVERY,
-                                'yellow' => $order->status === \App\Models\Order::STATUS_PENDING,
-                                'red' => $order->status === \App\Models\Order::STATUS_CANCELLED,
-                            ])>{{ $order->status_label }}</span>
-                        </div>
-                        <div class="order-header">
-                            <p class="order-desc">{{ $order->items_summary }}</p>
-                            <span class="order-price">PHP {{ number_format($order->total, 2) }}</span>
-                        </div>
-                        <p class="order-desc" style="font-size: 12px; margin-top: 8px;">Placed on {{ $order->placed_at?->format('F j, Y') }}</p>
-                        
-                        <div style="display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap; align-items: center;">
-                            <a href="{{ route('track-order', ['tracking_number' => $order->order_number]) }}" style="font-size: 12px; color: #fb7185; text-decoration: none;">Track this order</a>
-                            
-                            @if($order->status === \App\Models\Order::STATUS_DELIVERED)
-                                @if($order->rating)
-                                    <span class="rating-badge">
-                                        ★ {{ $order->rating }}/5 - Rated
-                                    </span>
-                                    @if($order->review_reward_points_awarded)
-                                        <span class="rating-badge">+{{ $order->review_reward_points }} pts</span>
+                @php
+                    $activeOrders = $orders->filter(fn($o) => in_array($o->status, [\App\Models\Order::STATUS_PENDING, \App\Models\Order::STATUS_PREPARING, \App\Models\Order::STATUS_OUT_FOR_DELIVERY]));
+                    $pastOrders = $orders->filter(fn($o) => in_array($o->status, [\App\Models\Order::STATUS_DELIVERED, \App\Models\Order::STATUS_CANCELLED]));
+                @endphp
+
+                @if($activeOrders->isNotEmpty())
+                    <h4 style="font-size: 14px; text-transform: uppercase; color: #9ca3af; margin: 20px 0 10px; letter-spacing: 0.05em;">In Progress</h4>
+                    @foreach($activeOrders as $order)
+                        <div class="order-item" style="border-left: 4px solid var(--pink-nav);">
+                            <div class="order-header">
+                                <span class="order-id">{{ $order->order_number }}</span>
+                                <span @class([
+                                    'badge',
+                                    'blue' => $order->status === \App\Models\Order::STATUS_PREPARING || $order->status === \App\Models\Order::STATUS_OUT_FOR_DELIVERY,
+                                    'yellow' => $order->status === \App\Models\Order::STATUS_PENDING,
+                                ])>{{ $order->status_label }}</span>
+                            </div>
+                            <div class="order-header">
+                                <p class="order-desc">{{ $order->items_summary }}</p>
+                                <span class="order-price">PHP {{ number_format($order->total, 2) }}</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 12px;">
+                                <div style="display: flex; gap: 15px;">
+                                    <a href="{{ route('track-order', ['tracking_number' => $order->order_number]) }}" style="font-size: 13px; color: #fb7185; text-decoration: none; font-weight: 600;">Track Order</a>
+                                    @if($order->status === \App\Models\Order::STATUS_PENDING)
+                                        <form action="{{ route('order.cancel', $order) }}" method="POST" onsubmit="return confirm('Are you sure you want to cancel this order?')">
+                                            @csrf
+                                            <button type="submit" style="background: none; border: none; padding: 0; font-size: 13px; color: #9ca3af; cursor: pointer; text-decoration: underline;">Cancel Order</button>
+                                        </form>
                                     @endif
-                                @else
-                                    <button type="button" class="btn-rate" data-order-id="{{ $order->id }}">Rate Order</button>
-                                @endif
-                            @endif
+                                </div>
+                                <span style="font-size: 11px; color: #9ca3af;">{{ $order->placed_at?->diffForHumans() }}</span>
+                            </div>
                         </div>
+                    @endforeach
+                @endif
+
+                @if($pastOrders->isNotEmpty())
+                    <h4 style="font-size: 14px; text-transform: uppercase; color: #9ca3af; margin: 30px 0 10px; letter-spacing: 0.05em;">Past Orders</h4>
+                    @foreach($pastOrders as $order)
+                        <div class="order-item" style="opacity: 0.8;">
+                            <div class="order-header">
+                                <span class="order-id">{{ $order->order_number }}</span>
+                                <span @class([
+                                    'badge',
+                                    'green' => $order->status === \App\Models\Order::STATUS_DELIVERED,
+                                    'red' => $order->status === \App\Models\Order::STATUS_CANCELLED,
+                                ])>{{ $order->status_label }}</span>
+                            </div>
+                            <div class="order-header">
+                                <p class="order-desc">{{ $order->items_summary }}</p>
+                                <span class="order-price">PHP {{ number_format($order->total, 2) }}</span>
+                            </div>
+                            
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
+                                <div style="display: flex; gap: 10px; align-items: center;">
+                                    @if($order->status === \App\Models\Order::STATUS_DELIVERED)
+                                        @if($order->rating)
+                                            <span class="rating-badge">★ {{ $order->rating }}/5 Rated</span>
+                                        @else
+                                            <button type="button" class="btn-rate" data-order-id="{{ $order->id }}">Rate Order</button>
+                                        @endif
+                                    @endif
+                                </div>
+                                <span style="font-size: 11px; color: #9ca3af;">{{ $order->placed_at?->format('M j, Y') }}</span>
+                            </div>
+                        </div>
+                    @endforeach
+                @endif
+
+                @if($orders->isEmpty())
+                    <div style="text-align: center; padding: 40px 0;">
+                        <p style="color: #9ca3af;">No orders found.</p>
+                        <a href="{{ route('catalog') }}" style="color: #fb7185; text-decoration: none; font-weight: 600;">Browse Catalog</a>
                     </div>
-                @empty
-                    <p class="order-desc">No orders yet.</p>
-                @endforelse
+                @endif
             </div>
         @endif
     </div>
 </div>
 
-<!-- Rating Modal -->
 <div id="ratingModal" class="modal">
     <div class="modal-content">
         <div class="modal-header">
@@ -316,12 +369,12 @@
             <button type="button" class="close-modal" onclick="closeRatingModal()">×</button>
         </div>
         
-        <form id="ratingForm" method="POST">
+        <form id="ratingForm" class="modal-form" method="POST">
             @csrf
             <input type="hidden" id="orderIdInput" name="order_id">
             
             <div>
-                <label style="display: block; margin-bottom: 10px; font-weight: bold; color: #1a1018;">How would you rate your order?</label>
+                <label style="display: block; margin-bottom: 10px; font-weight: bold; color: #1a1018; text-align: center;">How would you rate your order?</label>
                 <div class="rating-input">
                     <button type="button" class="star-btn" data-rating="1" onclick="setRating(1)">★</button>
                     <button type="button" class="star-btn" data-rating="2" onclick="setRating(2)">★</button>

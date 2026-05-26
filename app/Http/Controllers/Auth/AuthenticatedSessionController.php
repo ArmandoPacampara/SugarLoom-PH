@@ -28,6 +28,9 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
+        // Clear guest cart items upon login
+        $request->session()->forget(['cart', 'promo_code']);
+
         return redirect()->intended(route($request->user()->homeRoute(), absolute: false));
     }
 
